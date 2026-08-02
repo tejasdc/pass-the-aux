@@ -1,8 +1,13 @@
 const TOKEN_KEY = "host:tokens";
+const PARTY_SESSION_KEY = "party:session";
 const VIBE_KEY = "party:vibe";
+const HOST_AUTH_GRANT_PREFIX = "host:auth-grant:";
 const OAUTH_STATE_PREFIX = "oauth:state:";
 const RATE_LIMIT_PREFIX = "rate-limit:";
 
+const PARTY_SESSION_TTL_SECONDS = 8 * 60 * 60;
+const PARTY_SESSION_TTL_MS = PARTY_SESSION_TTL_SECONDS * 1000;
+const HOST_AUTH_GRANT_TTL_SECONDS = 5 * 60;
 const OAUTH_STATE_TTL_SECONDS = 10 * 60;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
 const RATE_LIMIT_WINDOW_SECONDS = RATE_LIMIT_WINDOW_MS / 1000;
@@ -96,8 +101,6 @@ export default {
     try {
       return await handleApiRequest(request, env, url);
     } catch (err) {
-      console.error("Unhandled Worker error:", err);
-
       if (err instanceof ApiError) {
         return json({ error: err.message }, { status: err.status });
       }
@@ -106,6 +109,7 @@ export default {
         return json({ error: "Not authenticated" }, { status: 401 });
       }
 
+      console.error("Unhandled Worker error:", err);
       return json({ error: "Internal server error" }, { status: 500 });
     }
   },
@@ -115,8 +119,20 @@ async function handleApiRequest(request, env, url) {
   const method = request.method.toUpperCase();
   const pathname = url.pathname;
 
+  if (method === "GET" && pathname === "/api/party/status") {
+    return handlePartyStatus(env);
+  }
+
+  if (method === "POST" && pathname === "/api/party/start") {
+    return handleStartParty(request, env);
+  }
+
+  if (method === "POST" && pathname === "/api/party/end") {
+    return handleEndParty(request, env);
+  }
+
   if (method === "GET" && pathname === "/api/auth/login") {
-    return handleAuthLogin(request, env);
+    return handleAuthLogin(request, env, url);
   }
 
   if (method === "GET" && pathname === "/api/auth/callback") {
@@ -128,23 +144,30 @@ async function handleApiRequest(request, env, url) {
   }
 
   if (method === "POST" && pathname === "/api/auth/logout") {
+    const body = await readOptionalJsonBody(request);
+    await requireHostKey(env, body.passphrase || body.hostKey);
     await env.PARTY_QUEUE_KV.delete(TOKEN_KEY);
+    await env.PARTY_QUEUE_KV.delete(PARTY_SESSION_KEY);
     return json({ success: true, message: "Logged out successfully" });
   }
 
   if (method === "GET" && pathname === "/api/now-playing") {
+    await requireLiveParty(env);
     return handleNowPlaying(env);
   }
 
   if (method === "GET" && pathname === "/api/queue") {
+    await requireLiveParty(env);
     return handleGetQueue(env);
   }
 
   if (method === "POST" && pathname === "/api/queue") {
+    await requireLiveParty(env);
     return handleAddToQueue(request, env);
   }
 
   if (method === "GET" && pathname === "/api/search") {
+    await requireLiveParty(env);
     return handleSearch(env, url);
   }
 
@@ -153,26 +176,31 @@ async function handleApiRequest(request, env, url) {
   }
 
   if (method === "POST" && pathname === "/api/vibe") {
+    await requireLiveParty(env);
     return handleSetVibe(request, env);
   }
 
   const relatedArtistMatch = pathname.match(/^\/api\/artist\/([^/]+)\/related$/);
   if (method === "GET" && relatedArtistMatch) {
+    await requireLiveParty(env);
     return handleRelatedArtists(env, relatedArtistMatch[1]);
   }
 
   const artistMatch = pathname.match(/^\/api\/artist\/([^/]+)$/);
   if (method === "GET" && artistMatch) {
+    await requireLiveParty(env);
     return handleArtist(env, artistMatch[1]);
   }
 
   const audioFeaturesMatch = pathname.match(/^\/api\/audio-features\/([^/]+)$/);
   if (method === "GET" && audioFeaturesMatch) {
+    await requireLiveParty(env);
     return handleSpotifyAudioFeatures(env, audioFeaturesMatch[1]);
   }
 
   const vibeCheckMatch = pathname.match(/^\/api\/vibe\/check\/([^/]+)$/);
   if (method === "GET" && vibeCheckMatch) {
+    await requireLiveParty(env);
     return handleVibeCheck(env, vibeCheckMatch[1]);
   }
 
@@ -183,16 +211,76 @@ async function handleApiRequest(request, env, url) {
   return json({ error: "Not found" }, { status: 404 });
 }
 
-async function handleAuthLogin(request, env) {
+async function handlePartyStatus(env) {
+  const session = await getPartySession(env);
+
+  return json({
+    live: !!session,
+    expiresAt: session?.expiresAt || null,
+    startedAt: session?.startedAt || null,
+    secondsRemaining: session
+      ? Math.max(0, Math.ceil((Date.parse(session.expiresAt) - Date.now()) / 1000))
+      : 0,
+  });
+}
+
+async function handleStartParty(request, env) {
+  const body = await readJsonBody(request);
+  await requireHostKey(env, body.passphrase || body.hostKey);
+
+  const grant = generateState();
+  await env.PARTY_QUEUE_KV.put(
+    `${HOST_AUTH_GRANT_PREFIX}${grant}`,
+    JSON.stringify({ createdAt: Date.now() }),
+    { expirationTtl: HOST_AUTH_GRANT_TTL_SECONDS },
+  );
+
+  const authUrl = new URL("/api/auth/login", request.url);
+  authUrl.searchParams.set("grant", grant);
+  authUrl.searchParams.set("returnTo", "/host");
+
+  return json({
+    success: true,
+    authUrl: `${authUrl.pathname}${authUrl.search}`,
+    message: "Host passphrase accepted. Continue to Spotify.",
+  });
+}
+
+async function handleEndParty(request, env) {
+  const body = await readOptionalJsonBody(request);
+  await requireHostKey(env, body.passphrase || body.hostKey);
+  await env.PARTY_QUEUE_KV.delete(PARTY_SESSION_KEY);
+
+  return json({
+    success: true,
+    live: false,
+    message: "Party ended",
+  });
+}
+
+async function handleAuthLogin(request, env, url) {
+  const grant = url.searchParams.get("grant");
+  if (!grant) {
+    throw new ApiError("Host passphrase required", 403);
+  }
+
+  const grantKey = `${HOST_AUTH_GRANT_PREFIX}${grant}`;
+  const storedGrant = await env.PARTY_QUEUE_KV.get(grantKey, "json");
+  if (!storedGrant) {
+    throw new ApiError("Host passphrase required", 403);
+  }
+
+  await env.PARTY_QUEUE_KV.delete(grantKey);
   requireSpotifyCredentials(env);
 
   const codeVerifier = generateCodeVerifier();
   const codeChallenge = await generateCodeChallenge(codeVerifier);
   const state = generateState();
+  const returnTo = safeReturnPath(url.searchParams.get("returnTo"));
 
   await env.PARTY_QUEUE_KV.put(
     `${OAUTH_STATE_PREFIX}${state}`,
-    JSON.stringify({ codeVerifier, createdAt: Date.now() }),
+    JSON.stringify({ codeVerifier, createdAt: Date.now(), returnTo }),
     { expirationTtl: OAUTH_STATE_TTL_SECONDS },
   );
 
@@ -272,12 +360,18 @@ async function handleAuthCallback(request, env, url) {
       refreshToken: tokenData.refresh_token,
       expiresAt: Date.now() + tokenData.expires_in * 1000,
     });
+    await createPartySession(env);
 
     console.log("Successfully authenticated with Spotify");
-    return Response.redirect(`${appUrl}?authenticated=true`, 302);
+    return Response.redirect(withAuthResult(appUrl, storedAuth.returnTo, {
+      authenticated: "true",
+      party: "live",
+    }), 302);
   } catch (err) {
     console.error("OAuth callback error:", err);
-    return Response.redirect(`${appUrl}?error=server_error`, 302);
+    return Response.redirect(withAuthResult(appUrl, storedAuth.returnTo, {
+      error: "server_error",
+    }), 302);
   }
 }
 
@@ -285,10 +379,15 @@ async function handleAuthStatus(env) {
   const hostTokens = await getTokens(env);
   const isAuthenticated = !!(hostTokens.accessToken && hostTokens.expiresAt);
   const expiresAt = hostTokens.expiresAt;
+  const session = await getPartySession(env);
 
   return json({
     authenticated: isAuthenticated,
     expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+    party: {
+      live: !!session,
+      expiresAt: session?.expiresAt || null,
+    },
   });
 }
 
@@ -731,6 +830,46 @@ async function saveTokens(env, tokens) {
   await env.PARTY_QUEUE_KV.put(TOKEN_KEY, JSON.stringify(tokens));
 }
 
+async function createPartySession(env) {
+  const now = Date.now();
+  const session = {
+    live: true,
+    startedAt: new Date(now).toISOString(),
+    expiresAt: new Date(now + PARTY_SESSION_TTL_MS).toISOString(),
+    durationSeconds: PARTY_SESSION_TTL_SECONDS,
+  };
+
+  await env.PARTY_QUEUE_KV.put(PARTY_SESSION_KEY, JSON.stringify(session), {
+    expirationTtl: PARTY_SESSION_TTL_SECONDS,
+  });
+
+  return session;
+}
+
+async function getPartySession(env) {
+  const session = await env.PARTY_QUEUE_KV.get(PARTY_SESSION_KEY, "json");
+
+  if (!session?.expiresAt) {
+    return null;
+  }
+
+  if (Date.parse(session.expiresAt) <= Date.now()) {
+    await env.PARTY_QUEUE_KV.delete(PARTY_SESSION_KEY);
+    return null;
+  }
+
+  return session;
+}
+
+async function requireLiveParty(env) {
+  const session = await getPartySession(env);
+  if (!session) {
+    throw new ApiError("No party right now. Check back when the host starts one.", 403);
+  }
+
+  return session;
+}
+
 async function getCurrentVibe(env) {
   const storedVibe = await env.PARTY_QUEUE_KV.get(VIBE_KEY, "json");
   return storedVibe || DEFAULT_VIBE;
@@ -956,6 +1095,46 @@ async function readJsonBody(request) {
   }
 }
 
+async function readOptionalJsonBody(request) {
+  try {
+    return await request.json();
+  } catch {
+    return {};
+  }
+}
+
+async function requireHostKey(env, providedKey) {
+  if (!(await isHostKeyMatch(env, providedKey))) {
+    throw new ApiError("Host passphrase required", 403);
+  }
+}
+
+async function isHostKeyMatch(env, providedKey) {
+  if (!env.HOST_KEY || !providedKey || typeof providedKey !== "string") {
+    return false;
+  }
+
+  const [providedHash, expectedHash] = await Promise.all([
+    sha256(providedKey),
+    sha256(env.HOST_KEY),
+  ]);
+
+  return timingSafeEqual(providedHash, expectedHash);
+}
+
+function timingSafeEqual(a, b) {
+  const maxLength = Math.max(a.length, b.length);
+  let mismatch = a.length ^ b.length;
+
+  for (let i = 0; i < maxLength; i += 1) {
+    const aCode = i < a.length ? a.charCodeAt(i) : 0;
+    const bCode = i < b.length ? b.charCodeAt(i) : 0;
+    mismatch |= aCode ^ bCode;
+  }
+
+  return mismatch === 0;
+}
+
 function requireSpotifyCredentials(env) {
   if (!env.SPOTIFY_CLIENT_ID || !env.SPOTIFY_CLIENT_SECRET) {
     throw new Error("Missing Spotify credentials");
@@ -968,6 +1147,24 @@ function getSpotifyRedirectUri(request, env) {
 
 function getAppUrl(request, env) {
   return env.FRONTEND_URL || new URL(request.url).origin;
+}
+
+function safeReturnPath(returnTo) {
+  if (!returnTo || !returnTo.startsWith("/") || returnTo.startsWith("//")) {
+    return "/";
+  }
+
+  return returnTo;
+}
+
+function withAuthResult(appUrl, returnTo, params) {
+  const redirectUrl = new URL(safeReturnPath(returnTo), appUrl);
+
+  for (const [key, value] of Object.entries(params)) {
+    redirectUrl.searchParams.set(key, value);
+  }
+
+  return redirectUrl.toString();
 }
 
 function basicAuth(env) {
