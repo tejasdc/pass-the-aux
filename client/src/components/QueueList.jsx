@@ -15,7 +15,7 @@ function QueueItem({ track, position, isNextUp }) {
 
   return (
     <div className={`queue-item ${isNextUp ? 'next-up' : ''}`}>
-      <span className="queue-num">{position}</span>
+      <span className="queue-tick" aria-hidden="true"></span>
       <div className="queue-thumb">
         <img src={albumImage} alt="" />
       </div>
@@ -23,7 +23,10 @@ function QueueItem({ track, position, isNextUp }) {
         <div className="queue-track">{trackName}</div>
         <div className="queue-artist">{artistName}</div>
       </div>
-      <span className="queue-duration">{formatDuration(track.duration_ms)}</span>
+      <div className="queue-meta">
+        <span className="queue-num">{String(position).padStart(2, '0')}</span>
+        <span className="queue-duration">{formatDuration(track.duration_ms)}</span>
+      </div>
     </div>
   );
 }
@@ -50,7 +53,7 @@ function QueueList({ queue, isLoading }) {
         </div>
         <div className="empty-state">
           <p>Queue is empty</p>
-          <small>Search for songs to add to the party!</small>
+          <small>Search for songs to add to the party.</small>
         </div>
       </section>
     );

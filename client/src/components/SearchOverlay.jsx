@@ -34,16 +34,18 @@ function SearchItem({ track, onAdd, addingUri, wasAdded, wasRejected, rejectedRe
         <div className="search-track">{trackName}</div>
         <div className="search-meta">
           {wasRejected ? (
-            <span className="rejected-reason">😬 {rejectedReason || "Doesn't match the vibe"}</span>
+            <span className="rejected-reason">{rejectedReason || "Doesn't match the vibe"}</span>
           ) : (
             <>{artistName} {albumName && `\u00B7 ${albumName}`}</>
           )}
         </div>
       </div>
       <button
+        type="button"
         className={`add-btn ${isLoading ? 'loading' : ''} ${wasAdded ? 'added' : ''} ${wasRejected ? 'rejected' : ''}`}
         onClick={handleAdd}
         disabled={wasRejected}
+        aria-label={wasAdded ? `${trackName} added` : wasRejected ? `${trackName} rejected` : `Add ${trackName} to queue`}
       >
         <span>{wasAdded ? '\u2713' : wasRejected ? '\u2717' : isLoading ? '\u25CB' : '+'}</span>
       </button>
@@ -170,7 +172,7 @@ function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
       onKeyDown={handleKeyDown}
     >
       <div className="search-header">
-        <button className="search-close" onClick={onClose}>
+        <button className="search-close" type="button" onClick={onClose} aria-label="Close search">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6L6 18M6 6l12 12"></path>
           </svg>
@@ -185,7 +187,7 @@ function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
             autoCapitalize="off"
             spellCheck="false"
             className="search-input"
-            placeholder="Find a song..."
+            placeholder="Find a song to queue"
             value={query}
             onChange={handleInputChange}
           />
@@ -200,21 +202,21 @@ function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
         {!isSearching && searchError && (
           <div className="search-empty">
             <p>{searchError}</p>
-            <small>Try again when the host opens the queue</small>
+            <small>Try again when the host opens the queue.</small>
           </div>
         )}
 
         {!isSearching && !searchError && query && results.length === 0 && (
           <div className="search-empty">
             <p>No results found</p>
-            <small>Try a different search term</small>
+            <small>Try a different search term.</small>
           </div>
         )}
 
         {!isSearching && !searchError && !query && (
           <div className="search-empty">
             <p>Search for songs</p>
-            <small>Type to find tracks to add to the queue</small>
+            <small>Type to find tracks to add to the queue.</small>
           </div>
         )}
 

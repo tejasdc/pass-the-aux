@@ -9,6 +9,7 @@ import { useQueue } from './hooks/useQueue';
 import './index.css';
 
 const PARTY_STATUS_REFRESH_MS = 30000;
+const PRODUCT_NAME = 'Pass the Aux';
 
 function App() {
   const isHostRoute = window.location.pathname === '/host';
@@ -104,15 +105,16 @@ function App() {
 
   return (
     <>
-      {/* Animated Background */}
       <AnimatedBackground />
 
-      {/* Main App */}
       <div className="app">
         <header className="header">
           <div className="header-spacer"></div>
-          <h1 className="logo">Electric Love</h1>
-          <button className="search-btn" onClick={handleOpenSearch}>
+          <a className="wordmark" href="/" aria-label={`${PRODUCT_NAME} home`}>
+            {PRODUCT_NAME}
+            <span>{partyStatus.live ? 'the queue is open' : 'gallery closed'}</span>
+          </a>
+          <button className="search-btn" type="button" onClick={handleOpenSearch} aria-label="Search songs">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <circle cx="11" cy="11" r="8"></circle>
               <path d="m21 21-4.35-4.35"></path>
@@ -125,19 +127,17 @@ function App() {
             <div className="loading-state">Checking party status...</div>
           ) : partyStatus.live ? (
             <>
-              {/* Now Playing Section */}
               <NowPlaying track={nowPlaying} isLoading={isNowPlayingLoading} />
 
-              {/* Queue Section */}
               <QueueList queue={queue} isLoading={isQueueLoading} />
             </>
           ) : (
             <NoPartyState />
           )}
         </main>
+        <ProvenanceFooter />
       </div>
 
-      {/* Search Overlay */}
       <SearchOverlay
         isOpen={isSearchOpen}
         onClose={handleCloseSearch}
@@ -145,7 +145,6 @@ function App() {
         onShowToast={showToast}
       />
 
-      {/* Toast Notifications */}
       <Toast
         message={toast.message}
         isVisible={toast.isVisible}
@@ -159,11 +158,26 @@ function App() {
 function NoPartyState() {
   return (
     <section className="no-party">
-      <div className="no-party-mark">EL</div>
+      <div className="no-party-mark" aria-hidden="true">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
       <h2>No party right now</h2>
-      <p>The queue opens when the host starts Electric Love.</p>
+      <p>{PRODUCT_NAME} opens when the host starts a live Spotify queue.</p>
       <a className="host-link" href="/host">host</a>
     </section>
+  );
+}
+
+function ProvenanceFooter() {
+  return (
+    <footer className="provenance">
+      Design after Kazimir Malevich,{' '}
+      <a href="https://www.moma.org/collection/works/80387" target="_blank" rel="noreferrer">
+        Suprematist Painting (1916-17)
+      </a>
+    </footer>
   );
 }
 
@@ -206,7 +220,10 @@ function HostPage({ partyStatus, onStatusChange, onShowToast }) {
             <path d="m15 18-6-6 6-6"></path>
           </svg>
         </a>
-        <h1 className="logo">Electric Love</h1>
+        <a className="wordmark" href="/" aria-label={`${PRODUCT_NAME} home`}>
+          {PRODUCT_NAME}
+          <span>host room</span>
+        </a>
         <div className="header-spacer"></div>
       </header>
 
@@ -217,7 +234,7 @@ function HostPage({ partyStatus, onStatusChange, onShowToast }) {
           <p className="host-copy">
             {partyStatus.live
               ? `Guests can add songs until ${formatExpiry(partyStatus.expiresAt)}.`
-              : 'Connect Spotify to open the queue.'}
+              : 'Connect Spotify to open the queue. Guests only need the QR.'}
           </p>
 
           {!partyStatus.live && (
@@ -244,6 +261,7 @@ function HostPage({ partyStatus, onStatusChange, onShowToast }) {
           )}
         </section>
       </main>
+      <ProvenanceFooter />
     </div>
   );
 }

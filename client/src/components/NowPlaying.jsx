@@ -11,10 +11,9 @@ function formatTime(ms) {
 function NowPlaying({ track, isLoading }) {
   const progressPercent = useMemo(() => {
     if (!track || !track.duration_ms || !track.progress_ms) return 0;
-    return (track.progress_ms / track.duration_ms) * 100;
+    return Math.max(0, Math.min(100, (track.progress_ms / track.duration_ms) * 100));
   }, [track]);
 
-  // Default placeholder image
   const defaultImage = 'https://i.scdn.co/image/ab67616d0000b273e8b066f70c206551210d902b';
 
   if (isLoading && !track) {
@@ -28,19 +27,14 @@ function NowPlaying({ track, isLoading }) {
   if (!track) {
     return (
       <section className="now-playing">
-        <div className="album-portal">
-          <div className="portal-ring"></div>
-          <div className="portal-ring"></div>
-          <div className="portal-ring"></div>
-          <div className="album-glow"></div>
-          <div className="album-art">
-            <img src={defaultImage} alt="No track playing" />
-          </div>
+        <div className="now-kicker">Now Playing</div>
+        <div className="album-plane is-empty">
+          <img src={defaultImage} alt="No track playing" />
         </div>
         <div className="track-info">
           <h2 className="track-title">No Track Playing</h2>
           <p className="track-artist">Start playing on Spotify</p>
-          <p className="track-album">Electric Love awaits</p>
+          <p className="track-album">The queue is ready when the room is.</p>
         </div>
         <div className="progress">
           <div className="progress-bar">
@@ -62,14 +56,9 @@ function NowPlaying({ track, isLoading }) {
 
   return (
     <section className="now-playing">
-      <div className="album-portal">
-        <div className="portal-ring"></div>
-        <div className="portal-ring"></div>
-        <div className="portal-ring"></div>
-        <div className="album-glow"></div>
-        <div className="album-art">
-          <img src={albumImage} alt={`${trackName} album art`} />
-        </div>
+      <div className="now-kicker">Now Playing</div>
+      <div className="album-plane">
+        <img src={albumImage} alt={`${trackName} album art`} />
       </div>
 
       <div className="track-info">
