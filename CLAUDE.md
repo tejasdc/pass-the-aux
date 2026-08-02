@@ -54,7 +54,22 @@ DONE (cont.):
   "Electric Love" strings, bg rgb(237,232,219), shapes present) at 430px and
   1390px. Client copy leads with the no-hijack value prop across meta/OG tags.
 
-IN PROGRESS — visualizer gallery redesign (design exploration, NOT yet in prod):
+DONE (cont.):
+- **Mobile shape sizing fixed + DEPLOYED 2026-08-02** (version 885b8da8):
+  `AnimatedBackground.jsx` now scales the Malevich shapes to 0.58x at ≤420px,
+  interpolating to full size by 768px (physics/collision/mass scale too). Fixes
+  the crowding/bumping Tejas flagged. The live suprematist skin is KEPT (the
+  facet full-replace port was cancelled) — decision reversed to "keep suprematist,
+  fix mobile sizing, add facet as a SECOND theme via a theme system."
+
+NEXT — theme system (not built yet, awaiting Tejas's roster + switcher calls):
+- Multiple selectable themes; each carries its design-inspiration (artist +
+  artwork + MoMA link) shown in a tooltip/label. Roster to ship: Suprematist
+  (default, live) + Facet (`design/moma-mockups/facet-final.html`, finished).
+  Architect for more; skip the rejected reactive experiments. Persist the
+  guest's choice (localStorage). Build on the now-fixed suprematist.
+
+Superseded — visualizer gallery redesign (design exploration, NOT in prod):
 - Direction chosen 2026-08-02: the now-playing hero becomes a **switchable
   visualizer gallery** — multiple beat-synced visualizations guests tap to cycle
   through, Winamp-preset style. Guests waiting to queue play with it. This
