@@ -19,6 +19,7 @@ function NowPlaying({ track, isLoading }) {
   if (isLoading && !track) {
     return (
       <section className="now-playing">
+        <VisualizerStage />
         <div className="loading-state">Loading now playing...</div>
       </section>
     );
@@ -28,6 +29,7 @@ function NowPlaying({ track, isLoading }) {
     return (
       <section className="now-playing">
         <div className="now-kicker">Now Playing</div>
+        <VisualizerStage />
         <div className="album-plane is-empty">
           <img src={defaultImage} alt="No track playing" />
         </div>
@@ -58,6 +60,7 @@ function NowPlaying({ track, isLoading }) {
   return (
     <section className="now-playing">
       <div className="now-kicker">Now Playing</div>
+      <VisualizerStage />
       <div className="album-plane">
         <img src={albumImage} alt={`${trackName} album art`} />
       </div>
@@ -86,6 +89,32 @@ function NowPlaying({ track, isLoading }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function VisualizerStage() {
+  return (
+    <div className="visualizer-stage" aria-hidden="true">
+      <div className="visualizer-grid"></div>
+      <div className="visualizer-core"></div>
+      <div className="visualizer-bars">
+        {Array.from({ length: 16 }, (_, index) => (
+          <span
+            key={index}
+            style={{
+              '--viz-index': index,
+              '--viz-delay': `${-index * 28}ms`,
+              '--viz-height': `${28 + (index % 6) * 11}%`,
+            }}
+          ></span>
+        ))}
+      </div>
+      <div className="visualizer-trace">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+    </div>
   );
 }
 

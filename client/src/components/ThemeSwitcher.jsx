@@ -14,8 +14,8 @@ function ThemeSwitcher({ activeTheme, onCycle }) {
     >
       <span className="theme-switcher-mark" aria-hidden="true"></span>
       <span className="theme-switcher-copy">
-        <span>{activeTheme.name}</span>
-        <small>{currentIndex + 1}/{THEMES.length}</small>
+        <span>Theme</span>
+        <small>{activeTheme.name} {currentIndex + 1}/{THEMES.length}</small>
       </span>
     </button>
   );

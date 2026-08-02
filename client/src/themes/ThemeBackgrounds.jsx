@@ -4,6 +4,10 @@ const barCount = 22;
 const particleCount = 28;
 const cathodeTraceCount = 5;
 const rootThemeClassByVariant = {
+  winamp: 'theme-winamp',
+  milkdrop: 'theme-milkdrop',
+  generative: 'theme-flow',
+  risograph: 'theme-risograph',
   afterglow: 'theme-afterglow',
   cathode: 'theme-cathode',
   vellum: 'theme-vellum',

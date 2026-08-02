@@ -170,6 +170,7 @@ function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
     <div
       className={`search-overlay ${isOpen ? 'open' : ''}`}
       onKeyDown={handleKeyDown}
+      aria-hidden={!isOpen}
     >
       <div className="search-header">
         <button className="search-close" type="button" onClick={onClose} aria-label="Close search">
