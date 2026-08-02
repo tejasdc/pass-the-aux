@@ -1,0 +1,13 @@
+{
+  "name": "electric-love-party-queue",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "npm --prefix client ci && npm --prefix client run build",
+    "dev:worker": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "^4.102.0"
+  }
+}
