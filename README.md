@@ -26,18 +26,44 @@ Print the QR (`electric-love-qr.png`), tape it to the wall, done.
 
 ## Stack
 
-- `client/` — Vite + React, static site
-- `server/` — Node.js API that proxies Spotify with the host's token
-- `render.yaml` — Render blueprint for both services (free tier)
+- `client/` — Vite + React, built as static assets
+- `worker/` — Cloudflare Worker API that proxies Spotify with the host's token
+- Cloudflare Workers Assets — serves the built client from the same Worker
+- Cloudflare KV — persists host Spotify tokens, OAuth state, rate-limit windows, and party vibe state
+- `server/` + `render.yaml` — legacy Render deployment kept live until cutover
 
 ## Run it locally
 
 ```bash
-cd server && npm install && npm start
-cd client && npm install && npm run dev
+npm install
+npm run build
+npx wrangler dev
 ```
 
-Set `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, and `SPOTIFY_REDIRECT_URI` for the server (Spotify developer dashboard), then authenticate as host at `/api/auth`.
+Set local Worker secrets in `.dev.vars` when testing real Spotify auth:
+
+```bash
+SPOTIFY_CLIENT_ID=...
+SPOTIFY_CLIENT_SECRET=...
+SPOTIFY_REDIRECT_URI=http://localhost:8787/api/auth/callback
+```
+
+Then authenticate as host at `/api/auth/login`. Guests continue to use the same origin app and relative `/api/*` routes.
+
+## Deploy
+
+Cloudflare Workers is the primary deployment target. From the repo root:
+
+```bash
+npm install
+npx wrangler secret put SPOTIFY_CLIENT_ID
+npx wrangler secret put SPOTIFY_CLIENT_SECRET
+npx wrangler deploy
+```
+
+`wrangler deploy` runs the client build, uploads `client/dist` as Workers Assets, deploys the Worker API, and auto-provisions the `PARTY_QUEUE_KV` namespace declared in `wrangler.jsonc` if it does not already exist.
+
+Configure the Spotify app redirect URI to the deployed Worker origin plus `/api/auth/callback`, or set the `SPOTIFY_REDIRECT_URI` Worker secret/variable to the exact callback URL. The Render blueprint remains in `render.yaml` as the legacy deployment until traffic is cut over.
 
 ## Provenance
 
