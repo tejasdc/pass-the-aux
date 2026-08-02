@@ -5,7 +5,9 @@ to the host's Spotify. They cannot skip, pause, or take over playback, and every
 pick passes a vibe check. Guests need no Spotify account, no AirPlay access, no
 WiFi - just the QR.
 
-**Live -> [party.tejas.nyc](https://party.tejas.nyc/)** · **Host -> [party.tejas.nyc/host](https://party.tejas.nyc/host)**
+**Live → [aux.tejas.nyc](https://aux.tejas.nyc/)**
+
+<p align="center"><img src="screenshots/app.png" width="340" alt="Pass the Aux — now playing and the up-next queue" /></p>
 
 [![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tejasdc/pass-the-aux)
 
