@@ -54,15 +54,34 @@ DONE (cont.):
   "Electric Love" strings, bg rgb(237,232,219), shapes present) at 430px and
   1390px. Client copy leads with the no-hijack value prop across meta/OG tags.
 
+IN PROGRESS — visualizer gallery redesign (design exploration, NOT yet in prod):
+- Direction chosen 2026-08-02: the now-playing hero becomes a **switchable
+  visualizer gallery** — multiple beat-synced visualizations guests tap to cycle
+  through, Winamp-preset style. Guests waiting to queue play with it. This
+  supersedes the single floating-shapes skin currently live.
+- Prototype: `design/moma-mockups/switcher.html` — tap-to-cycle across 5 presets
+  (Facet Floor / Scope / Plasma / Bars / Shapes), all driven by one beat clock,
+  in the facet aesthetic (crisp slanted tiles, bold black seams, Bricolage type —
+  the `3-facet.html` look Tejas liked). Other prototypes (facet-reactive,
+  facet-winamp, facet-viz, dancefloor) are candidate presets / earlier steps.
+- **Data path for reactivity (verified 2026-08-02)**: NO mic (Tejas's call), and
+  Spotify audio-analysis/audio-features are dead (403, deprecated Nov 2024). We
+  drive everything from a **synthesized beat clock**: BPM/energy/valence per track
+  from **ReccoBeats** (already fetched for the vibe check, worker line ~952,
+  cached one-fetch-per-track — nowhere near its rate limit), phase-locked to
+  Spotify `/me/player/currently-playing` `progress_ms` (not deprecated). Visuals
+  are choreographed to the beat, NOT true FFT/waveform reactivity — that's the
+  hard ceiling; be honest about it.
+- NEXT once Tejas signs off on the gallery: pick the preset set, then port into
+  `client/src` via Codex (real ReccoBeats tempo + progress_ms poll, tab-hidden
+  pause, reduced-motion fallback).
+
 PENDING (optional, no rush):
 1. **/host polish**: show End Party state on load instead of the stale
    "Continue with Spotify" button when already the bound host (cosmetic).
 2. **Full Render deletion**: suspended services cost nothing; delete them and
    remove `server/` + `render.yaml` from the repo whenever you're confident
    Cloudflare is stable.
-3. **Shape-vs-legibility tuning** (if desired): floating shapes occasionally
-   overlap queue rows; lower opacity or bias them toward margins if it reads
-   too busy at a real party.
 
 ## Architecture
 
