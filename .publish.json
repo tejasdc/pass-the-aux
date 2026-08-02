@@ -1,7 +1,7 @@
 {
   "slug": "electric-love",
   "title": "Electric Love",
-  "desc": "A Spotify party queue for house parties — guests scan a QR code, search, and add songs. Nobody can skip, pause, or wreck the playlist.",
+  "desc": "Ever shared your Spotify at a house party and watched someone play a song instead of queuing it? Here guests can only search and queue — and every pick has to pass the vibe check.",
   "external": "https://electric-love.onrender.com/",
   "level": "sovereign",
   "types": [
