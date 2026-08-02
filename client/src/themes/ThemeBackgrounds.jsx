@@ -2,6 +2,13 @@ import { useEffect, useMemo, useState } from 'react';
 
 const barCount = 22;
 const particleCount = 28;
+const cathodeTraceCount = 5;
+const rootThemeClassByVariant = {
+  afterglow: 'theme-afterglow',
+  cathode: 'theme-cathode',
+  vellum: 'theme-vellum',
+  holo: 'theme-holo',
+};
 
 function useMotionPaused() {
   const [isPaused, setIsPaused] = useState(() => {
@@ -89,6 +96,11 @@ export function FieldBackground({ track }) {
 export function BeatBackground({ track, variant }) {
   const isPaused = useMotionPaused();
   const { hasBeat, beatMs, beatOffsetMs, style } = useBeatStyle(track);
+  const rootThemeClass = rootThemeClassByVariant[variant];
+  const motionState = hasBeat && !isPaused ? 'running' : 'paused';
+  const exportedBeatStyle = rootThemeClass
+    ? `.theme-root.${rootThemeClass}{--theme-motion-state:${motionState};--beat-ms:${style['--beat-ms'] || '1000ms'};--bar-ms:${style['--bar-ms'] || '4000ms'};--viz-slow-ms:${style['--viz-slow-ms'] || '8000ms'};--beat-offset:${style['--beat-offset'] || '0ms'};--track-energy:${style['--track-energy']};--track-progress:${style['--track-progress']};--scope-peak-scale:${style['--scope-peak-scale']};--burst-alpha:${style['--burst-alpha']};}`
+    : '';
   const classes = [
     'beat-background',
     `beat-background-${variant}`,
@@ -98,6 +110,8 @@ export function BeatBackground({ track, variant }) {
 
   return (
     <div className={classes} style={style} aria-hidden="true">
+      {exportedBeatStyle && <style>{exportedBeatStyle}</style>}
+
       {variant === 'winamp' && (
         <div className="winamp-bars">
           {Array.from({ length: barCount }, (_, index) => (
@@ -147,6 +161,47 @@ export function BeatBackground({ track, variant }) {
           <div className="riso-ink riso-ink-teal"></div>
         </>
       )}
+
+      {variant === 'afterglow' && (
+        <>
+          <div className="afterglow-wash"></div>
+          <div className="afterglow-halo"></div>
+          <div className="afterglow-scan"></div>
+        </>
+      )}
+
+      {variant === 'cathode' && (
+        <>
+          <div className="cathode-graticule"></div>
+          <div className="cathode-sweep"></div>
+          <svg className="cathode-lissajous" viewBox="0 0 320 320" role="presentation">
+            {Array.from({ length: cathodeTraceCount }, (_, index) => (
+              <path
+                key={index}
+                d="M160 42 C262 42 278 124 206 160 C278 196 262 278 160 278 C58 278 42 196 114 160 C42 124 58 42 160 42Z"
+                style={{ '--trace-index': index }}
+              />
+            ))}
+            <circle cx="160" cy="160" r="5" />
+          </svg>
+        </>
+      )}
+
+      {variant === 'vellum' && (
+        <>
+          <div className="vellum-page-field"></div>
+          <div className="vellum-ornament vellum-ornament-left"></div>
+          <div className="vellum-ornament vellum-ornament-right"></div>
+        </>
+      )}
+
+      {variant === 'holo' && (
+        <>
+          <div className="holo-lanyard"></div>
+          <div className="holo-prism"></div>
+          <div className="holo-sheen"></div>
+        </>
+      )}
     </div>
   );
 }
@@ -165,4 +220,20 @@ export function GenerativeFlowBackground(props) {
 
 export function RisographBackground(props) {
   return <BeatBackground {...props} variant="risograph" />;
+}
+
+export function AfterglowBackground(props) {
+  return <BeatBackground {...props} variant="afterglow" />;
+}
+
+export function CathodeVectorscopeBackground(props) {
+  return <BeatBackground {...props} variant="cathode" />;
+}
+
+export function VellumHymnalBackground(props) {
+  return <BeatBackground {...props} variant="vellum" />;
+}
+
+export function HoloLaminateBackground(props) {
+  return <BeatBackground {...props} variant="holo" />;
 }

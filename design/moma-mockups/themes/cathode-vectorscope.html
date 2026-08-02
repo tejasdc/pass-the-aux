@@ -1,0 +1,1011 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>PASS THE AUX · CATHODE</title>
+  <meta name="theme-color" content="#04080a" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=VT323&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ============================================================
+       CATHODE — CRT vectorscope theme
+       References: Tektronix D11 5103N (Jerobeam Fenderson),
+       Winamp AVS SuperScope, Battlezone (1980) vector arcade,
+       P1 phosphor CRT lab equipment.
+       ============================================================ */
+
+    :root {
+      /* palette — P1 green phosphor + amber safety accent */
+      --void:        #04080a;   /* CRT bezel body */
+      --panel:       #061511;   /* interior panel */
+      --panel-lift:  #0a1c17;   /* raised elements */
+      --phosphor:    #7fff9c;   /* live green phosphor */
+      --phosphor-dim:#3f8a55;   /* dim traces / secondary */
+      --phosphor-ghost:#183a26; /* far dim / unfilled */
+      --amber:       #ffb547;   /* P3 amber — guest chip / warning */
+      --amber-dim:   #7a5320;
+      --rule:        #123024;   /* hairline dividers */
+      --shadow-glow: 0 0 10px rgba(127,255,156,0.35);
+      --text-glow:   0 0 6px rgba(127,255,156,0.55);
+      --text-glow-amber: 0 0 6px rgba(255,181,71,0.55);
+
+      /* type scale */
+      --f-display: "VT323", ui-monospace, monospace;
+      --f-body:    "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+
+    body {
+      margin: 0;
+      font-family: var(--f-body);
+      color: var(--phosphor);
+      background:
+        radial-gradient(120% 80% at 50% 0%, #0a1a15 0%, #010304 60%, #000 100%),
+        #000;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+      min-height: 100dvh;
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 12px 48px;
+    }
+
+    /* ==================== CRT bezel ==================== */
+    .crt {
+      position: relative;
+      width: 100%;
+      max-width: 430px;
+      border-radius: 22px;
+      background:
+        radial-gradient(100% 70% at 50% 0%, #0e211b 0%, #050d0a 60%, #030807 100%);
+      padding: 14px;
+      box-shadow:
+        0 0 0 1px #0d1b16 inset,
+        0 0 0 2px #020504 inset,
+        0 30px 60px -20px rgba(0,0,0,0.9),
+        0 0 60px -10px rgba(127,255,156,0.06);
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    /* subtle CRT vignette + bezel corner tab */
+    .crt::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(140% 90% at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+      pointer-events: none;
+      z-index: 3;
+      border-radius: inherit;
+    }
+
+    /* horizontal scanlines — very subtle */
+    .scanlines {
+      position: absolute; inset: 0;
+      background: repeating-linear-gradient(
+        to bottom,
+        rgba(127,255,156,0.03) 0px,
+        rgba(127,255,156,0.03) 1px,
+        transparent 1px,
+        transparent 3px
+      );
+      mix-blend-mode: screen;
+      pointer-events: none;
+      z-index: 4;
+      border-radius: inherit;
+    }
+
+    /* very faint animated horizontal sweep — a CRT tell */
+    .sweep {
+      position: absolute; left: 0; right: 0; top: 0;
+      height: 120px;
+      background: linear-gradient(to bottom,
+        transparent 0%,
+        rgba(127,255,156,0.045) 45%,
+        rgba(127,255,156,0.09) 50%,
+        rgba(127,255,156,0.045) 55%,
+        transparent 100%);
+      pointer-events: none;
+      z-index: 4;
+      opacity: 0.9;
+      animation: sweep 9s linear infinite;
+      will-change: transform;
+    }
+    @keyframes sweep {
+      0%   { transform: translateY(-120px); }
+      100% { transform: translateY(900px); }
+    }
+
+    .panel {
+      position: relative;
+      z-index: 2;
+      background: var(--panel);
+      border: 1px solid var(--rule);
+      border-radius: 12px;
+      padding: 14px 14px 10px;
+      box-shadow:
+        0 0 0 1px #030706 inset,
+        0 0 40px -10px rgba(127,255,156,0.08) inset;
+    }
+
+    /* ==================== header ==================== */
+    .scope-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 2px 8px;
+    }
+
+    .vents {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+    .vents span {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--phosphor);
+      box-shadow: 0 0 6px rgba(127,255,156,0.7);
+      animation: blink 2.2s steps(2) infinite;
+    }
+    .vents span:nth-child(2) { background: var(--amber); box-shadow: 0 0 6px rgba(255,181,71,0.6); animation-duration: 3s; }
+    .vents span:nth-child(3) { background: var(--phosphor-dim); box-shadow: 0 0 4px rgba(63,138,85,0.5); animation-duration: 4.6s; }
+    @keyframes blink { 0%,90% { opacity: 1; } 95% { opacity: 0.35; } 100% { opacity: 1; } }
+
+    .wordmark {
+      font-family: var(--f-display);
+      font-weight: 400;
+      font-size: 30px;
+      line-height: 1;
+      letter-spacing: 0.06em;
+      margin: 0;
+      color: var(--phosphor);
+      text-shadow: var(--text-glow), 0 0 18px rgba(127,255,156,0.35);
+      text-align: center;
+      white-space: nowrap;
+      /* tiny horizontal-hold jitter */
+      animation: hold 8s ease-in-out infinite;
+    }
+    @keyframes hold {
+      0%, 92%, 100% { transform: translateX(0); }
+      93% { transform: translateX(-1px); }
+      94% { transform: translateX(2px); }
+      95% { transform: translateX(-1px); }
+      96% { transform: translateX(0); }
+    }
+
+    .readout {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 2px;
+      font-family: var(--f-display);
+      color: var(--phosphor);
+      line-height: 1;
+    }
+    .readout-row {
+      display: flex; align-items: baseline; gap: 6px;
+    }
+    .readout .lbl {
+      font-family: var(--f-body);
+      font-size: 8.5px;
+      letter-spacing: 0.18em;
+      color: var(--phosphor-dim);
+      text-transform: uppercase;
+    }
+    .readout .val {
+      font-size: 22px;
+      text-shadow: var(--text-glow);
+    }
+    .readout .val.amber {
+      color: var(--amber);
+      text-shadow: var(--text-glow-amber);
+    }
+
+    /* ==================== hairline graticule divider ==================== */
+    .rule {
+      position: relative;
+      height: 10px;
+      margin: 2px 0;
+    }
+    .rule::before {
+      content: "";
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      height: 1px;
+      background: var(--rule);
+    }
+    .rule::after {
+      /* graticule tick marks */
+      content: "";
+      position: absolute;
+      top: calc(50% - 3px); left: 0; right: 0;
+      height: 6px;
+      background-image: repeating-linear-gradient(
+        to right,
+        var(--rule) 0, var(--rule) 1px,
+        transparent 1px, transparent 20px
+      );
+    }
+
+    /* ==================== search / queue input ==================== */
+    .search-row {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      align-items: stretch;
+      gap: 8px;
+      padding: 8px 0 6px;
+    }
+    .prompt {
+      font-family: var(--f-display);
+      font-size: 22px;
+      color: var(--phosphor);
+      text-shadow: var(--text-glow);
+      align-self: center;
+      padding-left: 4px;
+      animation: caret 1.1s steps(2) infinite;
+    }
+    @keyframes caret { 0%,50% { opacity: 1; } 51%,100% { opacity: 0.15; } }
+
+    .search-input {
+      background: var(--panel-lift);
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      color: var(--phosphor);
+      font-family: var(--f-body);
+      font-size: 11px;
+      letter-spacing: 0.14em;
+      padding: 10px 12px;
+      text-transform: uppercase;
+      outline: none;
+      caret-color: var(--phosphor);
+      box-shadow: 0 0 0 1px #020706 inset;
+    }
+    .search-input::placeholder {
+      color: var(--phosphor-dim);
+      opacity: 0.8;
+      letter-spacing: 0.14em;
+    }
+    .search-input:focus {
+      border-color: var(--phosphor-dim);
+      box-shadow:
+        0 0 0 1px var(--phosphor-dim) inset,
+        0 0 10px rgba(127,255,156,0.15);
+    }
+
+    .queue-btn {
+      background: transparent;
+      color: var(--phosphor);
+      border: 1px solid var(--phosphor-dim);
+      border-radius: 3px;
+      font-family: var(--f-body);
+      font-weight: 700;
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      padding: 0 14px;
+      cursor: pointer;
+      text-shadow: var(--text-glow);
+      transition: all 120ms ease-out;
+    }
+    .queue-btn:hover, .queue-btn:focus-visible {
+      border-color: var(--phosphor);
+      background: rgba(127,255,156,0.06);
+      box-shadow: 0 0 12px rgba(127,255,156,0.35);
+      outline: none;
+    }
+    .queue-btn:active { transform: translateY(1px); }
+
+    /* ==================== section label ==================== */
+    .section-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--phosphor-dim);
+      padding: 8px 0 6px;
+    }
+    .section-label .lead {
+      color: var(--phosphor);
+      text-shadow: var(--text-glow);
+    }
+    .section-label .dim { color: var(--phosphor-dim); }
+
+    /* ==================== now playing ==================== */
+    .now-row {
+      display: grid;
+      grid-template-columns: 96px 1fr;
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .art-frame {
+      position: relative;
+      width: 96px; height: 96px;
+      border: 1px solid var(--rule);
+      border-radius: 3px;
+      overflow: hidden;
+      background: #000;
+      box-shadow:
+        0 0 0 1px #010504 inset,
+        0 0 16px -6px rgba(127,255,156,0.35);
+    }
+    .art-frame img {
+      width: 100%; height: 100%;
+      display: block;
+      object-fit: cover;
+      /* phosphor tint — the risky choice: art reads as "on the CRT" */
+      filter: saturate(0.6) contrast(1.05) brightness(0.92);
+    }
+    /* green channel wash + scanlines over art */
+    .art-frame::after {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(127,255,156,0.14), rgba(127,255,156,0.14)),
+        repeating-linear-gradient(to bottom,
+          rgba(0,0,0,0.15) 0px, rgba(0,0,0,0.15) 1px,
+          transparent 1px, transparent 3px);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+    /* corner registration marks */
+    .art-frame::before {
+      content: "";
+      position: absolute; inset: 4px;
+      border: 1px solid rgba(127,255,156,0.18);
+      border-radius: 2px;
+      pointer-events: none;
+      z-index: 2;
+      background:
+        linear-gradient(to right, var(--phosphor) 6px, transparent 6px) top left / 6px 1px no-repeat,
+        linear-gradient(to bottom, var(--phosphor) 6px, transparent 6px) top left / 1px 6px no-repeat,
+        linear-gradient(to left, var(--phosphor) 6px, transparent 6px) top right / 6px 1px no-repeat,
+        linear-gradient(to bottom, var(--phosphor) 6px, transparent 6px) top right / 1px 6px no-repeat,
+        linear-gradient(to right, var(--phosphor) 6px, transparent 6px) bottom left / 6px 1px no-repeat,
+        linear-gradient(to top, var(--phosphor) 6px, transparent 6px) bottom left / 1px 6px no-repeat,
+        linear-gradient(to left, var(--phosphor) 6px, transparent 6px) bottom right / 6px 1px no-repeat,
+        linear-gradient(to top, var(--phosphor) 6px, transparent 6px) bottom right / 1px 6px no-repeat;
+    }
+
+    .now-meta {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-width: 0;
+      padding-top: 2px;
+    }
+    .now-title {
+      font-family: var(--f-display);
+      font-size: 26px;
+      line-height: 1.05;
+      color: var(--phosphor);
+      text-shadow: var(--text-glow);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .now-artist {
+      font-family: var(--f-body);
+      font-size: 11px;
+      letter-spacing: 0.18em;
+      color: var(--phosphor-dim);
+      text-transform: uppercase;
+      margin-top: 2px;
+    }
+
+    .progress { margin-top: 8px; }
+    .progress-track {
+      position: relative;
+      height: 8px;
+      background: var(--panel-lift);
+      border: 1px solid var(--rule);
+      border-radius: 1px;
+      overflow: hidden;
+    }
+    .progress-fill {
+      position: absolute; inset: 0 auto 0 0;
+      width: 34%;
+      background: linear-gradient(to right,
+        rgba(127,255,156,0.35),
+        rgba(127,255,156,0.95));
+      box-shadow: 0 0 8px rgba(127,255,156,0.5);
+    }
+    /* tick graticule overlay */
+    .progress-track::after {
+      content: "";
+      position: absolute; inset: 0;
+      background-image: repeating-linear-gradient(to right,
+        rgba(0,0,0,0.55) 0, rgba(0,0,0,0.55) 1px,
+        transparent 1px, transparent 10%);
+      pointer-events: none;
+    }
+    .progress-fill::after {
+      /* trace-head marker dot */
+      content: "";
+      position: absolute; right: -3px; top: 50%;
+      width: 6px; height: 14px;
+      transform: translateY(-50%);
+      background: var(--phosphor);
+      box-shadow: 0 0 10px var(--phosphor), 0 0 3px #fff;
+    }
+    .time-row {
+      display: flex; justify-content: space-between;
+      font-family: var(--f-display);
+      font-size: 16px;
+      line-height: 1;
+      color: var(--phosphor);
+      margin-top: 6px;
+      text-shadow: var(--text-glow);
+    }
+
+    /* ==================== the signature: XY vectorscope ==================== */
+    .scope-frame {
+      position: relative;
+      margin-top: 12px;
+      background: #010504;
+      border: 1px solid var(--rule);
+      border-radius: 4px;
+      padding: 10px 10px 8px;
+      box-shadow:
+        0 0 0 1px #020706 inset,
+        0 0 30px -8px rgba(127,255,156,0.25);
+      overflow: hidden;
+    }
+    .scope-labels {
+      display: flex; justify-content: space-between; align-items: baseline;
+      font-family: var(--f-body);
+      font-size: 9px;
+      letter-spacing: 0.24em;
+      text-transform: uppercase;
+      color: var(--phosphor-dim);
+      padding-bottom: 6px;
+    }
+    .scope-labels .live {
+      color: var(--amber);
+      text-shadow: var(--text-glow-amber);
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .scope-labels .live::before {
+      content: ""; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 6px var(--amber);
+      animation: blink 1.4s steps(2) infinite;
+    }
+    .scope-canvas-wrap {
+      position: relative;
+      aspect-ratio: 5 / 2;
+      background: #01110b;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      overflow: hidden;
+      /* graticule grid — divided into 10 x 4 */
+      background-image:
+        linear-gradient(to right, rgba(127,255,156,0.09) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(127,255,156,0.09) 1px, transparent 1px);
+      background-size: 10% 25%;
+      background-position: 0 0;
+    }
+    .scope-canvas-wrap::before,
+    .scope-canvas-wrap::after {
+      /* center cross */
+      content: "";
+      position: absolute;
+      background: rgba(127,255,156,0.22);
+      pointer-events: none;
+    }
+    .scope-canvas-wrap::before {
+      left: 0; right: 0; top: 50%; height: 1px;
+    }
+    .scope-canvas-wrap::after {
+      top: 0; bottom: 0; left: 50%; width: 1px;
+    }
+    #scope {
+      display: block;
+      width: 100%; height: 100%;
+    }
+
+    .scope-foot {
+      display: flex; justify-content: space-between;
+      font-family: var(--f-body);
+      font-size: 8.5px;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--phosphor-dim);
+      padding-top: 6px;
+    }
+
+    /* ==================== queue ==================== */
+    .queue-list {
+      list-style: none; margin: 0; padding: 0;
+      display: flex; flex-direction: column;
+      gap: 1px;
+    }
+    .queue-row {
+      display: grid;
+      grid-template-columns: 26px 42px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 4px;
+      border-top: 1px dashed var(--rule);
+      position: relative;
+    }
+    .queue-row:first-child { border-top: none; }
+    .queue-row:hover { background: rgba(127,255,156,0.03); }
+
+    .idx {
+      font-family: var(--f-display);
+      font-size: 20px;
+      color: var(--phosphor-dim);
+      text-align: right;
+      line-height: 1;
+      letter-spacing: 0.05em;
+    }
+
+    .thumb {
+      position: relative;
+      width: 42px; height: 42px;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      overflow: hidden;
+      background: #000;
+    }
+    .thumb img {
+      width: 100%; height: 100%;
+      display: block;
+      object-fit: cover;
+      filter: saturate(0.55) contrast(1.02) brightness(0.9);
+    }
+    .thumb::after {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(rgba(127,255,156,0.16), rgba(127,255,156,0.16)),
+        repeating-linear-gradient(to bottom,
+          rgba(0,0,0,0.2) 0, rgba(0,0,0,0.2) 1px,
+          transparent 1px, transparent 3px);
+      mix-blend-mode: screen;
+      pointer-events: none;
+    }
+
+    .q-meta { min-width: 0; }
+    .q-title {
+      font-family: var(--f-body);
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--phosphor);
+      letter-spacing: 0.02em;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      text-shadow: 0 0 4px rgba(127,255,156,0.35);
+      line-height: 1.15;
+    }
+    .q-sub {
+      display: flex; align-items: center; gap: 8px;
+      margin-top: 3px;
+      font-family: var(--f-body);
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--phosphor-dim);
+      min-width: 0;
+    }
+    .q-artist {
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .chip {
+      display: inline-flex; align-items: center;
+      font-family: var(--f-body);
+      font-size: 9.5px;
+      letter-spacing: 0.18em;
+      text-transform: lowercase;
+      color: var(--amber);
+      border: 1px solid var(--amber-dim);
+      border-radius: 2px;
+      padding: 2px 6px;
+      background: rgba(255,181,71,0.05);
+      text-shadow: 0 0 4px rgba(255,181,71,0.4);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .dur {
+      font-family: var(--f-display);
+      font-size: 18px;
+      line-height: 1;
+      color: var(--phosphor);
+      text-shadow: var(--text-glow);
+      text-align: right;
+      min-width: 44px;
+      letter-spacing: 0.02em;
+    }
+
+    /* ==================== footer readout ==================== */
+    .crt-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 4px 2px;
+      font-family: var(--f-body);
+      font-size: 8.5px;
+      letter-spacing: 0.28em;
+      text-transform: uppercase;
+      color: var(--phosphor-dim);
+    }
+    .crt-footer .rec {
+      display: inline-flex; align-items: center; gap: 5px;
+      color: var(--amber);
+    }
+    .crt-footer .rec::before {
+      content: ""; width: 6px; height: 6px; border-radius: 50%;
+      background: var(--amber);
+      box-shadow: 0 0 6px var(--amber);
+      animation: blink 1.6s steps(2) infinite;
+    }
+
+    /* ==================== responsive ==================== */
+    @media (min-width: 500px) {
+      .crt { padding: 18px; }
+    }
+    @media (min-width: 720px) {
+      body { padding: 60px 20px 80px; }
+    }
+
+    /* reduced motion respect */
+    @media (prefers-reduced-motion: reduce) {
+      .sweep, .vents span, .prompt, .crt-footer .rec::before, .scope-labels .live::before { animation: none !important; }
+      .wordmark { animation: none !important; }
+    }
+
+    /* ==================== focus visibility ==================== */
+    :focus-visible {
+      outline: 1px dashed var(--phosphor);
+      outline-offset: 2px;
+    }
+  </style>
+</head>
+<body>
+  <main class="crt" role="main" aria-label="Pass The Aux party queue">
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="sweep" aria-hidden="true"></div>
+
+    <div class="panel">
+      <!-- ============== HEADER ============== -->
+      <header class="scope-header">
+        <div class="vents" aria-hidden="true">
+          <span></span><span></span><span></span>
+        </div>
+        <h1 class="wordmark">PASS THE AUX</h1>
+        <div class="readout" aria-label="Tempo and energy of current track">
+          <div class="readout-row">
+            <span class="lbl">BPM</span>
+            <span class="val" id="bpm-val">128</span>
+          </div>
+          <div class="readout-row">
+            <span class="lbl">ENERGY</span>
+            <span class="val amber">.82</span>
+          </div>
+        </div>
+      </header>
+
+      <div class="rule" aria-hidden="true"></div>
+
+      <!-- ============== SEARCH ============== -->
+      <div class="search-row">
+        <span class="prompt" aria-hidden="true">▸</span>
+        <label class="sr-only" for="q" style="position:absolute;left:-9999px">Search a track or artist</label>
+        <input class="search-input" id="q" placeholder="SEARCH TRACK OR ARTIST" autocomplete="off" />
+        <button class="queue-btn" type="button">QUEUE +</button>
+      </div>
+
+      <div class="rule" aria-hidden="true"></div>
+
+      <!-- ============== NOW PLAYING ============== -->
+      <section aria-label="Now playing">
+        <div class="section-label">
+          <span class="lead">◤ NOW PLAYING</span>
+          <span class="dim">CH-1</span>
+        </div>
+
+        <div class="now-row">
+          <div class="art-frame">
+            <img
+              src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f"
+              alt="Album art"
+              loading="eager"
+            />
+          </div>
+          <div class="now-meta">
+            <div>
+              <div class="now-title">Midnight City</div>
+              <div class="now-artist">M83 · Hurry Up, We're Dreaming</div>
+            </div>
+
+            <div class="progress" aria-label="Playback progress">
+              <div class="progress-track">
+                <div class="progress-fill" id="progress-fill"></div>
+              </div>
+              <div class="time-row">
+                <span class="time" id="time-current">01:24</span>
+                <span class="time-total">04:03</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- The signature: live XY-mode Lissajous vectorscope -->
+        <div class="scope-frame" aria-hidden="true">
+          <div class="scope-labels">
+            <span>XY · LISSAJOUS</span>
+            <span class="live">LIVE · 128 BPM</span>
+          </div>
+          <div class="scope-canvas-wrap">
+            <canvas id="scope" width="820" height="328"></canvas>
+          </div>
+          <div class="scope-foot">
+            <span>2V/DIV · 5ms/DIV</span>
+            <span>P1 PHOSPHOR</span>
+          </div>
+        </div>
+      </section>
+
+      <div class="rule" aria-hidden="true" style="margin-top: 14px;"></div>
+
+      <!-- ============== UP NEXT ============== -->
+      <section aria-label="Up next">
+        <div class="section-label">
+          <span class="lead">◤ UP NEXT</span>
+          <span class="dim">04 IN QUEUE</span>
+        </div>
+
+        <ol class="queue-list">
+          <li class="queue-row">
+            <span class="idx">02</span>
+            <div class="thumb">
+              <img src="https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0" alt="" />
+            </div>
+            <div class="q-meta">
+              <div class="q-title">Redbone</div>
+              <div class="q-sub">
+                <span class="q-artist">Childish Gambino</span>
+                <span class="chip">« tejas »</span>
+              </div>
+            </div>
+            <div class="dur">5:26</div>
+          </li>
+
+          <li class="queue-row">
+            <span class="idx">03</span>
+            <div class="thumb">
+              <img src="https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946" alt="" />
+            </div>
+            <div class="q-meta">
+              <div class="q-title">Passionfruit</div>
+              <div class="q-sub">
+                <span class="q-artist">Drake</span>
+                <span class="chip">« marya »</span>
+              </div>
+            </div>
+            <div class="dur">4:59</div>
+          </li>
+
+          <li class="queue-row">
+            <span class="idx">04</span>
+            <div class="thumb">
+              <img src="https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae2432651" alt="" />
+            </div>
+            <div class="q-meta">
+              <div class="q-title">The Less I Know The Better</div>
+              <div class="q-sub">
+                <span class="q-artist">Tame Impala</span>
+                <span class="chip">« jules »</span>
+              </div>
+            </div>
+            <div class="dur">3:36</div>
+          </li>
+
+          <li class="queue-row">
+            <span class="idx">05</span>
+            <div class="thumb">
+              <img src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="" />
+            </div>
+            <div class="q-meta">
+              <div class="q-title">Sunflower</div>
+              <div class="q-sub">
+                <span class="q-artist">Post Malone, Swae Lee</span>
+                <span class="chip">« ravi »</span>
+              </div>
+            </div>
+            <div class="dur">2:38</div>
+          </li>
+        </ol>
+      </section>
+
+      <div class="rule" aria-hidden="true" style="margin-top: 10px;"></div>
+
+      <!-- ============== FOOTER READOUT ============== -->
+      <footer class="crt-footer">
+        <span>MODEL D-11 · 5103N</span>
+        <span class="rec">REC · CH-1</span>
+        <span>V.CATHODE.001</span>
+      </footer>
+    </div>
+  </main>
+
+  <script>
+    /* ============================================================
+       XY-mode Lissajous vectorscope
+       ------------------------------------------------------------
+       Real reactivity in the production app is driven by:
+         beat-clock  = f(track.bpm, playhead)
+         energy      = ReccoBeats energy for the current track
+       Here we hard-code BPM = 128 and energy = 0.82 to demonstrate
+       the visual mapping. Frequency ratio evolves through classic
+       Lissajous ratios (3:2, 4:3, 5:4, 5:3) synced to a phrase
+       length of 16 beats, so the figure "settles" on downbeats.
+       ============================================================ */
+    (function () {
+      const cvs = document.getElementById('scope');
+      if (!cvs) return;
+      const ctx = cvs.getContext('2d');
+
+      // handle HiDPI
+      const DPR = Math.min(window.devicePixelRatio || 1, 2);
+      function fit() {
+        const rect = cvs.getBoundingClientRect();
+        cvs.width  = Math.floor(rect.width  * DPR);
+        cvs.height = Math.floor(rect.height * DPR);
+      }
+      fit();
+      window.addEventListener('resize', fit);
+
+      // Track parameters (in production: read from track + ReccoBeats)
+      const BPM     = 128;
+      const ENERGY  = 0.82;
+      const BEAT_MS = 60000 / BPM;             // ~468.75 ms per beat
+      const PHRASE_BEATS = 16;
+
+      // Lissajous ratio program — 4 phrases of 16 beats each
+      const RATIOS = [
+        [3, 2],
+        [4, 3],
+        [5, 4],
+        [5, 3]
+      ];
+
+      const start = performance.now();
+
+      // seed the canvas dark so first frames don't flash
+      ctx.fillStyle = '#010f08';
+      ctx.fillRect(0, 0, cvs.width, cvs.height);
+
+      function beatEnv(t) {
+        // 0..1 pulse decaying between beats
+        const phase = (t % BEAT_MS) / BEAT_MS;
+        return Math.pow(1 - phase, 2.2);
+      }
+
+      function draw(now) {
+        const t   = now - start;
+        const w   = cvs.width;
+        const h   = cvs.height;
+
+        // Phosphor decay — semi-transparent fill each frame
+        ctx.fillStyle = 'rgba(1, 15, 8, 0.16)';
+        ctx.fillRect(0, 0, w, h);
+
+        // Pick ratio for the current phrase
+        const beatIdx   = Math.floor(t / BEAT_MS);
+        const phraseIdx = Math.floor(beatIdx / PHRASE_BEATS) % RATIOS.length;
+        const [a, b]    = RATIOS[phraseIdx];
+
+        // beat envelope grows amplitude briefly on each downbeat
+        const env  = beatEnv(t);
+        const beat = 0.85 + env * 0.35 * ENERGY;
+
+        // slowly drifting phase delta -> curve opens/closes
+        const delta = (t / 4000) % (Math.PI * 2);
+
+        // center + radius
+        const cx = w / 2;
+        const cy = h / 2;
+        const R  = Math.min(w, h) * 0.36 * beat;
+
+        // secondary time driver — inside the trace we walk θ 0..2π*STEPS
+        const STEPS = 720;
+        const omega = 2 * Math.PI;
+
+        // subtle horizontal jitter — CRT tell
+        const jitter = (Math.sin(t / 37) + Math.sin(t / 91)) * 0.4;
+
+        // Draw the trace as a single continuous path
+        ctx.lineWidth   = Math.max(1.2, 1.4 * DPR);
+        ctx.strokeStyle = 'rgba(127,255,156,0.85)';
+        ctx.shadowBlur  = 12 * DPR;
+        ctx.shadowColor = 'rgba(127,255,156,0.55)';
+        ctx.beginPath();
+
+        // Slow rotation of the whole figure — makes it feel "alive"
+        const rot = t / 6500;
+
+        for (let i = 0; i <= STEPS; i++) {
+          const p = (i / STEPS) * omega;
+          const x0 = Math.sin(a * p + delta);
+          const y0 = Math.sin(b * p);
+
+          // rotate
+          const cs = Math.cos(rot), sn = Math.sin(rot);
+          const xr = x0 * cs - y0 * sn;
+          const yr = x0 * sn + y0 * cs;
+
+          const px = cx + xr * R + jitter;
+          const py = cy + yr * R * 0.9;   // slightly squashed for the 5:2 aspect
+
+          if (i === 0) ctx.moveTo(px, py);
+          else         ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Draw a brighter "electron beam head" — small dot near end-of-trace
+        const headP = (Math.PI * 2) * (0.02 + env * 0.05);
+        const hx0 = Math.sin(a * headP + delta);
+        const hy0 = Math.sin(b * headP);
+        const cs = Math.cos(rot), sn = Math.sin(rot);
+        const hx = cx + (hx0 * cs - hy0 * sn) * R + jitter;
+        const hy = cy + (hx0 * sn + hy0 * cs) * R * 0.9;
+
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(220,255,225,0.95)';
+        ctx.shadowBlur = 18 * DPR;
+        ctx.shadowColor = 'rgba(180,255,200,0.9)';
+        ctx.arc(hx, hy, 2.2 * DPR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // reset shadow so scan trace next frame doesn't over-bloom the fill
+        ctx.shadowBlur = 0;
+
+        raf = requestAnimationFrame(draw);
+      }
+
+      let raf = requestAnimationFrame(draw);
+
+      // Also animate the progress-fill so the mockup feels alive
+      const fill = document.getElementById('progress-fill');
+      const timeEl = document.getElementById('time-current');
+      const total = 4 * 60 + 3; // 04:03
+      let current = 1 * 60 + 24; // 01:24
+      const pStart = performance.now();
+      let last = pStart;
+      function progressTick(now) {
+        const dt = (now - last) / 1000;
+        last = now;
+        current = Math.min(total, current + dt);
+        if (current >= total) current = 1 * 60 + 24; // loop back for the demo
+        const pct = (current / total) * 100;
+        if (fill) fill.style.width = pct + '%';
+        const mm = String(Math.floor(current / 60)).padStart(2, '0');
+        const ss = String(Math.floor(current % 60)).padStart(2, '0');
+        if (timeEl) timeEl.textContent = `${mm}:${ss}`;
+        requestAnimationFrame(progressTick);
+      }
+      requestAnimationFrame(progressTick);
+
+      // Reduced motion — freeze after one frame
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        cancelAnimationFrame(raf);
+      }
+    })();
+  </script>
+</body>
+</html>

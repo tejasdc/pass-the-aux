@@ -1,0 +1,969 @@
+<!--
+  PASS THE AUX — Vellum Hymnal
+  A party queue reimagined as an illuminated medieval codex.
+  References: Book of Kells · Lindisfarne Gospels · Très Riches Heures du Duc de Berry ·
+  Trinity Apocalypse (drolleries) · Winchester Bible (rubrication).
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <meta name="theme-color" content="#f2e3c4" />
+  <title>Pass the Aux — Vellum Hymnal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Cinzel+Decorative:wght@400;700;900&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IM+Fell+English+SC&family=IM+Fell+DW+Pica:ital@0;1&display=swap" rel="stylesheet">
+
+  <style>
+    /* ── PALETTE ─────────────────────────────────────────────────────── */
+    :root {
+      --vellum-1:      #f4e6c6;   /* raw parchment */
+      --vellum-2:      #ecd7a8;   /* aged fold */
+      --vellum-3:      #d9c188;   /* dark edge */
+      --vellum-shadow: rgba(58, 32, 12, 0.18);
+      --ink:           #1c1108;   /* iron-gall */
+      --ink-soft:      #3a2513;
+      --rubric:        #a3231a;   /* vermillion */
+      --rubric-deep:   #7a1a13;
+      --lapis:         #1c3d7a;   /* ultramarine */
+      --lapis-deep:    #12275a;
+      --verdigris:     #476a3d;
+      --gold-1:        #d4a83a;
+      --gold-2:        #b98b1e;
+      --gold-3:        #f2d97a;
+      --gold-shadow:   rgba(90, 62, 8, 0.55);
+
+      /* live beat variables — mutated by JS */
+      --beat-phase: 0;      /* 0..1 within a beat */
+      --beat-energy: 0.68;  /* 0..1 track energy */
+      --downbeat-pulse: 0;  /* 0..1 spike on beat 1 of bar */
+      --shimmer-x: 0%;      /* animated shimmer position */
+    }
+
+    /* ── RESET & BASE ────────────────────────────────────────────────── */
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    html, body {
+      background: #2a1e10;
+      min-height: 100%;
+      color: var(--ink);
+      font-family: 'EB Garamond', Georgia, serif;
+      font-size: 16px;
+      line-height: 1.5;
+      overflow-x: hidden;
+    }
+
+    body {
+      display: flex;
+      justify-content: center;
+      padding: 24px 0 64px;
+      background:
+        radial-gradient(circle at 30% 20%, #4a3520 0%, #2a1e10 55%, #150c05 100%);
+    }
+
+    /* ── FOLIO ───────────────────────────────────────────────────────── */
+    .folio {
+      width: 100%;
+      max-width: 430px;
+      min-height: 900px;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 20% 15%, rgba(255,248,220,0.55), transparent 55%),
+        radial-gradient(ellipse at 85% 85%, rgba(180,140,80,0.18), transparent 60%),
+        linear-gradient(158deg, var(--vellum-1) 0%, var(--vellum-2) 55%, var(--vellum-3) 100%);
+      box-shadow:
+        0 40px 80px -20px rgba(0,0,0,0.7),
+        0 12px 22px rgba(0,0,0,0.35),
+        inset 0 0 0 1px rgba(60,30,10,0.15),
+        inset 0 0 60px rgba(120,80,30,0.18);
+      padding: 22px 22px 40px;
+      overflow: hidden;
+    }
+
+    /* Parchment grain — SVG noise overlay */
+    .folio::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.35  0 0 0 0 0.22  0 0 0 0 0.08  0 0 0 0.35 0'/></filter><rect width='100%' height='100%' filter='url(%23n)' opacity='0.55'/></svg>");
+      mix-blend-mode: multiply;
+      opacity: 0.35;
+      z-index: 1;
+    }
+
+    /* Age spots + water rings */
+    .folio::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 78%, rgba(120, 70, 20, 0.22) 0, transparent 3.5%),
+        radial-gradient(circle at 82% 12%, rgba(140, 90, 30, 0.18) 0, transparent 4.5%),
+        radial-gradient(circle at 68% 46%, rgba(120, 60, 20, 0.14) 0, transparent 2.8%),
+        radial-gradient(circle at 24% 32%, rgba(100, 50, 15, 0.12) 0, transparent 2.2%),
+        radial-gradient(circle at 55% 92%, rgba(120, 60, 20, 0.16) 0, transparent 3.2%);
+      z-index: 2;
+    }
+
+    .page-content { position: relative; z-index: 5; }
+
+    /* Corner ornaments (SVG) */
+    .corner {
+      position: absolute;
+      width: 78px; height: 78px;
+      color: var(--lapis-deep);
+      opacity: 0.85;
+      z-index: 4;
+      pointer-events: none;
+    }
+    .corner.tl { top: 6px;  left: 6px; }
+    .corner.tr { top: 6px;  right: 6px; transform: scaleX(-1); }
+    .corner.bl { bottom: 6px; left: 6px; transform: scaleY(-1); }
+    .corner.br { bottom: 6px; right: 6px; transform: scale(-1,-1); }
+
+    /* Left rule (like a hand-inked margin line) */
+    .margin-rule {
+      position: absolute;
+      top: 92px; bottom: 32px;
+      left: 44px;
+      width: 1px;
+      background: linear-gradient(to bottom, transparent, var(--rubric) 6%, var(--rubric) 94%, transparent);
+      opacity: 0.42;
+      z-index: 3;
+    }
+    .margin-rule.right {
+      left: auto; right: 44px;
+    }
+
+    /* ── INCIPIT (Header) ────────────────────────────────────────────── */
+    .incipit {
+      text-align: center;
+      padding: 6px 0 14px;
+      border-bottom: 1.5px double var(--ink);
+      margin-bottom: 16px;
+      position: relative;
+    }
+    .folio-mark {
+      font-family: 'IM Fell English SC', serif;
+      font-size: 10px;
+      letter-spacing: 0.28em;
+      color: var(--rubric);
+      margin-bottom: 6px;
+    }
+    .wordmark {
+      font-family: 'UnifrakturMaguntia', serif;
+      font-weight: 400;
+      font-size: 38px;
+      line-height: 1;
+      color: var(--ink);
+      letter-spacing: 0.02em;
+      margin: 2px 0 6px;
+      display: inline-block;
+      position: relative;
+    }
+    /* First letter of wordmark illuminated */
+    .wordmark .illum {
+      color: var(--rubric);
+      text-shadow:
+        0 0 0.5px rgba(163,35,26,0.4),
+        1px 1px 0 rgba(0,0,0,0.08);
+    }
+
+    .tempus-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 12px 4px;
+      border: 1px solid var(--ink);
+      border-radius: 2px;
+      background:
+        linear-gradient(180deg, rgba(255,240,190,0.4), rgba(200,160,80,0.15));
+      font-family: 'IM Fell English SC', serif;
+      font-size: 10px;
+      letter-spacing: 0.22em;
+      color: var(--ink);
+      margin-top: 4px;
+      position: relative;
+    }
+    .tempus-badge .rub { color: var(--rubric); }
+    .tempus-badge .bpm-num {
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 700;
+      font-size: 13px;
+      color: var(--ink);
+    }
+
+    /* Little pulsating manicule (index-pointing hand) */
+    .manicule {
+      display: inline-block;
+      width: 14px; height: 14px;
+      color: var(--rubric);
+      vertical-align: middle;
+      margin-right: 3px;
+      transform: scale(calc(1 + var(--beat-phase) * 0.12));
+      transition: transform 60ms linear;
+    }
+
+    /* ── SCRIPTORIUM (Search) ────────────────────────────────────────── */
+    .scriptorium {
+      display: flex;
+      gap: 8px;
+      margin: 6px 6px 20px;
+      align-items: stretch;
+    }
+    .quill-wrap {
+      flex: 1;
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(255,248,220,0.55), rgba(220,190,130,0.25));
+      border: 1px solid var(--ink);
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.4),
+        inset 0 -1px 0 rgba(0,0,0,0.08),
+        2px 2px 0 rgba(60,30,10,0.15);
+      display: flex;
+      align-items: center;
+      padding: 0 10px 0 8px;
+    }
+    .quill-icon {
+      width: 18px; height: 18px;
+      color: var(--ink);
+      opacity: 0.75;
+      flex-shrink: 0;
+      margin-right: 6px;
+    }
+    .quill-input {
+      flex: 1;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-family: 'IM Fell DW Pica', 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 15px;
+      color: var(--ink);
+      padding: 10px 4px;
+    }
+    .quill-input::placeholder {
+      color: var(--ink-soft);
+      opacity: 0.6;
+    }
+    .scribe-btn {
+      background:
+        linear-gradient(180deg, var(--rubric), var(--rubric-deep));
+      color: var(--vellum-1);
+      border: 1px solid var(--ink);
+      padding: 0 14px;
+      font-family: 'IM Fell English SC', serif;
+      font-size: 11px;
+      letter-spacing: 0.16em;
+      cursor: pointer;
+      box-shadow:
+        inset 0 1px 0 rgba(255,220,180,0.4),
+        inset 0 -1px 2px rgba(0,0,0,0.35),
+        2px 2px 0 rgba(60,30,10,0.2);
+      text-shadow: 0 1px 0 rgba(0,0,0,0.35);
+      transition: transform 120ms ease;
+    }
+    .scribe-btn:hover { transform: translate(-1px,-1px); }
+    .scribe-btn:active { transform: translate(1px,1px); box-shadow: inset 0 1px 3px rgba(0,0,0,0.5); }
+
+    /* ── SECTION HEADER (Rubric) ─────────────────────────────────────── */
+    .rubric-head {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 8px 12px;
+    }
+    .rubric-head .flourish {
+      flex: 1; height: 1px;
+      background: linear-gradient(to right, var(--ink), transparent);
+      opacity: 0.4;
+    }
+    .rubric-head .flourish.left {
+      background: linear-gradient(to left, var(--ink), transparent);
+    }
+    .rubric-head h2 {
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 700;
+      color: var(--rubric);
+      font-size: 12px;
+      letter-spacing: 0.32em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .rubric-head h2 sub {
+      font-family: 'IM Fell English SC', serif;
+      font-size: 9px;
+      color: var(--ink-soft);
+      letter-spacing: 0.24em;
+      margin-left: 6px;
+      vertical-align: baseline;
+    }
+
+    /* ── NOW SOUNDING (Now Playing) ──────────────────────────────────── */
+    .nowplaying {
+      margin: 0 6px 22px;
+      padding: 16px 14px 18px;
+      background:
+        linear-gradient(180deg, rgba(255,245,210,0.5), rgba(210,175,110,0.18));
+      border: 1px solid var(--ink);
+      position: relative;
+      box-shadow:
+        inset 0 1px 0 rgba(255,255,255,0.5),
+        2px 3px 0 rgba(60,30,10,0.18);
+    }
+    /* corner filigree */
+    .nowplaying .np-corner {
+      position: absolute;
+      width: 22px; height: 22px;
+      color: var(--gold-2);
+      opacity: 0.9;
+    }
+    .np-corner.tl { top: -4px; left: -4px; }
+    .np-corner.tr { top: -4px; right: -4px; transform: scaleX(-1); }
+    .np-corner.bl { bottom: -4px; left: -4px; transform: scaleY(-1); }
+    .np-corner.br { bottom: -4px; right: -4px; transform: scale(-1,-1); }
+
+    .np-main {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    /* Illuminated capital + album art */
+    .illumination {
+      position: relative;
+      width: 132px; height: 132px;
+      flex-shrink: 0;
+    }
+    .illumination .frame {
+      position: absolute; inset: 0;
+      background:
+        linear-gradient(135deg, var(--gold-3), var(--gold-1) 40%, var(--gold-2) 100%);
+      padding: 5px;
+      box-shadow:
+        0 4px 10px rgba(60,30,10,0.35),
+        inset 0 0 0 1px rgba(90,60,15,0.6);
+    }
+    .illumination .frame::before {
+      /* gold shimmer */
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(115deg,
+        transparent 30%,
+        rgba(255,240,180, calc(var(--beat-energy) * 0.9)) 48%,
+        rgba(255,255,220, calc(var(--beat-energy) * 0.6)) 52%,
+        transparent 70%);
+      background-size: 240% 240%;
+      background-position: var(--shimmer-x) 50%;
+      mix-blend-mode: overlay;
+      pointer-events: none;
+      transition: background-position 40ms linear;
+    }
+    .illumination .art {
+      position: relative;
+      width: 100%; height: 100%;
+      overflow: hidden;
+      background: #2a1e10;
+    }
+    .illumination .art img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      filter: sepia(0.18) contrast(1.02) saturate(0.92);
+    }
+    /* Illuminated drop-cap overlay on lower-left */
+    .illumination .dropcap {
+      position: absolute;
+      left: -8px; bottom: -12px;
+      width: 44px; height: 44px;
+      background:
+        radial-gradient(circle at 30% 30%, var(--gold-3), var(--gold-1) 55%, var(--gold-2) 100%);
+      border: 1px solid var(--ink);
+      display: flex; align-items: center; justify-content: center;
+      font-family: 'UnifrakturMaguntia', serif;
+      font-size: 34px;
+      color: var(--rubric-deep);
+      text-shadow: 1px 1px 0 rgba(255,235,160,0.7);
+      box-shadow: 2px 2px 0 rgba(60,30,10,0.35);
+      transform: rotate(-4deg) scale(calc(1 + var(--downbeat-pulse) * 0.06));
+      transition: transform 90ms ease;
+      z-index: 3;
+    }
+
+    .np-meta {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      min-width: 0;
+      padding-top: 2px;
+    }
+    .np-label {
+      font-family: 'IM Fell English SC', serif;
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      color: var(--rubric);
+      margin-bottom: 4px;
+    }
+    .np-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 900;
+      font-size: 20px;
+      line-height: 1.05;
+      color: var(--ink);
+      margin-bottom: 3px;
+      word-break: break-word;
+    }
+    .np-artist {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 15px;
+      color: var(--ink-soft);
+      margin-bottom: 10px;
+    }
+    .np-artist::before {
+      content: '— ';
+      color: var(--ink-soft);
+    }
+
+    /* Progress: ink-fill on a hand-drawn line */
+    .progress {
+      margin-top: auto;
+    }
+    .progress-line {
+      position: relative;
+      height: 6px;
+      background: rgba(60,30,10,0.14);
+      border-top: 1px solid rgba(60,30,10,0.3);
+      border-bottom: 1px solid rgba(60,30,10,0.3);
+    }
+    .progress-fill {
+      position: absolute;
+      inset: 0;
+      width: 42%;
+      background:
+        linear-gradient(180deg, var(--ink), var(--ink-soft));
+      background-image:
+        linear-gradient(180deg, var(--ink), var(--ink-soft)),
+        url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='6'><path d='M0 3 Q10 1 20 3 T40 3' stroke='%23120a04' fill='none' stroke-width='0.4' opacity='0.4'/></svg>");
+    }
+    .progress-fill::after {
+      /* wet ink blob at leading edge */
+      content: '';
+      position: absolute;
+      right: -3px; top: -2px;
+      width: 8px; height: 10px;
+      background: radial-gradient(ellipse, var(--ink) 30%, transparent 70%);
+      opacity: 0.85;
+    }
+    .progress-times {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px;
+      font-family: 'IM Fell English SC', serif;
+      font-size: 9px;
+      letter-spacing: 0.18em;
+      color: var(--ink-soft);
+    }
+
+    /* ── SEQUENTIA (Up Next Queue) ───────────────────────────────────── */
+    .codex {
+      list-style: none;
+      margin: 0 6px;
+      padding: 0;
+    }
+    .verse {
+      position: relative;
+      display: grid;
+      grid-template-columns: 26px 56px 1fr auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px 6px 12px 4px;
+      border-bottom: 1px dotted rgba(60,30,10,0.35);
+    }
+    .verse:last-child { border-bottom: none; }
+
+    /* Verse number in Roman numerals, rubricated */
+    .verse-num {
+      font-family: 'Cinzel Decorative', serif;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--rubric);
+      text-align: center;
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+    .verse-num::after {
+      content: '';
+      display: block;
+      width: 14px; height: 1px;
+      background: var(--rubric);
+      margin: 3px auto 0;
+      opacity: 0.6;
+    }
+
+    /* Album thumbnail with mini gold frame */
+    .verse-art {
+      position: relative;
+      width: 56px; height: 56px;
+      background:
+        linear-gradient(135deg, var(--gold-3), var(--gold-2));
+      padding: 2px;
+      box-shadow:
+        1px 2px 0 rgba(60,30,10,0.28),
+        inset 0 0 0 1px rgba(90,60,15,0.5);
+    }
+    .verse-art img {
+      width: 100%; height: 100%;
+      object-fit: cover;
+      display: block;
+      filter: sepia(0.22) contrast(1.03) saturate(0.88);
+    }
+    /* Tiny illuminated first letter over the art */
+    .verse-art .mini-cap {
+      position: absolute;
+      left: -6px; top: -6px;
+      width: 20px; height: 20px;
+      background: var(--lapis);
+      color: var(--gold-3);
+      font-family: 'UnifrakturMaguntia', serif;
+      font-size: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--ink);
+      box-shadow: 1px 1px 0 rgba(60,30,10,0.3);
+      line-height: 1;
+    }
+
+    .verse-body {
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .verse-title {
+      font-family: 'EB Garamond', serif;
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--ink);
+      line-height: 1.15;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .verse-artist {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 12.5px;
+      color: var(--ink-soft);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .verse-scribe {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'IM Fell English SC', serif;
+      font-size: 9px;
+      letter-spacing: 0.14em;
+      color: var(--rubric);
+      margin-top: 1px;
+    }
+    .verse-scribe::before {
+      content: '';
+      display: inline-block;
+      width: 8px; height: 8px;
+      background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a3231a'><path d='M20 3 L15 8 L4 19 L2 22 L5 20 L16 9 L21 4 Z M14 7 L17 10 L15.5 11.5 L12.5 8.5 Z'/></svg>") no-repeat center/contain;
+    }
+
+    .verse-tail {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .verse-duration {
+      font-family: 'IM Fell English SC', serif;
+      font-size: 10px;
+      letter-spacing: 0.14em;
+      color: var(--ink);
+    }
+
+    /* Little marginalia beast on hover */
+    .verse:hover .drollery {
+      opacity: 0.85;
+      transform: translateX(0) rotate(-4deg);
+    }
+    .drollery {
+      position: absolute;
+      right: -6px; top: 50%;
+      width: 24px; height: 24px;
+      margin-top: -12px;
+      color: var(--verdigris);
+      opacity: 0;
+      transform: translateX(-8px) rotate(-14deg);
+      transition: opacity 300ms ease, transform 300ms ease;
+      pointer-events: none;
+    }
+
+    /* ── EXPLICIT (Footer) ───────────────────────────────────────────── */
+    .explicit {
+      margin: 26px 8px 0;
+      text-align: center;
+      padding: 12px 0 4px;
+      border-top: 1.5px double var(--ink);
+      font-family: 'IM Fell English SC', serif;
+      font-size: 9px;
+      letter-spacing: 0.28em;
+      color: var(--rubric);
+    }
+    .explicit .anno {
+      display: block;
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 11px;
+      color: var(--ink-soft);
+      letter-spacing: 0.02em;
+      margin-top: 6px;
+    }
+
+    /* ── FLOATING MARGINALIA (breathes with downbeat) ────────────────── */
+    .float-beast {
+      position: absolute;
+      color: var(--lapis);
+      opacity: 0.42;
+      z-index: 3;
+      pointer-events: none;
+      transform-origin: center;
+      transform: scale(calc(0.94 + var(--downbeat-pulse) * 0.08));
+      transition: transform 180ms ease;
+    }
+    .float-beast.left  { top: 300px; left: 6px;  width: 28px; height: 28px; }
+    .float-beast.right { top: 520px; right: 6px; width: 30px; height: 30px; transform: scaleX(-1) scale(calc(0.94 + var(--downbeat-pulse) * 0.08)); }
+
+    /* Prevent iOS zoom on input focus */
+    @media (max-width: 430px) {
+      .quill-input { font-size: 16px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="folio" id="folio">
+
+    <!-- Corner ornaments (Celtic-ish interlace) -->
+    <svg class="corner tl" viewBox="0 0 60 60" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+        <path d="M2 2 L2 40 M2 2 L40 2" />
+        <path d="M2 12 Q12 12 12 22 Q12 32 22 32 Q32 32 32 22 Q32 12 22 12 Q12 12 12 22" opacity="0.85"/>
+        <circle cx="12" cy="22" r="2.2" fill="currentColor" stroke="none"/>
+        <path d="M8 8 Q14 4 20 8 M8 8 Q4 14 8 20" />
+        <path d="M2 44 Q6 46 6 50 M50 2 Q46 6 44 6" opacity="0.7"/>
+      </g>
+      <circle cx="6" cy="6" r="2" fill="#a3231a"/>
+    </svg>
+    <svg class="corner tr" viewBox="0 0 60 60" aria-hidden="true"><use href="#" /><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2 L2 40 M2 2 L40 2" /><path d="M2 12 Q12 12 12 22 Q12 32 22 32 Q32 32 32 22 Q32 12 22 12 Q12 12 12 22" opacity="0.85"/><circle cx="12" cy="22" r="2.2" fill="currentColor" stroke="none"/><path d="M8 8 Q14 4 20 8 M8 8 Q4 14 8 20" /></g><circle cx="6" cy="6" r="2" fill="#a3231a"/></svg>
+    <svg class="corner bl" viewBox="0 0 60 60" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2 L2 40 M2 2 L40 2" /><path d="M2 12 Q12 12 12 22 Q12 32 22 32 Q32 32 32 22 Q32 12 22 12 Q12 12 12 22" opacity="0.85"/><circle cx="12" cy="22" r="2.2" fill="currentColor" stroke="none"/><path d="M8 8 Q14 4 20 8 M8 8 Q4 14 8 20" /></g><circle cx="6" cy="6" r="2" fill="#a3231a"/></svg>
+    <svg class="corner br" viewBox="0 0 60 60" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"><path d="M2 2 L2 40 M2 2 L40 2" /><path d="M2 12 Q12 12 12 22 Q12 32 22 32 Q32 32 32 22 Q32 12 22 12 Q12 12 12 22" opacity="0.85"/><circle cx="12" cy="22" r="2.2" fill="currentColor" stroke="none"/><path d="M8 8 Q14 4 20 8 M8 8 Q4 14 8 20" /></g><circle cx="6" cy="6" r="2" fill="#a3231a"/></svg>
+
+    <!-- Hand-inked margin rules -->
+    <div class="margin-rule"></div>
+    <div class="margin-rule right"></div>
+
+    <!-- Floating marginalia beasts (drolleries) -->
+    <svg class="float-beast left" viewBox="0 0 40 40" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+        <path d="M6 26 Q6 18 14 16 Q22 14 24 8 Q26 4 30 6 Q34 8 30 14 Q26 20 30 24 Q34 28 30 32 Q26 36 20 34 Q14 32 10 34 Q6 34 6 30 Z"/>
+        <circle cx="26" cy="10" r="1.1" fill="currentColor"/>
+        <path d="M28 12 Q30 14 32 14" />
+        <path d="M10 32 Q14 30 18 32 M14 34 Q16 36 18 34"/>
+      </g>
+    </svg>
+    <svg class="float-beast right" viewBox="0 0 40 40" aria-hidden="true">
+      <g fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round">
+        <path d="M8 20 Q4 14 10 10 Q16 6 22 10 Q28 14 26 20 Q24 26 28 30 Q32 34 26 36 Q20 38 16 34 Q12 30 8 32 Q4 32 6 26 Q8 22 8 20 Z"/>
+        <circle cx="14" cy="14" r="1.1" fill="currentColor"/>
+        <path d="M18 12 Q20 10 22 12"/>
+        <path d="M28 30 Q32 28 34 30"/>
+      </g>
+    </svg>
+
+    <div class="page-content">
+
+      <!-- Incipit / Header -->
+      <header class="incipit">
+        <div class="folio-mark">✦ FOLIVM XXIII ·  ANNO MMXXVI ✦</div>
+        <h1 class="wordmark"><span class="illum">P</span>ass the <span class="illum">A</span>ux</h1>
+        <div class="tempus-badge">
+          <svg class="manicule" viewBox="0 0 24 24" fill="currentColor"><path d="M4 12 L15 12 L13 9 L15 8 L20 12 L15 16 L13 15 L15 12 L4 12 Z"/></svg>
+          <span class="rub">TEMPUS</span>
+          <span class="bpm-num" id="bpmNum">124</span>
+          <span>BPM</span>
+          <span>·</span>
+          <span class="rub">VIGOR</span>
+          <span>ALT</span>
+        </div>
+      </header>
+
+      <!-- Scriptorium / Search -->
+      <div class="scriptorium">
+        <label class="quill-wrap" for="q">
+          <svg class="quill-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M20 3 C16 5 12 8 9 12 L7 15 L4 18 L3 21 L6 20 L9 17 L12 15 C16 12 19 8 21 4 Z M9 15 L11 17"/>
+            <path d="M7 17 L4 20" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+          </svg>
+          <input id="q" class="quill-input" type="text" placeholder="Inscribe a song upon the codex…" />
+        </label>
+        <button class="scribe-btn" type="button">ENQVEVE</button>
+      </div>
+
+      <!-- Now Sounding -->
+      <div class="rubric-head">
+        <div class="flourish left"></div>
+        <h2>In Cantu Praesenti <sub>· NOW SOUNDING</sub></h2>
+        <div class="flourish"></div>
+      </div>
+
+      <section class="nowplaying">
+        <svg class="np-corner tl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 12 L1 3 Q1 1 3 1 L12 1 M4 4 Q4 8 8 8 Q4 8 4 12"/></svg>
+        <svg class="np-corner tr" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 12 L1 3 Q1 1 3 1 L12 1 M4 4 Q4 8 8 8 Q4 8 4 12"/></svg>
+        <svg class="np-corner bl" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 12 L1 3 Q1 1 3 1 L12 1 M4 4 Q4 8 8 8 Q4 8 4 12"/></svg>
+        <svg class="np-corner br" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M1 12 L1 3 Q1 1 3 1 L12 1 M4 4 Q4 8 8 8 Q4 8 4 12"/></svg>
+
+        <div class="np-main">
+          <div class="illumination">
+            <div class="frame">
+              <div class="art">
+                <img src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="album" />
+              </div>
+            </div>
+            <div class="dropcap">M</div>
+          </div>
+          <div class="np-meta">
+            <div class="np-label">✦ CANTVS PRAESENS ✦</div>
+            <div class="np-title">Midnight City</div>
+            <div class="np-artist">M83</div>
+            <div class="progress">
+              <div class="progress-line">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+              <div class="progress-times">
+                <span id="pTime">01·42</span>
+                <span>04·03</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sequentia / Up Next -->
+      <div class="rubric-head">
+        <div class="flourish left"></div>
+        <h2>Sequentia <sub>· UP NEXT</sub></h2>
+        <div class="flourish"></div>
+      </div>
+
+      <ol class="codex">
+        <li class="verse">
+          <div class="verse-num">II</div>
+          <div class="verse-art">
+            <div class="mini-cap">L</div>
+            <img src="https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0" alt="album" />
+          </div>
+          <div class="verse-body">
+            <div class="verse-title">Levitating</div>
+            <div class="verse-artist">Dua Lipa</div>
+            <div class="verse-scribe">scriptor · Maya</div>
+          </div>
+          <div class="verse-tail">
+            <div class="verse-duration">3·23</div>
+          </div>
+          <svg class="drollery" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M4 16 Q4 10 10 10 Q16 10 18 6 Q20 4 22 6 M6 18 Q10 14 14 18"/><circle cx="16" cy="8" r="0.9" fill="currentColor"/></g></svg>
+        </li>
+
+        <li class="verse">
+          <div class="verse-num">III</div>
+          <div class="verse-art">
+            <div class="mini-cap">A</div>
+            <img src="https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946" alt="album" />
+          </div>
+          <div class="verse-body">
+            <div class="verse-title">As It Was</div>
+            <div class="verse-artist">Harry Styles</div>
+            <div class="verse-scribe">scriptor · Diego</div>
+          </div>
+          <div class="verse-tail">
+            <div class="verse-duration">2·47</div>
+          </div>
+          <svg class="drollery" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M4 18 Q6 12 12 12 Q18 12 20 18 M8 12 Q10 8 12 8 Q14 8 14 12"/><circle cx="10" cy="14" r="0.8" fill="currentColor"/></g></svg>
+        </li>
+
+        <li class="verse">
+          <div class="verse-num">IV</div>
+          <div class="verse-art">
+            <div class="mini-cap">F</div>
+            <img src="https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae2432651" alt="album" />
+          </div>
+          <div class="verse-body">
+            <div class="verse-title">Flowers</div>
+            <div class="verse-artist">Miley Cyrus</div>
+            <div class="verse-scribe">scriptor · Priya</div>
+          </div>
+          <div class="verse-tail">
+            <div class="verse-duration">3·20</div>
+          </div>
+          <svg class="drollery" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 13 L12 20 M8 22 Q12 20 16 22"/><path d="M9 10 Q7 8 9 6 M15 10 Q17 8 15 6"/></g></svg>
+        </li>
+
+        <li class="verse">
+          <div class="verse-num">V</div>
+          <div class="verse-art">
+            <div class="mini-cap">B</div>
+            <img src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="album" />
+          </div>
+          <div class="verse-body">
+            <div class="verse-title">Blinding Lights</div>
+            <div class="verse-artist">The Weeknd</div>
+            <div class="verse-scribe">scriptor · Jae-won</div>
+          </div>
+          <div class="verse-tail">
+            <div class="verse-duration">3·22</div>
+          </div>
+          <svg class="drollery" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M12 3 L14 9 L20 9 L15 13 L17 20 L12 16 L7 20 L9 13 L4 9 L10 9 Z"/></g></svg>
+        </li>
+
+        <li class="verse">
+          <div class="verse-num">VI</div>
+          <div class="verse-art">
+            <div class="mini-cap">S</div>
+            <img src="https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0" alt="album" />
+          </div>
+          <div class="verse-body">
+            <div class="verse-title">Sunflower, Vol. 6</div>
+            <div class="verse-artist">Harry Styles</div>
+            <div class="verse-scribe">scriptor · Amara</div>
+          </div>
+          <div class="verse-tail">
+            <div class="verse-duration">3·40</div>
+          </div>
+          <svg class="drollery" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M4 20 Q8 8 14 8 Q20 8 20 14"/><circle cx="20" cy="14" r="1.4"/><circle cx="6" cy="18" r="0.8" fill="currentColor"/></g></svg>
+        </li>
+
+        <li class="verse">
+          <div class="verse-num">VII</div>
+          <div class="verse-art">
+            <div class="mini-cap">P</div>
+            <img src="https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946" alt="album" />
+          </div>
+          <div class="verse-body">
+            <div class="verse-title">Padam Padam</div>
+            <div class="verse-artist">Kylie Minogue</div>
+            <div class="verse-scribe">scriptor · Rafael</div>
+          </div>
+          <div class="verse-tail">
+            <div class="verse-duration">3·13</div>
+          </div>
+          <svg class="drollery" viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"><path d="M4 14 Q4 6 12 6 Q20 6 20 14 Q20 20 12 20 Q4 20 4 14 Z"/><path d="M9 12 L10 14 M14 12 L15 14 M9 16 Q12 18 15 16"/></g></svg>
+        </li>
+      </ol>
+
+      <footer class="explicit">
+        EXPLICIT · ⚜ QUEVE HAEC PARATA EST ⚜ · FINIS
+        <span class="anno">Scribed at the feast of a Friday evening · vol. XXIII</span>
+      </footer>
+
+    </div>
+  </div>
+
+  <script>
+    /* ─────────────────────────────────────────────────────────────────
+       Beat clock — drives illumination + downbeat pulse.
+       Prototype BPM is the current-track BPM as a constant.
+       In production this reads live per-track BPM (ReccoBeats) +
+       playhead offset to sync shimmer sweeps to real downbeats.
+       ─────────────────────────────────────────────────────────────── */
+    (function () {
+      const BPM        = 124;               // per-track BPM (prod: from ReccoBeats)
+      const ENERGY     = 0.72;              // 0..1 track energy (prod: from Spotify audio-features)
+      const BEATS_PER_BAR = 4;
+
+      const root = document.documentElement;
+      root.style.setProperty('--beat-energy', ENERGY);
+
+      const beatMs = 60000 / BPM;
+      const barMs  = beatMs * BEATS_PER_BAR;
+
+      // Progress bar animation (mocked at 42%, slow crawl for visual life)
+      const fill = document.getElementById('progressFill');
+      const timeEl = document.getElementById('pTime');
+      const trackDurMs = 4 * 60 * 1000 + 3 * 1000; // 4:03
+      let startedAt = performance.now() - (1 * 60 * 1000 + 42 * 1000); // seek to 1:42
+
+      // Beat clock — locked to performance.now() so phase is deterministic
+      const t0 = performance.now();
+
+      function fmt(ms) {
+        const s = Math.floor(ms / 1000);
+        const m = Math.floor(s / 60);
+        const r = s % 60;
+        return m + '·' + String(r).padStart(2, '0');
+      }
+
+      function tick(now) {
+        const elapsed = now - t0;
+
+        // Beat phase 0..1
+        const beatPhase = (elapsed % beatMs) / beatMs;
+        root.style.setProperty('--beat-phase', beatPhase.toFixed(3));
+
+        // Downbeat spike (decays fast after beat 1 of each bar)
+        const barPhase = (elapsed % barMs) / barMs;
+        // sharp attack at bar start, exponential decay over ~40% of bar
+        const decay = Math.max(0, 1 - barPhase * 2.5);
+        root.style.setProperty('--downbeat-pulse', (decay * ENERGY).toFixed(3));
+
+        // Shimmer sweep across the album frame — one full sweep per bar
+        const sweep = barPhase * 220 - 110; // -110% .. +110%
+        root.style.setProperty('--shimmer-x', sweep.toFixed(1) + '%');
+
+        // Progress bar advance
+        const played = now - startedAt;
+        const pct = Math.min(1, played / trackDurMs) * 100;
+        fill.style.width = pct.toFixed(2) + '%';
+        timeEl.textContent = fmt(played);
+
+        requestAnimationFrame(tick);
+      }
+
+      requestAnimationFrame(tick);
+    })();
+
+    /* Enqueue button — playful feedback (party context) */
+    (function () {
+      const btn = document.querySelector('.scribe-btn');
+      const input = document.getElementById('q');
+      btn.addEventListener('click', () => {
+        const label = btn.textContent;
+        btn.textContent = '✦ SCRIBED ✦';
+        btn.style.background = 'linear-gradient(180deg, #476a3d, #2f4a26)';
+        input.value = '';
+        setTimeout(() => {
+          btn.textContent = label;
+          btn.style.background = '';
+        }, 1400);
+      });
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); btn.click(); }
+      });
+    })();
+  </script>
+</body>
+</html>

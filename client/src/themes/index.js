@@ -1,10 +1,14 @@
 import AnimatedBackground from '../components/AnimatedBackground';
 import {
+  AfterglowBackground,
+  CathodeVectorscopeBackground,
   EmptyBackground,
   FieldBackground,
   GenerativeFlowBackground,
+  HoloLaminateBackground,
   MilkdropBackground,
   RisographBackground,
+  VellumHymnalBackground,
   WinampBackground,
 } from './ThemeBackgrounds';
 
@@ -66,6 +70,38 @@ export const THEMES = [
     href: 'https://www.riso.co.jp/english/',
     className: 'theme-risograph',
     Background: RisographBackground,
+  },
+  {
+    id: 'afterglow',
+    name: 'Afterglow',
+    reference: '032c, cinematic dark editorial typography and chromatic bloom',
+    href: 'https://032c.com/',
+    className: 'theme-afterglow',
+    Background: AfterglowBackground,
+  },
+  {
+    id: 'cathode-vectorscope',
+    name: 'Cathode',
+    reference: 'Jerobeam Fenderson, Oscilloscope Music on Tektronix D11 5103N',
+    href: 'https://oscilloscopemusic.com/watch/oscilloscope_music',
+    className: 'theme-cathode',
+    Background: CathodeVectorscopeBackground,
+  },
+  {
+    id: 'vellum-hymnal',
+    name: 'Vellum',
+    reference: 'Book of Kells illuminated manuscript and Winchester Bible rubrication',
+    href: 'https://digitalcollections.tcd.ie/collections/ks65hc20t?locale=en',
+    className: 'theme-vellum',
+    Background: VellumHymnalBackground,
+  },
+  {
+    id: 'holo-laminate-pass',
+    name: 'Laminate',
+    reference: 'Holopasses holographic backstage laminates and tour credentials',
+    href: 'https://holopasses.com/en/collections/backstagepasslaminateholo',
+    className: 'theme-holo',
+    Background: HoloLaminateBackground,
   },
 ];
 

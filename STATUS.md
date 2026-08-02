@@ -10,6 +10,13 @@ _Last updated 2026-08-02._
 
 ### DONE
 
+- **Agency theme ports implemented locally 2026-08-02 (not deployed):**
+  Afterglow, Cathode Vectorscope, Vellum Hymnal, and All-Access Laminate are
+  now first-class entries in the persisted theme registry, bringing the local
+  selectable roster to 11 themes. Their motion uses the existing live
+  now-playing BPM/energy variables and pauses with reduced-motion, hidden tabs,
+  or missing audio features. Required verification passed:
+  `node worker/test/party-session.test.mjs` and `npm --prefix client run build`.
 - **Theme system implemented locally 2026-08-02 (not deployed):** real
   now-playing ReccoBeats BPM/energy is exposed in `/api/now-playing`, cached in
   KV per track, and shown as a live badge when available. Client theme selection

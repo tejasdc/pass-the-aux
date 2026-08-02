@@ -25,7 +25,7 @@
 <body>
   <header>
     <h1>Pass the Aux — theme gallery</h1>
-    <p class="sub">Four overnight theme candidates for the switchable theme system (every visitor lands on a random one; tap to browse). All beat-timed off a synthesized 126 BPM clock — no real audio, per the data limits. Veto / approve each. Previews are live &amp; interactive; hit "open full" for the real thing.</p>
+    <p class="sub">Theme candidates for the switchable theme system (every visitor lands on a random one; tap to browse). Prototype previews use fixed beat clocks; the production app ports drive motion from the real current track BPM and energy. Previews are live &amp; interactive; hit "open full" for the real thing.</p>
   </header>
   <div class="grid" id="grid"></div>
 <script>
@@ -34,6 +34,10 @@
     ['milkdrop', 'Milkdrop', 'Full-bleed psychedelic plasma with a bright superscope waveform slicing across, feedback-tunnel depth, and a downbeat radial burst — the visualizer IS the screen, with glass panels keeping the queue legible over the chaos.'],
     ['generative-flow', 'Generative Flow', 'Gallery-generative art: a warm cream/terracotta field with a Perlin flow-field of ink strokes drifting, a coral wash rising each bar. Editorial Fraunces + mono. The most restrained and grown-up of the four.'],
     ['risograph-print', 'Risograph Print', 'A communal party zine — newsprint stock, mis-registered fluorescent pink + teal spot inks, halftone dots, hand-stamped BPM badge and rotated guest chips. Tactile, printed, deliberately not a music-player skin.'],
+    ['afterglow', 'Afterglow', 'Cinematic dark-editorial treatment after 032c: obsidian field, Fraunces masthead typography, red/cyan chromatic split, album-art bloom, and hairline colophon details.'],
+    ['cathode-vectorscope', 'Cathode Vectorscope', 'CRT green-phosphor lab instrument after Jerobeam Fenderson and vector arcade displays: graticules, scanlines, amber readouts, and beat-locked Lissajous figures.'],
+    ['vellum-hymnal', 'Vellum Hymnal', 'Illuminated manuscript party queue inspired by the Book of Kells and Winchester Bible rubrication: vellum grain, blackletter, lapis, vermillion, and gold leaf shimmer.'],
+    ['holo-laminate-pass', 'All-Access Laminate', 'Holographic backstage credential after Holopasses and tour laminates: prismatic foil, lanyard sway, magnetic-strip progress, and tear-off queue stubs.'],
   ];
   document.getElementById('grid').innerHTML = themes.map(([slug,name,desc]) => `
     <div class="card">
