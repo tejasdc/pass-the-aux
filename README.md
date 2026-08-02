@@ -1,6 +1,8 @@
 # Electric Love
 
-A Spotify party queue for house parties. Guests scan a QR code, search the catalog, and add songs to the queue — without ever touching the host's Spotify or being able to skip, pause, or wreck the playlist.
+Ever shared your Spotify at a house party and watched someone play a song instead of queuing it? Playlist gone, vibe dead.
+
+Electric Love is the fix: guests scan a QR code, search the catalog, and add songs to the queue — without ever touching the host's Spotify. Nobody can skip, pause, or take over playback, and every pick has to pass the vibe check.
 
 **Live → [electric-love.onrender.com](https://electric-love.onrender.com/)**
 
@@ -10,7 +12,7 @@ A Spotify party queue for house parties. Guests scan a QR code, search the catal
 
 ## Why
 
-Sharing Spotify access at a party always ends the same way: someone hits play instead of queue, someone skips the song mid-chorus, someone puts on their own playlist. Electric Love is the controlled gateway — guests can search and queue, nothing else.
+Spotify's own sharing options — Jam, shared speakers, handing your phone around — all give guests full playback control. One mistap hits play instead of queue, skips the song mid-chorus, or swaps in someone else's playlist. Electric Love is the controlled gateway — guests can search and queue, nothing else.
 
 ## How it works
 
