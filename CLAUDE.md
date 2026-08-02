@@ -24,29 +24,38 @@ DONE:
   bug fixed (was styled scrollbar + forced overflow). Spotify app renamed
   "Pass the Aux"; three redirect URIs registered (Render legacy, workers.dev
   legacy, party.tejas.nyc — the live one).
+- **In-app identity + skin updated**: client UI, document metadata, closed-party
+  state, and `/host` now use **Pass the Aux**. The neon-rave theme was replaced
+  with the chosen suprematist direction from `design/moma-mockups/1-suprematist.html`
+  after Kazimir Malevich's "Suprematist Painting" (1916-17): warm gallery
+  cream, Archivo typography, flat queue ticks, provenance footer, and ambient
+  draggable/colliding shapes that pause when hidden and respect reduced motion.
+- README now includes friend-host management and deploy-your-own instructions,
+  including the Cloudflare Deploy button.
+
+DONE (cont.):
+- GitHub repo renamed to **pass-the-aux** (tejasdc/pass-the-aux); description
+  refreshed with the no-hijack + no-Spotify/AirPlay/WiFi selling points.
+- Google Safe Browsing flagged party.tejas.nyc "Deceptive pages" (false
+  positive — new subdomain + OAuth button trips the phishing classifier).
+  tejas.nyc verified in Search Console (DNS TXT), review-removal request
+  submitted 2026-08-02. Warning clears automatically on Google reclassify
+  (days to ~2 weeks); nothing to fix in code.
+- **Render decommissioned 2026-08-02**: both services SUSPENDED (not deleted —
+  reversible via Render dashboard → Resume). `electric-love-api` (web,
+  srv-d68csfur433s73cibpmg) and `electric-love` (static,
+  srv-d68csver433s73cic0mg) now return 503. Cloudflare is sole production.
+  Tejas confirmed a real host flow + queued song worked first.
 
 PENDING (in priority order):
-1. **Rename in-app**: client UI still says "Electric Love" everywhere. Product
-   name is now **Pass the Aux**. Rename alongside the redesign (below), not as
-   a separate pass.
-2. **Redesign**: Tejas wants the neon-rave theme replaced with a direction from
-   `design/moma-mockups/` — four INTERACTIVE mockups derived from MoMA
-   geometric-abstraction paintings (photos in `design/inspiration/`):
-   1-suprematist (Malevich; ambient collision physics, shapes are draggable
-   fidget toys, taps ripple), 2-field (Villalba teal; touch etches fading
-   hairline incisions, wedge = live progress), 3-facet (stained-glass; hung-
-   canvas pointer tilt), 4-pinwheel (concrete art; record-scratch spin with
-   inertia). Design intent: guests waiting to queue play with the page.
-   **Tejas has NOT picked a direction yet — ask before building the real skin.**
-3. **README additions**: (a) User Management — how a friend gets host access
-   (see below); (b) "Deploy your own" — fork, create own Spotify dev app, set
-   secrets, `wrangler deploy`, plus a Cloudflare one-click deploy button.
-4. **GitHub repo rename** to match Pass the Aux (keep Worker name unchanged —
-   see invariants), plus description/card copy refresh with the no-Spotify/no-
-   AirPlay/no-WiFi selling point.
-5. **Decommission Render** (both `electric-love-*` services) after Tejas has
-   done one successful host flow + queued a song on party.tejas.nyc.
-   Until then Render stays as fallback.
+1. **Deploy the suprematist skin to production** — the new theme is built and
+   committed but party.tejas.nyc may still serve the old neon build until the
+   next `wrangler deploy`. (An automated check is deploying + screenshotting.)
+2. **Optional cleanup**: fully delete the suspended Render services and remove
+   `server/` + `render.yaml` from the repo once you're sure Cloudflare is
+   stable. Suspended costs nothing, so no rush.
+3. **/host polish**: show the End Party state on load instead of the stale
+   "Continue with Spotify" button when already the bound host (cosmetic).
 
 ## Architecture
 
