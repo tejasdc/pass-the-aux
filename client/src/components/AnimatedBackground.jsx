@@ -12,6 +12,39 @@ const SHAPES = [
   { id: 'sliver', className: 'shape-sliver', w: 118, h: 12, angle: 19, x: 0.47, y: 0.11, circles: 2 },
 ];
 
+const MOBILE_MIN_WIDTH = 420;
+const DESKTOP_WIDTH = 768;
+const MOBILE_SHAPE_SCALE = 0.58;
+
+const shapeScaleForWidth = (viewportWidth) => {
+  if (viewportWidth >= DESKTOP_WIDTH) return 1;
+  if (viewportWidth <= MOBILE_MIN_WIDTH) return MOBILE_SHAPE_SCALE;
+
+  const progress = (viewportWidth - MOBILE_MIN_WIDTH) / (DESKTOP_WIDTH - MOBILE_MIN_WIDTH);
+  return MOBILE_SHAPE_SCALE + progress * (1 - MOBILE_SHAPE_SCALE);
+};
+
+const shapeGeometry = (shape, scale) => {
+  const baseW = shape.baseW ?? shape.w;
+  const baseH = shape.baseH ?? shape.h;
+  const circleCount = shape.circleCount ?? shape.circles;
+  const w = baseW * scale;
+  const h = baseH * scale;
+  const radius = Math.min(w, h) / 2 + 4 * scale;
+  const span = Math.max(w, h) - 2 * radius;
+
+  return {
+    scale,
+    w,
+    h,
+    circles: Array.from({ length: circleCount }, (_, index) => ({
+      offset: circleCount === 1 ? 0 : -span / 2 + (span * index) / (circleCount - 1),
+      radius,
+    })),
+    mass: (w * h) / 4300 + 1,
+  };
+};
+
 function AnimatedBackground() {
   const fieldRef = useRef(null);
   const shapeRefs = useRef(new Map());
@@ -23,41 +56,74 @@ function AnimatedBackground() {
     const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const width = () => window.innerWidth;
     const height = () => window.innerHeight;
+    let viewport = { width: width(), height: height() };
+    const initialScale = shapeScaleForWidth(viewport.width);
 
     const bodies = SHAPES.map((shape) => {
       const el = shapeRefs.current.get(shape.id);
-      const radius = Math.min(shape.w, shape.h) / 2 + 4;
-      const span = Math.max(shape.w, shape.h) - 2 * radius;
-      const circles = Array.from({ length: shape.circles }, (_, index) => ({
-        offset: shape.circles === 1 ? 0 : -span / 2 + (span * index) / (shape.circles - 1),
-        radius,
-      }));
+      const geometry = shapeGeometry(shape, initialScale);
 
       return {
         ...shape,
+        baseW: shape.w,
+        baseH: shape.h,
+        circleCount: shape.circles,
+        ...geometry,
         el,
-        circles,
         horizontalMajor: shape.w >= shape.h,
-        x: shape.x * width(),
-        y: shape.y * height(),
+        x: shape.x * viewport.width,
+        y: shape.y * viewport.height,
         vx: (Math.random() - 0.5) * 34,
         vy: (Math.random() - 0.5) * 34,
         angleRad: (shape.angle * Math.PI) / 180,
         va: (Math.random() - 0.5) * 0.22,
-        mass: (shape.w * shape.h) / 4300 + 1,
         grabbed: null,
       };
     });
 
     const render = (body) => {
-      body.el.style.transform = `translate3d(${body.x - body.w / 2}px, ${body.y - body.h / 2}px, 0) rotate(${body.angleRad}rad)`;
+      body.el.style.transform = `translate3d(${body.x - body.baseW / 2}px, ${body.y - body.baseH / 2}px, 0) rotate(${body.angleRad}rad) scale(${body.scale})`;
     };
 
     bodies.forEach(render);
 
+    const reachFor = (body) => Math.max(...body.circles.map((circle) => Math.abs(circle.offset) + circle.radius));
+
+    const clampToViewport = (body) => {
+      const reach = reachFor(body);
+      const minX = Math.min(reach, width() / 2);
+      const maxX = Math.max(width() - reach, minX);
+      const minY = Math.min(reach, height() / 2);
+      const maxY = Math.max(height() - reach, minY);
+
+      body.x = Math.max(minX, Math.min(maxX, body.x));
+      body.y = Math.max(minY, Math.min(maxY, body.y));
+    };
+
+    const handleResize = () => {
+      const nextViewport = { width: width(), height: height() };
+      const nextScale = shapeScaleForWidth(nextViewport.width);
+
+      bodies.forEach((body) => {
+        const xRatio = viewport.width ? body.x / viewport.width : body.x;
+        const yRatio = viewport.height ? body.y / viewport.height : body.y;
+        Object.assign(body, shapeGeometry(body, nextScale));
+        body.x = xRatio * nextViewport.width;
+        body.y = yRatio * nextViewport.height;
+        clampToViewport(body);
+        render(body);
+      });
+
+      viewport = nextViewport;
+    };
+
     if (reducedMotion) {
       field.classList.add('is-reduced-motion');
-      return undefined;
+      window.addEventListener('resize', handleResize);
+
+      return () => {
+        window.removeEventListener('resize', handleResize);
+      };
     }
 
     const bodyCircles = (body) => body.circles.map((circle) => {
@@ -166,7 +232,7 @@ function AnimatedBackground() {
           body.vy *= maxSpeed / speed;
         }
 
-        const reach = Math.max(...body.circles.map((circle) => Math.abs(circle.offset) + circle.radius));
+        const reach = reachFor(body);
         if (body.x < reach) {
           body.x = reach;
           body.vx = Math.abs(body.vx) * restitution;
@@ -271,6 +337,7 @@ function AnimatedBackground() {
     window.addEventListener('pointermove', handleMove);
     window.addEventListener('pointerup', release);
     window.addEventListener('pointercancel', release);
+    window.addEventListener('resize', handleResize);
     document.addEventListener('visibilitychange', handleVisibility);
     start();
 
@@ -280,6 +347,7 @@ function AnimatedBackground() {
       window.removeEventListener('pointermove', handleMove);
       window.removeEventListener('pointerup', release);
       window.removeEventListener('pointercancel', release);
+      window.removeEventListener('resize', handleResize);
       document.removeEventListener('visibilitychange', handleVisibility);
       shapeHandlers.forEach(([el, handler]) => el.removeEventListener('pointerdown', handler));
     };
