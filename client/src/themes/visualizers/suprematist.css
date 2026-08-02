@@ -1,9 +1,14 @@
+/* Suprematist visualizer — Malevich planes floating in a cream void.
+   Motion vocabulary: bar-length drift + rotation on the ORBIT (parent),
+   beat-length scale pulse on the BODY (child). Two-level transforms
+   compose naturally; no animation-composition fallback needed.
+   All motion halts on --theme-motion-state: paused (reduced motion,
+   hidden tab, missing BPM). */
+
 .visualizer-stage[data-visualizer-theme="suprematist"] {
-  background:
-    linear-gradient(90deg, rgba(20, 18, 14, 0.05) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(20, 18, 14, 0.04) 1px, transparent 1px),
-    #f1ecdf;
-  background-size: 34px 34px;
+  /* Pure Malevich cream. Drop the shared grid so the planes float in a void. */
+  background: #ede8db;
+  background-size: auto;
 }
 
 .suprematist-visualizer,
@@ -15,93 +20,233 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+
+  /* Malevich palette, matched to design/moma-mockups/1-suprematist.html */
+  --sv-ink:    #14120e;
+  --sv-salmon: #e89a84;
+  --sv-pink:   #efc9bf;
+  --sv-green:  #1e7a5a;
+  --sv-slate:  #8d94a0;
+  --sv-cobalt: #2438b8;
+  --sv-red:    #c6371f;
+
+  /* Motion cadence: shorthand names for legibility below. */
+  --sv-play:  var(--theme-motion-state, paused);
+  --sv-beat:  var(--beat-ms, 950ms);
+  --sv-bar:   var(--bar-ms, 3800ms);
+  --sv-drift: calc(var(--bar-ms, 3800ms) * 4); /* four-bar recomposition */
+  --sv-slow:  calc(var(--bar-ms, 3800ms) * 8); /* eight-bar rotation */
 }
 
-.suprematist-viz-grid,
-.suprematist-viz-core,
-.suprematist-viz-bars,
-.suprematist-viz-trace,
-.suprematist-viz-trace span {
+/* Very faint hairline vertical — a single Malevich pencil axis, no full grid. */
+.suprematist-visualizer::before {
+  content: '';
   position: absolute;
-}
-
-.suprematist-viz-grid {
-  inset: 0;
-  opacity: 0.8;
-}
-
-.suprematist-viz-core {
   left: 50%;
-  top: 50%;
-  width: min(48vw, 210px);
-  aspect-ratio: 1;
-  border: 0;
-  border-radius: 0;
-  background:
-    linear-gradient(90deg, var(--pink) 0 42%, transparent 42%),
-    linear-gradient(0deg, transparent 0 52%, var(--cobalt) 52% 62%, transparent 62%),
-    radial-gradient(circle at 72% 34%, var(--slate) 0 24%, transparent 25%);
-  transform: translate(-50%, -50%) rotate(-15deg);
-  opacity: 0.84;
+  top: 8%;
+  bottom: 8%;
+  width: 1px;
+  background: rgba(20, 18, 14, 0.06);
+  transform: rotate(-3deg);
+  transform-origin: top;
 }
 
-.suprematist-viz-bars {
-  left: 16px;
-  right: 16px;
-  bottom: 14px;
-  height: 38%;
-  display: grid;
-  grid-template-columns: repeat(16, 1fr);
-  align-items: end;
-  gap: 4px;
-}
-
-.suprematist-viz-bars span {
-  display: block;
-  height: var(--viz-height);
-  min-height: 8px;
-  background: var(--ink);
-  transform-origin: bottom;
-  animation: suprematist-viz-bars var(--beat-ms, 950ms) ease-out infinite;
-  animation-delay: calc(var(--beat-offset, 0ms) + var(--viz-delay, 0ms));
-  animation-play-state: var(--theme-motion-state, paused);
-}
-
-.suprematist-viz-trace {
-  inset: 20px;
-}
-
-.suprematist-viz-trace span {
-  inset: 18% 8%;
-  border: 2px solid var(--cobalt);
-  border-radius: 50%;
-  transform: rotate(calc(var(--viz-index, 1) * 14deg));
-  opacity: 0.48;
-  animation: suprematist-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
+/* ── orbit: positions and rotates the plane over the bar cycle ── */
+.sv-orbit {
+  position: absolute;
+  transform-origin: center;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(.44, 0, .4, 1);
   animation-delay: var(--beat-offset, 0ms);
-  animation-play-state: var(--theme-motion-state, paused);
+  animation-play-state: var(--sv-play);
+  will-change: transform;
 }
 
-.suprematist-viz-trace span:nth-child(2) {
-  inset: 26% 16%;
-  border-color: var(--green);
-  transform: rotate(-18deg);
+/* ── body: fills the orbit, pulses scale on every beat ── */
+.sv-body {
+  width: 100%;
+  height: 100%;
+  transform-origin: center;
+  animation-name: sv-tap;
+  animation-duration: var(--sv-beat);
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  animation-timing-function: cubic-bezier(.2, .9, .3, 1);
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--sv-play);
+  will-change: transform, opacity;
 }
 
-.suprematist-viz-trace span:nth-child(3) {
-  inset: 34% 24%;
-  border-color: var(--salmon);
-  transform: rotate(31deg);
+/* Sharp attack, slow release — a percussive tap. Amplitude scales with
+   the current track's energy AND with a per-shape amp so big planes
+   breathe subtly and small accents pop. */
+@keyframes sv-tap {
+  0%   { transform: scale(1); }
+  7%   { transform: scale(calc(1 + var(--track-energy, .4) * var(--sv-tap-amp, .08))); }
+  100% { transform: scale(1); }
 }
 
-@keyframes suprematist-viz-bars {
-  0% { transform: scaleY(var(--eq-peak-scale, 1.34)); }
-  42% { transform: scaleY(0.48); }
-  100% { transform: scaleY(0.78); }
+/* ─────────────────────────────────────────────────────────────
+   1. BLACK QUADRILATERAL  — anchor mass, lower-left
+   ───────────────────────────────────────────────────────────── */
+.sv-orbit-quad {
+  left: 6%;
+  top: 26%;
+  width: 32%;
+  height: 60%;
+  animation-name: sv-drift-quad;
+  animation-duration: var(--sv-drift);
+}
+.sv-body-quad {
+  background: var(--sv-ink);
+  --sv-tap-amp: .035;
+}
+@keyframes sv-drift-quad {
+  0%, 100% { transform: rotate(-6deg)   translate(0, 0); }
+  25%      { transform: rotate(-4.2deg) translate(2%, -1.5%); }
+  50%      { transform: rotate(-8deg)   translate(-1.5%, 1%); }
+  75%      { transform: rotate(-5.4deg) translate(1%, -.5%); }
 }
 
-@keyframes suprematist-viz-trace {
-  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
-  50% { transform: rotate(10deg) scale(0.92); }
-  100% { transform: rotate(-8deg) scale(1); }
+/* ─────────────────────────────────────────────────────────────
+   2. PINK BEAM — long diagonal sweep across the composition
+   ───────────────────────────────────────────────────────────── */
+.sv-orbit-pinkbeam {
+  left: 18%;
+  top: 46%;
+  width: 66%;
+  height: 8px;
+  transform-origin: 22% 50%;
+  animation-name: sv-drift-pink;
+  animation-duration: var(--sv-drift);
+}
+.sv-body-pinkbeam {
+  background: var(--sv-pink);
+  --sv-tap-amp: .05;
+}
+@keyframes sv-drift-pink {
+  0%, 100% { transform: rotate(-14deg); }
+  50%      { transform: rotate(-9deg); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   3. COBALT BAR — sharp counterweight, mid-lower
+   ───────────────────────────────────────────────────────────── */
+.sv-orbit-cobalt {
+  left: 44%;
+  top: 68%;
+  width: 22%;
+  height: 5px;
+  animation-name: sv-drift-cobalt;
+  animation-duration: var(--sv-drift);
+}
+.sv-body-cobalt {
+  background: var(--sv-cobalt);
+  --sv-tap-amp: .12;
+}
+@keyframes sv-drift-cobalt {
+  0%, 100% { transform: rotate(6deg)  translate(0, 0); }
+  50%      { transform: rotate(11deg) translate(-9%, -4%); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   4. SALMON SQUARE — off-axis, continuous slow rotation
+   ───────────────────────────────────────────────────────────── */
+.sv-orbit-salmon {
+  left: 42%;
+  top: 12%;
+  width: clamp(26px, 10%, 42px);
+  aspect-ratio: 1;
+  animation-name: sv-drift-salmon;
+  animation-duration: var(--sv-slow);
+  animation-timing-function: linear;
+}
+.sv-body-salmon {
+  background: var(--sv-salmon);
+  --sv-tap-amp: .14;
+}
+@keyframes sv-drift-salmon {
+  0%   { transform: rotate(18deg)  translate(0, 0); }
+  50%  { transform: rotate(32deg)  translate(-5%, 6%); }
+  100% { transform: rotate(18deg)  translate(0, 0); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   5. GREEN DISC — upper right, snappy beat pulse
+   ───────────────────────────────────────────────────────────── */
+.sv-orbit-green {
+  left: 74%;
+  top: 8%;
+  width: clamp(30px, 12%, 50px);
+  aspect-ratio: 1;
+  animation-name: sv-drift-green;
+  animation-duration: var(--sv-drift);
+}
+.sv-body-green {
+  background: var(--sv-green);
+  border-radius: 50%;
+  --sv-tap-amp: .22;
+}
+@keyframes sv-drift-green {
+  0%, 100% { transform: translate(0, 0); }
+  50%      { transform: translate(-8%, 14%); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   6. SLATE OVOID — soft right-edge balance, gentle breath
+   ───────────────────────────────────────────────────────────── */
+.sv-orbit-slate {
+  left: 82%;
+  top: 38%;
+  width: 16%;
+  height: 58%;
+  animation-name: sv-drift-slate;
+  animation-duration: calc(var(--sv-beat) * 2);
+}
+.sv-body-slate {
+  background: var(--sv-slate);
+  border-radius: 50%;
+  opacity: .82;
+  --sv-tap-amp: .05;
+}
+@keyframes sv-drift-slate {
+  0%, 100% { transform: rotate(-4deg); }
+  50%      { transform: rotate(1deg); }
+}
+
+/* ─────────────────────────────────────────────────────────────
+   7. RED TICK — hairline accent, sharp on-beat flash
+   The tick stays fixed in its rotation; the body does a
+   scaleX + opacity click that reads as the downbeat hit.
+   ───────────────────────────────────────────────────────────── */
+.sv-orbit-red {
+  left: 8%;
+  top: 86%;
+  width: clamp(30px, 12%, 56px);
+  height: 4px;
+  transform-origin: 0 50%;
+  transform: rotate(42deg);
+  animation: none;
+}
+.sv-body-red {
+  background: var(--sv-red);
+  transform-origin: 0 50%;
+  /* Override the shared sv-tap with a percussive tick keyframe. */
+  animation-name: sv-tick;
+  animation-duration: var(--sv-beat);
+  animation-timing-function: cubic-bezier(.15, .9, .3, 1);
+}
+@keyframes sv-tick {
+  0%   { transform: scaleX(1);    opacity: 1;   }
+  7%   { transform: scaleX(1.28); opacity: 1;   }
+  55%  { transform: scaleX(.55);  opacity: .55; }
+  100% { transform: scaleX(1);    opacity: 1;   }
+}
+
+/* Small viewports: keep the composition legible on a narrow card. */
+@media (max-width: 480px) {
+  .sv-orbit-pinkbeam { height: 6px; }
+  .sv-orbit-cobalt   { height: 4px; }
+  .sv-orbit-red      { height: 3px; }
 }

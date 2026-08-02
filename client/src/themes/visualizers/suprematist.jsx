@@ -1,7 +1,20 @@
 import { useBeatStyle, useMotionPaused } from '../ThemeBackgrounds';
 import './suprematist.css';
 
-const BAR_COUNT = 16;
+// Suprematist Painting, 1916-17 — a kinetic Malevich composition.
+// Seven flat planes drift, slowly rotate, and pulse scale on the beat,
+// recomposing into off-kilter constructivist balance across each bar.
+// Nested orbit/body wrappers let drift (parent transform) and beat pulse
+// (child transform) compose without stepping on each other.
+const PLANES = [
+  'quad',       // 1. black quadrilateral — anchor mass, lower-left
+  'pinkbeam',   // 2. long pink beam — diagonal sweep across the void
+  'cobalt',     // 3. cobalt bar — counterweight below the beam
+  'salmon',     // 4. salmon square — off-axis, slow constant rotation
+  'green',      // 5. green disc — upper-right, sharp beat pulse
+  'slate',      // 6. slate ovoid — soft right-edge balance
+  'red',        // 7. red tick — hairline accent that flashes on the beat
+];
 
 function SuprematistVisualizer({ track }) {
   const isPaused = useMotionPaused();
@@ -14,25 +27,11 @@ function SuprematistVisualizer({ track }) {
       style={{ ...style, '--theme-motion-state': motionState }}
       aria-hidden="true"
     >
-      <div className="suprematist-viz-grid"></div>
-      <div className="suprematist-viz-core"></div>
-      <div className="suprematist-viz-bars">
-        {Array.from({ length: BAR_COUNT }, (_, index) => (
-          <span
-            key={index}
-            style={{
-              '--viz-index': index,
-              '--viz-delay': `${-index * 28}ms`,
-              '--viz-height': `${28 + (index % 6) * 11}%`,
-            }}
-          ></span>
-        ))}
-      </div>
-      <div className="suprematist-viz-trace">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+      {PLANES.map((kind) => (
+        <div key={kind} className={`sv-orbit sv-orbit-${kind}`}>
+          <div className={`sv-body sv-body-${kind}`} />
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,14 +1,24 @@
+/* ============================================================
+   CATHODE — CRT vectorscope stage
+   Signature: live XY-mode Lissajous trace drawn on <canvas>,
+   phase-locked to the current track's BPM/energy/playhead.
+   Palette locked to P1 phosphor green + amber safety accent.
+   ============================================================ */
+
 .visualizer-stage[data-visualizer-theme="cathode-vectorscope"] {
   min-height: clamp(188px, 50vw, 280px);
-  border: 1px solid var(--faint);
-  border-radius: 16px;
+  border: 1px solid rgba(127, 255, 156, 0.24);
+  border-radius: 12px;
+  /* Deep CRT interior: near-black with a soft phosphor bloom rising
+     from the center. No bright grid here — the graticule owns that. */
   background:
-    linear-gradient(90deg, rgba(127, 255, 156, 0.08) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(127, 255, 156, 0.08) 1px, transparent 1px),
-    radial-gradient(circle at center, rgba(127, 255, 156, 0.08), transparent 68%),
-    #020605;
-  background-size: 34px 34px, 34px 34px, auto, auto;
-  box-shadow: inset 0 0 42px rgba(127, 255, 156, 0.08);
+    radial-gradient(120% 80% at 50% 55%, rgba(127, 255, 156, 0.08) 0%, transparent 60%),
+    radial-gradient(140% 100% at 50% 0%, rgba(127, 255, 156, 0.04) 0%, transparent 55%),
+    #010806;
+  box-shadow:
+    inset 0 0 32px rgba(127, 255, 156, 0.08),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.6);
+  overflow: hidden;
 }
 
 .cathode-visualizer,
@@ -20,52 +30,143 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+  color: #7fff9c;
+  /* System monospace fallback keeps type on-brief without adding new
+     font requests — VT323/Space Mono may already be loaded by the
+     Cathode theme root but we don't require them here. */
+  font-family: "VT323", "Space Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
 }
 
-.cathode-viz-grid,
-.cathode-viz-core,
-.cathode-viz-bars,
-.cathode-viz-trace,
-.cathode-viz-trace span {
+/* The trace lives on this canvas. Sized by the JSX ResizeObserver at
+   DPR resolution; CSS just stretches it across the stage. */
+.cathode-canvas {
   position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+  z-index: 1;
 }
 
-.cathode-viz-grid,
-.cathode-viz-core,
-.cathode-viz-bars {
-  display: none;
+/* Hairline 10x4 graticule + faint scanlines, drawn on top of the trace
+   so the trace reads as if it's *behind the phosphor coating*, exactly
+   like a real scope. Opacities kept very low so the trace stays legible. */
+.cathode-graticule {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background:
+    /* vertical hairlines every 10% */
+    linear-gradient(90deg,
+      rgba(127, 255, 156, 0.09) 1px,
+      transparent 1px 10%,
+      rgba(127, 255, 156, 0.09) calc(10% + 1px),
+      transparent calc(10% + 1px) 20%,
+      rgba(127, 255, 156, 0.09) calc(20% + 1px),
+      transparent calc(20% + 1px) 30%,
+      rgba(127, 255, 156, 0.09) calc(30% + 1px),
+      transparent calc(30% + 1px) 40%,
+      rgba(127, 255, 156, 0.09) calc(40% + 1px),
+      transparent calc(40% + 1px) 50%,
+      rgba(127, 255, 156, 0.16) calc(50% + 1px),  /* brighter center axis */
+      transparent calc(50% + 1px) 60%,
+      rgba(127, 255, 156, 0.09) calc(60% + 1px),
+      transparent calc(60% + 1px) 70%,
+      rgba(127, 255, 156, 0.09) calc(70% + 1px),
+      transparent calc(70% + 1px) 80%,
+      rgba(127, 255, 156, 0.09) calc(80% + 1px),
+      transparent calc(80% + 1px) 90%,
+      rgba(127, 255, 156, 0.09) calc(90% + 1px),
+      transparent calc(90% + 1px)),
+    /* horizontal hairlines every 25% (4 divisions) */
+    linear-gradient(0deg,
+      rgba(127, 255, 156, 0.09) 1px,
+      transparent 1px 25%,
+      rgba(127, 255, 156, 0.09) calc(25% + 1px),
+      transparent calc(25% + 1px) 50%,
+      rgba(127, 255, 156, 0.16) calc(50% + 1px),  /* brighter center axis */
+      transparent calc(50% + 1px) 75%,
+      rgba(127, 255, 156, 0.09) calc(75% + 1px),
+      transparent calc(75% + 1px)),
+    /* faint horizontal scanlines — the CRT tell */
+    repeating-linear-gradient(0deg,
+      rgba(0, 0, 0, 0.18) 0 1px,
+      transparent 1px 3px);
 }
 
-.cathode-viz-trace {
-  inset: 18px;
-  filter: drop-shadow(0 0 10px rgba(127, 255, 156, 0.68));
+/* Live/standby chip — pinned top-right like a real scope's channel LED.
+   Uses the amber P3 accent only for the live dot; label stays phosphor. */
+.cathode-chip {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  z-index: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 8px;
+  border: 1px solid rgba(127, 255, 156, 0.35);
+  border-radius: 2px;
+  background: rgba(1, 15, 8, 0.7);
+  color: #7fff9c;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  text-shadow: 0 0 5px rgba(127, 255, 156, 0.45);
 }
 
-.cathode-viz-trace span {
-  inset: 14% 12%;
-  border: 1px solid var(--ink);
-  border-radius: 46% 54% 50% 50%;
-  transform: rotate(calc(var(--viz-index, 1) * 14deg));
-  opacity: 0.48;
-  animation: cathode-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
-  animation-delay: var(--beat-offset, 0ms);
+.cathode-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ffb547;
+  box-shadow: 0 0 6px rgba(255, 181, 71, 0.85);
+  animation: cathode-chip-blink 1200ms steps(2, end) infinite;
   animation-play-state: var(--theme-motion-state, paused);
 }
 
-.cathode-viz-trace span:nth-child(2) {
-  inset: 22% 20%;
-  border-color: rgba(127, 255, 156, 0.62);
-  transform: rotate(-18deg);
+.cathode-chip[data-live="false"] .cathode-chip-dot {
+  background: #3f8a55;
+  box-shadow: none;
+  animation: none;
 }
 
-.cathode-viz-trace span:nth-child(3) {
-  inset: 36% 34%;
-  border-color: var(--salmon);
-  transform: rotate(31deg);
+.cathode-chip-label {
+  white-space: nowrap;
 }
 
-@keyframes cathode-viz-trace {
-  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
-  50% { transform: rotate(10deg) scale(0.92); }
-  100% { transform: rotate(-8deg) scale(1); }
+/* Scope-front-panel labels pinned to the bottom corners.
+   These are chrome — decorative but plausibly labeled, per brief. */
+.cathode-foot {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  z-index: 3;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: rgba(127, 255, 156, 0.55);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+@keyframes cathode-chip-blink {
+  0%, 55% { opacity: 1; }
+  60%, 100% { opacity: 0.4; }
+}
+
+/* Reduced motion: RAF already halts via motionState; also freeze the
+   blinking live dot so nothing on screen moves. */
+@media (prefers-reduced-motion: reduce) {
+  .cathode-chip-dot { animation: none !important; }
+}
+
+/* Compact stages (very short cards) — tighten the corner labels so they
+   don't crowd the trace. */
+@media (max-height: 200px) {
+  .cathode-foot { font-size: 8px; letter-spacing: 0.18em; }
+  .cathode-chip { font-size: 9px; padding: 2px 6px; }
 }

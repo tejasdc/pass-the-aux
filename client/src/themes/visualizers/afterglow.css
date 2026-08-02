@@ -1,10 +1,32 @@
+/* =================================================================
+   AFTERGLOW VISUALIZER — Chromatic Bloom
+   Nightclub cinematography: volumetric RGB bloom that breathes on the
+   beat, an anamorphic lens streak that widens with energy, slow embers
+   rising through obsidian air, editorial corner registration.
+
+   Motion contract:
+   - All keyframe timing is locked to --beat-ms / --bar-ms / --viz-slow-ms
+     (published by useBeatStyle in ThemeBackgrounds.jsx).
+   - Every animated element pauses on --theme-motion-state: paused
+     (no beat, hidden tab, reduced motion).
+   - Chromatic split amplitude scales with --track-energy.
+   - No canvas, no RAF — pure CSS layered radials + blend modes.
+   ================================================================= */
+
+/* --- Stage shell --------------------------------------------------- */
+
 .visualizer-stage[data-visualizer-theme="afterglow"] {
-  border: 1px solid rgba(245, 241, 234, 0.16);
+  border: 1px solid rgba(245, 241, 234, 0.09);
   background:
-    radial-gradient(70% 62% at 88% 92%, rgba(255, 75, 71, 0.38), transparent 70%),
-    radial-gradient(60% 48% at 12% 4%, rgba(74, 213, 255, 0.24), transparent 72%),
-    rgba(10, 9, 8, 0.82);
-  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.42);
+    /* corner room-wash */
+    radial-gradient(84% 70% at 92% 96%, rgba(255, 75, 71, 0.22), transparent 68%),
+    radial-gradient(72% 58% at 6% 4%, rgba(74, 213, 255, 0.14), transparent 74%),
+    /* deep vignette */
+    radial-gradient(120% 120% at 50% 50%, transparent 42%, rgba(0, 0, 0, 0.55) 100%),
+    #0A0908;
+  box-shadow:
+    inset 0 0 0 1px rgba(245, 241, 234, 0.03),
+    0 24px 70px rgba(0, 0, 0, 0.45);
 }
 
 .afterglow-visualizer,
@@ -16,96 +38,323 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+  isolation: isolate; /* contain blend modes to this stack */
+  --split-base: 4px;
+  --split-max: calc(var(--split-base) + var(--track-energy, 0.5) * 14px);
+  --bloom-size: min(72%, 340px);
 }
 
-.afterglow-viz-grid,
-.afterglow-viz-core,
-.afterglow-viz-bars,
-.afterglow-viz-trace,
-.afterglow-viz-trace span {
+/* --- Editorial corner registration marks -------------------------- */
+
+.afterglow-regmarks {
   position: absolute;
+  inset: 10px;
+  z-index: 6;
 }
 
-.afterglow-viz-grid {
+.afterglow-regmark {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  opacity: 0.55;
+}
+
+.afterglow-regmark::before,
+.afterglow-regmark::after {
+  content: "";
+  position: absolute;
+  background: rgba(245, 241, 234, 0.42);
+}
+
+.afterglow-regmark::before { inset: 0 0 auto 0; height: 1px; }
+.afterglow-regmark::after  { inset: 0 auto 0 0; width: 1px; }
+
+.afterglow-regmark--tl { top: 0; left: 0; }
+.afterglow-regmark--tr { top: 0; right: 0; transform: scaleX(-1); }
+.afterglow-regmark--bl { bottom: 0; left: 0; transform: scaleY(-1); }
+.afterglow-regmark--br { bottom: 0; right: 0; transform: scale(-1, -1); }
+
+/* --- Room-wash: subtle corner atmospherics ------------------------ */
+
+.afterglow-room {
+  position: absolute;
   inset: 0;
-  opacity: 0.8;
-}
-
-.afterglow-viz-core {
-  left: 50%;
-  top: 50%;
-  width: min(52vw, 230px);
-  aspect-ratio: 1;
-  border: 0;
-  border-radius: 50%;
+  z-index: 1;
   background:
-    radial-gradient(circle, rgba(255, 75, 71, 0.36), transparent 56%),
-    radial-gradient(circle, rgba(74, 213, 255, 0.16), transparent 72%);
-  filter: blur(16px);
-  transform: translate(-50%, -50%) rotate(-9deg);
-  animation: afterglow-viz-trace var(--beat-ms, 1s) ease-out infinite;
+    radial-gradient(50% 55% at 92% 96%, rgba(255, 75, 71, 0.28), transparent 62%),
+    radial-gradient(46% 44% at 8% 6%, rgba(74, 213, 255, 0.14), transparent 68%);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  animation: afterglow-room-breathe var(--bar-ms, 2000ms) ease-in-out infinite;
   animation-delay: var(--beat-offset, 0ms);
   animation-play-state: var(--theme-motion-state, paused);
 }
 
-.afterglow-viz-bars {
-  left: 16px;
-  right: 16px;
-  bottom: 14px;
-  height: 18%;
+/* --- Volumetric bloom stage: three RGB layers, chromatic split ---- */
+
+.afterglow-bloom-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   display: grid;
-  grid-template-columns: repeat(16, 1fr);
-  align-items: end;
-  gap: 4px;
+  place-items: center;
+  mix-blend-mode: screen; /* additive so layered radials brighten cleanly */
 }
 
-.afterglow-viz-bars span {
-  display: block;
-  height: var(--viz-height);
-  min-height: 8px;
-  background: linear-gradient(to top, var(--red), var(--salmon));
-  box-shadow: 0 0 18px rgba(255, 75, 71, 0.48);
-  transform-origin: bottom;
-  animation: afterglow-viz-bars var(--beat-ms, 950ms) ease-out infinite;
-  animation-delay: calc(var(--beat-offset, 0ms) + var(--viz-delay, 0ms));
-  animation-play-state: var(--theme-motion-state, paused);
-}
-
-.afterglow-viz-trace {
-  inset: 20px;
-}
-
-.afterglow-viz-trace span {
-  inset: 18% 8%;
-  border: 2px solid var(--cobalt);
+.afterglow-bloom {
+  position: absolute;
+  width: var(--bloom-size);
+  aspect-ratio: 1;
   border-radius: 50%;
-  transform: rotate(calc(var(--viz-index, 1) * 14deg));
-  opacity: 0.48;
-  animation: afterglow-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
+  filter: blur(28px);
+  will-change: transform, opacity, filter;
+  transform-origin: center;
+}
+
+/* RED channel: warm arterial bloom, offsets right on beat */
+.afterglow-bloom--r {
+  background: radial-gradient(circle,
+    rgba(255, 75, 71, 0.72) 0%,
+    rgba(255, 75, 71, 0.28) 34%,
+    rgba(255, 75, 71, 0.00) 62%);
+  animation: afterglow-bloom-r var(--beat-ms, 469ms) cubic-bezier(0.22, 1, 0.36, 1) infinite;
   animation-delay: var(--beat-offset, 0ms);
   animation-play-state: var(--theme-motion-state, paused);
 }
 
-.afterglow-viz-trace span:nth-child(2) {
-  inset: 26% 16%;
-  border-color: var(--green);
-  transform: rotate(-18deg);
+/* GREEN channel: keeps the center clean and lifted */
+.afterglow-bloom--g {
+  background: radial-gradient(circle,
+    rgba(232, 250, 200, 0.42) 0%,
+    rgba(232, 250, 200, 0.14) 32%,
+    rgba(232, 250, 200, 0.00) 60%);
+  animation: afterglow-bloom-g var(--beat-ms, 469ms) cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
 }
 
-.afterglow-viz-trace span:nth-child(3) {
-  inset: 34% 24%;
-  border-color: var(--salmon);
-  transform: rotate(31deg);
+/* BLUE channel: cyan counter-note, offsets left on beat */
+.afterglow-bloom--b {
+  background: radial-gradient(circle,
+    rgba(74, 213, 255, 0.62) 0%,
+    rgba(74, 213, 255, 0.22) 34%,
+    rgba(74, 213, 255, 0.00) 62%);
+  animation: afterglow-bloom-b var(--beat-ms, 469ms) cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
 }
 
-@keyframes afterglow-viz-bars {
-  0% { transform: scaleY(var(--eq-peak-scale, 1.34)); }
-  42% { transform: scaleY(0.48); }
-  100% { transform: scaleY(0.78); }
+@keyframes afterglow-bloom-r {
+  /* attack: bright, split hard right */
+  0%   { transform: translate3d(calc(var(--split-max) * -0.15), 0, 0) scale(1.08);
+         opacity: 0.95; filter: blur(22px); }
+  /* decay: settle back toward center */
+  55%  { transform: translate3d(calc(var(--split-max) * 0.75), 0, 0) scale(0.94);
+         opacity: 0.62; filter: blur(30px); }
+  100% { transform: translate3d(calc(var(--split-max) * 0.20), 0, 0) scale(0.98);
+         opacity: 0.7;  filter: blur(28px); }
 }
 
-@keyframes afterglow-viz-trace {
-  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
-  50% { transform: rotate(10deg) scale(0.92); }
-  100% { transform: rotate(-8deg) scale(1); }
+@keyframes afterglow-bloom-g {
+  0%   { transform: translate3d(0, calc(var(--split-max) * -0.12), 0) scale(1.06); opacity: 0.75; filter: blur(24px); }
+  55%  { transform: translate3d(0, calc(var(--split-max) * 0.08), 0) scale(0.96); opacity: 0.52; filter: blur(32px); }
+  100% { transform: translate3d(0, 0, 0) scale(1.00); opacity: 0.6; filter: blur(28px); }
+}
+
+@keyframes afterglow-bloom-b {
+  0%   { transform: translate3d(calc(var(--split-max) * 0.15), 0, 0) scale(1.08);
+         opacity: 0.9; filter: blur(22px); }
+  55%  { transform: translate3d(calc(var(--split-max) * -0.75), 0, 0) scale(0.94);
+         opacity: 0.55; filter: blur(30px); }
+  100% { transform: translate3d(calc(var(--split-max) * -0.20), 0, 0) scale(0.98);
+         opacity: 0.65; filter: blur(28px); }
+}
+
+/* --- Room-wash breathing pulse (downbeat cadence) ----------------- */
+
+@keyframes afterglow-room-breathe {
+  0%, 100% { opacity: 0.55; filter: saturate(1); }
+  25%      { opacity: 0.95; filter: saturate(1.35); }
+  60%      { opacity: 0.60; filter: saturate(1.05); }
+}
+
+/* --- Anamorphic horizontal lens streak ---------------------------- */
+
+.afterglow-streak {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  mix-blend-mode: screen;
+}
+
+.afterglow-streak-core,
+.afterglow-streak-r,
+.afterglow-streak-b {
+  position: absolute;
+  left: -8%;
+  right: -8%;
+  height: 2px;
+  border-radius: 999px;
+  transform-origin: center;
+  will-change: transform, opacity;
+  animation-duration: var(--beat-ms, 469ms);
+  animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+  animation-iteration-count: infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.afterglow-streak-core {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 232, 220, 0.05) 20%,
+    rgba(255, 232, 220, 0.85) 50%,
+    rgba(255, 232, 220, 0.05) 80%,
+    transparent 100%);
+  filter: blur(2px);
+  box-shadow:
+    0 0 12px rgba(255, 220, 200, 0.55),
+    0 0 32px rgba(255, 130, 110, 0.35);
+  animation-name: afterglow-streak-core;
+}
+
+.afterglow-streak-r {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 75, 71, 0.55) 50%,
+    transparent 100%);
+  filter: blur(3px);
+  animation-name: afterglow-streak-r;
+}
+
+.afterglow-streak-b {
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(74, 213, 255, 0.55) 50%,
+    transparent 100%);
+  filter: blur(3px);
+  animation-name: afterglow-streak-b;
+}
+
+@keyframes afterglow-streak-core {
+  0%   { transform: translate3d(0, 0, 0) scaleY(3.2) scaleX(1.02); opacity: 0.95; }
+  40%  { transform: translate3d(0, 0, 0) scaleY(1.0) scaleX(0.98); opacity: 0.55; }
+  100% { transform: translate3d(0, 0, 0) scaleY(1.3) scaleX(1.00); opacity: 0.65; }
+}
+
+@keyframes afterglow-streak-r {
+  0%   { transform: translate3d(calc(var(--split-max) * -1.2), 0, 0) scaleY(2.4); opacity: 0.85; }
+  50%  { transform: translate3d(calc(var(--split-max) * 0.5),  0, 0) scaleY(1.0); opacity: 0.40; }
+  100% { transform: translate3d(calc(var(--split-max) * 0.15), 0, 0) scaleY(1.4); opacity: 0.55; }
+}
+
+@keyframes afterglow-streak-b {
+  0%   { transform: translate3d(calc(var(--split-max) * 1.2), 0, 0) scaleY(2.4); opacity: 0.85; }
+  50%  { transform: translate3d(calc(var(--split-max) * -0.5), 0, 0) scaleY(1.0); opacity: 0.40; }
+  100% { transform: translate3d(calc(var(--split-max) * -0.15), 0, 0) scaleY(1.4); opacity: 0.55; }
+}
+
+/* --- Rising embers ------------------------------------------------- */
+
+.afterglow-embers {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  mix-blend-mode: screen;
+}
+
+.afterglow-ember {
+  position: absolute;
+  bottom: -8px;
+  left: var(--ember-left);
+  width: var(--ember-size);
+  height: var(--ember-size);
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(255, 190, 150, 0.95) 0%,
+    rgba(255, 120, 90, 0.55) 45%,
+    transparent 70%);
+  box-shadow: 0 0 6px rgba(255, 130, 90, 0.6);
+  opacity: 0;
+  will-change: transform, opacity;
+  animation-name: afterglow-ember-rise;
+  animation-duration: var(--viz-slow-ms, 3750ms);
+  animation-timing-function: cubic-bezier(0.15, 0.35, 0.35, 1);
+  animation-iteration-count: infinite;
+  animation-delay: var(--ember-delay, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+@keyframes afterglow-ember-rise {
+  0%   { transform: translate3d(0, 0, 0) scale(0.6);      opacity: 0; }
+  12%  { transform: translate3d(0, -8%, 0) scale(1);      opacity: var(--ember-opacity, 0.6); }
+  70%  { transform: translate3d(calc(var(--ember-drift) * 0.6), -70%, 0) scale(0.9);
+         opacity: calc(var(--ember-opacity, 0.6) * 0.7); }
+  100% { transform: translate3d(var(--ember-drift), -110%, 0) scale(0.4); opacity: 0; }
+}
+
+/* --- Colophon overlay --------------------------------------------- */
+
+.afterglow-colophon {
+  position: absolute;
+  left: 14px;
+  bottom: 12px;
+  z-index: 7;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(245, 241, 234, 0.42);
+}
+
+.afterglow-colophon-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #FF4B47;
+  box-shadow: 0 0 6px rgba(255, 75, 71, 0.9);
+  animation: afterglow-colophon-pulse var(--beat-ms, 469ms) ease-out infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+@keyframes afterglow-colophon-pulse {
+  0%   { opacity: 1;    transform: scale(1.15); }
+  55%  { opacity: 0.55; transform: scale(0.9);  }
+  100% { opacity: 0.8;  transform: scale(1.0);  }
+}
+
+/* --- Film grain finish -------------------------------------------- */
+
+.afterglow-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  pointer-events: none;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.96  0 0 0 0 0.94  0 0 0 0 0.91  0 0 0 0.9 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  background-size: 140px 140px;
+}
+
+/* --- Reduced motion accessibility --------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .afterglow-bloom,
+  .afterglow-streak-core,
+  .afterglow-streak-r,
+  .afterglow-streak-b,
+  .afterglow-ember,
+  .afterglow-room,
+  .afterglow-colophon-dot {
+    animation: none !important;
+  }
+  .afterglow-bloom { opacity: 0.7; }
+  .afterglow-ember { opacity: 0; }
 }

@@ -1,11 +1,15 @@
+/* ═══════════════════════════════════════════════════════════════════
+   Risograph visualizer — warm newsprint, two spot inks, one turntable.
+   All motion is CSS keyframes phase-locked to real BPM/energy vars from
+   useBeatStyle:  --beat-ms, --bar-ms, --beat-offset, --track-energy.
+   Zero JS motion, zero fake FFT.
+   ═══════════════════════════════════════════════════════════════════ */
+
 .visualizer-stage[data-visualizer-theme="risograph"] {
-  border: 3px solid var(--ink);
-  background:
-    radial-gradient(circle at 30% 38%, rgba(255, 61, 122, 0.48) 0 8%, transparent 9% 100%),
-    radial-gradient(circle at 68% 54%, rgba(15, 127, 121, 0.42) 0 8%, transparent 9% 100%),
-    #efe3c4;
-  background-size: 18px 18px, 16px 16px, auto;
+  border: 3px solid var(--ink, #1a1611);
+  background: #efe3c4;
   box-shadow: var(--shadow);
+  overflow: hidden;
 }
 
 .risograph-visualizer,
@@ -17,67 +21,366 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+
+  /* Palette — real Riso spot inks, off-black (never true K). */
+  --riso-paper: #efe3c4;
+  --riso-paper-deep: #e5d5ac;
+  --riso-pink: #ff3d7a;
+  --riso-teal: #0f7f79;
+  --riso-ink: #1a1611;
+
+  /* Registration offset. A rested riso mis-prints by ~2-3px; hot on
+     high-energy tracks it can drift to 5-6px. Energy = 0..1. */
+  --riso-reg: calc(2.4px + var(--track-energy, 0.5) * 3.4px);
+
+  /* Record spin period — 1 full turn per bar × 4 (~one 4-bar phrase).
+     Fallback covers "no track" so a paused disc has a sensible pose. */
+  --riso-spin-ms: calc(var(--bar-ms, 4000ms) * 4);
+
+  /* Beat kick — snap outward then relax. Cycles once per beat. */
+  --riso-kick-ms: var(--beat-ms, 500ms);
+
+  background:
+    /* Extremely subtle grain baked in — the strong one is .riso-grain. */
+    radial-gradient(circle at 30% 40%, rgba(26, 22, 17, 0.03) 0.5px, transparent 1px),
+    var(--riso-paper);
+  background-size: 4px 4px, auto;
 }
 
-.risograph-viz-grid,
-.risograph-viz-core,
-.risograph-viz-bars,
-.risograph-viz-trace,
-.risograph-viz-trace span {
+/* ── Halftone spot-ink fields ─────────────────────────────────────── */
+/* Two full-bleed fields of duotone dots. They drift slowly against
+   each other and every downbeat kicks them outward before they relax.
+   mix-blend-mode: multiply so they behave like real overlapping inks. */
+
+.riso-halftone {
   position: absolute;
-}
-
-.risograph-viz-grid,
-.risograph-viz-bars {
-  display: none;
-}
-
-.risograph-viz-core {
-  left: 50%;
-  top: 50%;
-  width: min(48vw, 210px);
-  aspect-ratio: 1;
-  border: 24px solid var(--ink);
-  border-radius: 50%;
-  background: repeating-radial-gradient(circle, #efe3c4 0 3px, var(--ink) 3px 5px);
-  transform: translate(-50%, -50%);
-  animation: risograph-viz-spin var(--riso-spin-ms, 8s) linear infinite;
+  inset: -32px;
+  mix-blend-mode: multiply;
   animation-play-state: var(--theme-motion-state, paused);
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
-.risograph-viz-trace {
-  inset: 20px;
+.riso-halftone--pink {
+  background-image:
+    radial-gradient(circle at 50% 50%, var(--riso-pink) 1.5px, transparent 2.4px);
+  background-size: 9px 9px;
+  opacity: 0.62;
+  animation:
+    riso-drift-pink calc(var(--riso-spin-ms) / 2) linear infinite,
+    riso-kick-pink var(--riso-kick-ms) cubic-bezier(0.16, 0.9, 0.3, 1) infinite;
+  animation-delay: 0ms, var(--beat-offset, 0ms);
 }
 
-.risograph-viz-trace span {
-  inset: 18% 8%;
-  border: 2px solid var(--cobalt);
-  border-radius: 50%;
-  transform: rotate(calc(var(--viz-index, 1) * 14deg));
-  opacity: 0.48;
-  animation: risograph-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
+.riso-halftone--teal {
+  background-image:
+    radial-gradient(circle at 50% 50%, var(--riso-teal) 1.4px, transparent 2.2px);
+  background-size: 11px 11px;
+  background-position: 4px 3px;
+  opacity: 0.5;
+  animation:
+    riso-drift-teal calc(var(--riso-spin-ms) / 2) linear infinite,
+    riso-kick-teal var(--riso-kick-ms) cubic-bezier(0.16, 0.9, 0.3, 1) infinite;
+  animation-delay: 0ms, var(--beat-offset, 0ms);
+}
+
+@keyframes riso-drift-pink {
+  0%   { transform: translate(calc(var(--riso-reg) * -1),   calc(var(--riso-reg) * -0.5)); }
+  50%  { transform: translate(calc(var(--riso-reg) * -1.5), calc(var(--riso-reg) * -0.1)); }
+  100% { transform: translate(calc(var(--riso-reg) * -1),   calc(var(--riso-reg) * -0.5)); }
+}
+
+@keyframes riso-drift-teal {
+  0%   { transform: translate(var(--riso-reg),           calc(var(--riso-reg) *  0.5)); }
+  50%  { transform: translate(calc(var(--riso-reg) * 1.5), calc(var(--riso-reg) *  0.1)); }
+  100% { transform: translate(var(--riso-reg),           calc(var(--riso-reg) *  0.5)); }
+}
+
+/* Beat kick — opacity + brightness snap that reads like ink pressure. */
+@keyframes riso-kick-pink {
+  0%   { opacity: 0.62; filter: none; }
+  8%   { opacity: 0.9;  filter: brightness(1.15) contrast(1.05); }
+  60%  { opacity: 0.62; filter: none; }
+  100% { opacity: 0.62; }
+}
+@keyframes riso-kick-teal {
+  0%   { opacity: 0.5;  filter: none; }
+  8%   { opacity: 0.78; filter: brightness(1.12) contrast(1.05); }
+  60%  { opacity: 0.5;  filter: none; }
+  100% { opacity: 0.5; }
+}
+
+/* ── Vinyl record ─────────────────────────────────────────────────── */
+/* Partial disc peeks in from the left, oversized so the spinning grooves
+   fill the frame and the label sits just off-frame — very poster-editorial. */
+
+.riso-vinyl-wrap {
+  position: absolute;
+  left: 6%;
+  top: 50%;
+  width: 260px;
+  height: 260px;
+  transform: translate(-40%, -50%);
+  animation: riso-vinyl-beat var(--riso-kick-ms) cubic-bezier(0.16, 0.9, 0.3, 1) infinite;
   animation-delay: var(--beat-offset, 0ms);
   animation-play-state: var(--theme-motion-state, paused);
 }
 
-.risograph-viz-trace span:nth-child(2) {
-  inset: 26% 16%;
-  border-color: var(--green);
-  transform: rotate(-18deg);
+@keyframes riso-vinyl-beat {
+  0%   { transform: translate(-40%, -50%) scale(1); }
+  8%   { transform: translate(-40%, -50%) scale(calc(1 + var(--track-energy, 0.5) * 0.045)); }
+  60%  { transform: translate(-40%, -50%) scale(1); }
+  100% { transform: translate(-40%, -50%) scale(1); }
 }
 
-.risograph-viz-trace span:nth-child(3) {
-  inset: 34% 24%;
-  border-color: var(--salmon);
-  transform: rotate(31deg);
+.riso-vinyl {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  animation: riso-spin var(--riso-spin-ms) linear infinite;
+  animation-play-state: var(--theme-motion-state, paused);
+  transform-origin: 50% 50%;
+  /* Faint printed drop shadow — softer than any real shadow, more like
+     a second-pass off-black. */
+  box-shadow: 0 6px 0 rgba(26, 22, 17, 0.28);
 }
 
-@keyframes risograph-viz-spin {
-  to { transform: translate(-50%, -50%) rotate(1turn); }
+@keyframes riso-spin { to { transform: rotate(1turn); } }
+
+.riso-vinyl__grooves {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  /* Halftone-dot vinyl surface + concentric printed grooves.
+     The dot pattern is what makes it read as Riso instead of glossy. */
+  background:
+    /* fine grooves */
+    repeating-radial-gradient(circle at 50% 50%,
+      rgba(239, 227, 196, 0.16) 0 0.7px,
+      transparent 0.7px 4.5px),
+    /* halftone dot texture across the disc — the record IS a print */
+    radial-gradient(circle at 50% 50%,
+      rgba(239, 227, 196, 0.06) 0 0.6px,
+      transparent 0.6px 1.4px) 0 0 / 4px 4px,
+    /* soft ink-black vinyl body — never pure black */
+    radial-gradient(circle at 42% 34%, #2d2620 0 62%, #1a1611 100%);
+  box-shadow: inset 0 0 0 3px var(--riso-ink);
 }
 
-@keyframes risograph-viz-trace {
-  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
-  50% { transform: rotate(10deg) scale(0.92); }
-  100% { transform: rotate(-8deg) scale(1); }
+.riso-vinyl__grooves::after {
+  /* One "printed reflection" arc — dashes of paper color catching the
+     grooves as they turn. */
+  content: "";
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  background: conic-gradient(from 210deg,
+    transparent 0deg,
+    rgba(239, 227, 196, 0.22) 8deg,
+    rgba(239, 227, 196, 0.06) 24deg,
+    transparent 40deg,
+    transparent 360deg);
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+.riso-vinyl__label {
+  position: absolute;
+  inset: 36%;
+  border-radius: 50%;
+  background: var(--riso-pink);
+  box-shadow:
+    inset 0 0 0 1.5px var(--riso-ink),
+    0 0 0 3px var(--riso-paper),
+    0 0 0 4.5px var(--riso-ink);
+  overflow: hidden;
+}
+
+/* Two printed marks on the label so you can actually see it spin. */
+.riso-vinyl__label-mark {
+  position: absolute;
+  left: 50%;
+  top: 8%;
+  width: 12%;
+  height: 44%;
+  background: var(--riso-ink);
+  transform: translateX(-50%);
+  border-radius: 2px;
+}
+.riso-vinyl__label-mark--b {
+  top: auto;
+  bottom: 8%;
+  height: 20%;
+  width: 32%;
+  background: var(--riso-paper);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+}
+
+.riso-vinyl__hole {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6.5%;
+  height: 6.5%;
+  border-radius: 50%;
+  background: var(--riso-paper);
+  box-shadow: 0 0 0 1.5px var(--riso-ink);
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+/* Ghost prints — the pink and teal "channels" of the record itself,
+   mis-registered so the disc looks like a duotone screen print. */
+.riso-vinyl-ghost {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  mix-blend-mode: multiply;
+  animation: riso-ghost-kick var(--riso-kick-ms) cubic-bezier(0.16, 0.9, 0.3, 1) infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+  z-index: 0;
+}
+.riso-vinyl-ghost--pink {
+  background: radial-gradient(circle at 50% 50%,
+    var(--riso-pink) 0 46%,
+    rgba(255, 61, 122, 0.35) 46% 49%,
+    transparent 51%);
+  transform: translate(calc(var(--riso-reg) * -1.6), calc(var(--riso-reg) * 0.4));
+  opacity: 0.55;
+}
+.riso-vinyl-ghost--teal {
+  background: radial-gradient(circle at 50% 50%,
+    var(--riso-teal) 0 46%,
+    rgba(15, 127, 121, 0.35) 46% 49%,
+    transparent 51%);
+  transform: translate(calc(var(--riso-reg) * 1.2), calc(var(--riso-reg) * -0.5));
+  opacity: 0.55;
+}
+@keyframes riso-ghost-kick {
+  0%   { filter: none; }
+  8%   { filter: brightness(1.2) saturate(1.15); }
+  60%  { filter: none; }
+  100% { filter: none; }
+}
+
+/* ── Corner rubber stamp "SIDE A · 33⅓ RPM" ───────────────────────── */
+
+.riso-stamp {
+  position: absolute;
+  right: 4%;
+  top: 50%;
+  width: clamp(66px, 22%, 96px);
+  aspect-ratio: 1;
+  transform: translateY(-50%) rotate(7deg);
+  color: var(--riso-pink);
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  animation: riso-stamp-kick var(--riso-kick-ms) cubic-bezier(0.16, 0.9, 0.3, 1) infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+@keyframes riso-stamp-kick {
+  0%   { transform: translateY(-50%) rotate(7deg) scale(1); }
+  8%   { transform: translateY(-50%) rotate(7deg) scale(1.06); filter: brightness(1.15); }
+  60%  { transform: translateY(-50%) rotate(7deg) scale(1); filter: none; }
+  100% { transform: translateY(-50%) rotate(7deg) scale(1); }
+}
+
+.riso-stamp__ring {
+  position: absolute;
+  inset: 0;
+  border: 2px solid var(--riso-pink);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px var(--riso-paper), inset 0 0 0 3.6px var(--riso-pink);
+  /* The dashed inner ring — the tell of a real rubber stamp. */
+  mask:
+    radial-gradient(circle, black 63%, transparent 65%),
+    linear-gradient(black, black);
+  mask-composite: exclude;
+  -webkit-mask-composite: xor;
+}
+
+.riso-stamp__top,
+.riso-stamp__mid,
+.riso-stamp__bot {
+  position: relative;
+  z-index: 2;
+  line-height: 1;
+}
+.riso-stamp__top {
+  font-size: clamp(8px, 2.2vw, 10px);
+  align-self: start;
+  margin-top: 22%;
+}
+.riso-stamp__mid {
+  font-family: "Bricolage Grotesque", "JetBrains Mono", sans-serif;
+  font-weight: 800;
+  font-size: clamp(16px, 4.6vw, 22px);
+  letter-spacing: -0.02em;
+}
+.riso-stamp__bot {
+  font-size: clamp(7px, 2vw, 9px);
+  align-self: end;
+  margin-bottom: 22%;
+}
+
+/* ── Colophon tick tape (top) & deckle edge (bottom) ──────────────── */
+
+.riso-tape {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 12px;
+  background:
+    repeating-linear-gradient(
+      to right,
+      var(--riso-ink) 0 1.5px,
+      transparent 1.5px 10px
+    ),
+    var(--riso-paper-deep);
+  border-bottom: 1px solid var(--riso-ink);
+  opacity: 0.5;
+  mix-blend-mode: multiply;
+}
+
+.riso-deckle {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 8px;
+  background-image: radial-gradient(circle at 4px 8px, var(--riso-paper) 5px, transparent 5.5px);
+  background-size: 8px 8px;
+  background-repeat: repeat-x;
+  z-index: 4;
+}
+
+/* ── Paper grain — the single most important tell for "printed". ──── */
+
+.riso-grain {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+  mix-blend-mode: multiply;
+  opacity: 0.35;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='1.6' numOctaves='2' seed='9'/><feColorMatrix values='0 0 0 0 0.10 0 0 0 0 0.09 0 0 0 0 0.07 0 0 0 0.58 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+}
+
+/* ── Reduced motion & hidden tab ──────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .risograph-visualizer *,
+  .risograph-visualizer *::before,
+  .risograph-visualizer *::after {
+    animation: none !important;
+  }
 }

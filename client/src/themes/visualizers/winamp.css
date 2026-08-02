@@ -1,10 +1,29 @@
+/* =========================================================
+   Winamp Classic fire spectrum
+   22 dense LED bars, segmented (2px on / 1px dark), colored
+   bottom→top yellow → orange → red. White peak-hold caps.
+   Phosphor-green oscilloscope threading through the middle.
+   All inside a beveled sunk chrome frame with CRT scanlines.
+   ========================================================= */
+
 .visualizer-stage[data-visualizer-theme="winamp"] {
-  min-height: 118px;
-  border: 2px solid #000;
-  background:
-    repeating-linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 0 1px, transparent 1px 3px),
-    #050506;
-  box-shadow: inset 1px 1px 0 #6a6a72, inset -1px -1px 0 #000, 0 0 0 1px #000;
+  min-height: 122px;
+  padding: 0;
+  background: #000;
+  /* Classic "sunk" bevel: dark top/left, light bottom/right, black hairline outside. */
+  border: 1px solid #000;
+  box-shadow:
+    inset 1px 1px 0 #000,
+    inset -1px -1px 0 #5a5a62,
+    inset 2px 2px 0 rgba(0, 0, 0, 0.7),
+    0 0 0 1px #6a6a72,
+    0 0 0 2px #000;
+}
+
+@media (min-width: 760px) {
+  .visualizer-stage[data-visualizer-theme="winamp"] {
+    min-height: 184px;
+  }
 }
 
 .winamp-visualizer,
@@ -16,83 +35,124 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
+  padding: 6px 8px 8px;
+  /* Subtle dark green wash — the CRT phosphor room the LEDs live inside. */
+  background:
+    radial-gradient(120% 60% at 50% 100%, rgba(60, 20, 0, 0.35), transparent 70%),
+    #030304;
+  /* Freeze all animation when the shared beat clock says paused. */
+  animation-play-state: var(--theme-motion-state, paused);
 }
 
-.winamp-viz-grid,
-.winamp-viz-core,
-.winamp-viz-bars,
-.winamp-viz-trace,
-.winamp-viz-trace span {
+/* Faint interior bevel line — tighter than the stage border. */
+.winamp-viz-bevel {
   position: absolute;
+  inset: 3px;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  border-left: 1px solid rgba(255, 255, 255, 0.05);
+  border-right: 1px solid rgba(0, 0, 0, 0.6);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+  pointer-events: none;
 }
 
-.winamp-viz-grid,
-.winamp-viz-core {
-  display: none;
+/* CRT scanlines: horizontal 1px dark-green stripes with 2px gaps. */
+.winamp-viz-scan {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(20, 60, 20, 0.14) 0 1px,
+    transparent 1px 2px
+  );
+  mix-blend-mode: screen;
+  z-index: 3;
 }
 
+/* Bars grid — 22 columns, hard-aligned to the bottom of the stage. */
 .winamp-viz-bars {
-  inset: 10px 10px 24px;
-  height: auto;
+  position: absolute;
+  inset: 8px 10px 10px;
   display: grid;
-  grid-template-columns: repeat(16, 1fr);
+  grid-template-columns: repeat(22, 1fr);
   align-items: end;
-  gap: 4px;
+  gap: 1px;
+  z-index: 2;
 }
 
-.winamp-viz-bars span {
+.winamp-bar-slot {
+  position: relative;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  overflow: visible;
+}
+
+/*
+  The bar itself. The fire gradient is authentic (yellow bottom,
+  orange middle, red top). The horizontal "cutter" gradient over
+  the top is what gives the segmented LED look — without it the
+  bar reads as a smooth fire and loses the 1998 chunkiness.
+*/
+.winamp-bar {
   display: block;
-  height: var(--viz-height);
-  min-height: 8px;
-  background: linear-gradient(to top, #ffe70a, #ffa61a 55%, #ff2a1f);
+  width: 100%;
+  height: 6px;
+  min-height: 3px;
+  background:
+    repeating-linear-gradient(
+      to top,
+      transparent 0 2px,
+      rgba(0, 0, 0, 0.72) 2px 3px
+    ),
+    linear-gradient(
+      to top,
+      #ffe70a 0%,
+      #ffe70a 22%,
+      #ffbf1a 46%,
+      #ff8a1a 68%,
+      #ff3a20 88%,
+      #ff2a1f 100%
+    );
+  /* A hint of hot red glow rising off the tallest bars. */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.35),
+    0 -1px 3px rgba(255, 90, 20, 0.35);
   transform-origin: bottom;
-  animation: winamp-viz-bars var(--beat-ms, 950ms) ease-out infinite;
-  animation-delay: calc(var(--beat-offset, 0ms) + var(--viz-delay, 0ms));
-  animation-play-state: var(--theme-motion-state, paused);
+  will-change: height;
 }
 
-.winamp-viz-trace {
-  inset: 18px 12px;
+/* Peak-hold cap — a chunky 2px pixel bar that rides above each column. */
+.winamp-peak {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px;
+  background: #f2f2f2;
+  box-shadow: 0 0 3px rgba(255, 255, 255, 0.55);
+  will-change: transform;
+  transform: translateY(0);
 }
 
-.winamp-viz-trace span {
-  inset: 36% 4%;
-  border: 2px solid #8bff00;
-  border-left-color: transparent;
-  border-right-color: transparent;
-  border-radius: 44%;
-  filter: drop-shadow(0 0 5px rgba(139, 255, 0, 0.7));
-  opacity: 0.48;
-  transform: rotate(calc(var(--viz-index, 1) * 14deg));
-  animation: winamp-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
-  animation-delay: var(--beat-offset, 0ms);
-  animation-play-state: var(--theme-motion-state, paused);
+/* Oscilloscope — 40% band centered on the bars. */
+.winamp-viz-osc {
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  top: 30%;
+  height: 40%;
+  z-index: 4;
+  opacity: 0.9;
+  /* image-rendering keeps the trace crisp on the CRT-styled backdrop. */
+  image-rendering: pixelated;
 }
 
-.winamp-viz-trace span:nth-child(2) {
-  inset: 26% 16%;
-  transform: rotate(-18deg);
-}
-
-.winamp-viz-trace span:nth-child(3) {
-  inset: 34% 24%;
-  transform: rotate(31deg);
-}
-
-@media (min-width: 760px) {
-  .visualizer-stage[data-visualizer-theme="winamp"] {
-    min-height: 180px;
+/* Reduced-motion / hidden-tab: freeze the LEDs at their rest state.
+   The RAF loop is already gated by useMotionPaused; this line is defense
+   in depth for any CSS-driven decoration we add later. */
+@media (prefers-reduced-motion: reduce) {
+  .winamp-visualizer * {
+    animation-play-state: paused !important;
+    transition: none !important;
   }
-}
-
-@keyframes winamp-viz-bars {
-  0% { transform: scaleY(var(--eq-peak-scale, 1.34)); }
-  42% { transform: scaleY(0.48); }
-  100% { transform: scaleY(0.78); }
-}
-
-@keyframes winamp-viz-trace {
-  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
-  50% { transform: rotate(10deg) scale(0.92); }
-  100% { transform: rotate(-8deg) scale(1); }
 }
