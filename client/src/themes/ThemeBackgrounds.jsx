@@ -14,7 +14,7 @@ const rootThemeClassByVariant = {
   holo: 'theme-holo',
 };
 
-function useMotionPaused() {
+export function useMotionPaused() {
   const [isPaused, setIsPaused] = useState(() => {
     if (typeof window === 'undefined') return true;
     return document.hidden || window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -42,7 +42,7 @@ function getTrackProgress(track) {
   return Math.max(0, Math.min(1, Number(track.progress_ms) / track.duration_ms));
 }
 
-function useBeatStyle(track) {
+export function useBeatStyle(track) {
   return useMemo(() => {
     const bpm = Number(track?.audioFeatures?.bpm);
     const energy = Number(track?.audioFeatures?.energy);

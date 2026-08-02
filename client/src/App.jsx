@@ -131,7 +131,11 @@ function App() {
             <div className="loading-state">Checking party status...</div>
           ) : partyStatus.live ? (
             <>
-              <NowPlaying track={nowPlaying} isLoading={isNowPlayingLoading} />
+              <NowPlaying
+                track={nowPlaying}
+                isLoading={isNowPlayingLoading}
+                activeTheme={activeTheme}
+              />
 
               <QueueList queue={queue} isLoading={isQueueLoading} />
             </>

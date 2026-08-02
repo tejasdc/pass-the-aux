@@ -1,0 +1,107 @@
+.visualizer-stage[data-visualizer-theme="suprematist"] {
+  background:
+    linear-gradient(90deg, rgba(20, 18, 14, 0.05) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(20, 18, 14, 0.04) 1px, transparent 1px),
+    #f1ecdf;
+  background-size: 34px 34px;
+}
+
+.suprematist-visualizer,
+.suprematist-visualizer * {
+  pointer-events: none;
+}
+
+.suprematist-visualizer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.suprematist-viz-grid,
+.suprematist-viz-core,
+.suprematist-viz-bars,
+.suprematist-viz-trace,
+.suprematist-viz-trace span {
+  position: absolute;
+}
+
+.suprematist-viz-grid {
+  inset: 0;
+  opacity: 0.8;
+}
+
+.suprematist-viz-core {
+  left: 50%;
+  top: 50%;
+  width: min(48vw, 210px);
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 0;
+  background:
+    linear-gradient(90deg, var(--pink) 0 42%, transparent 42%),
+    linear-gradient(0deg, transparent 0 52%, var(--cobalt) 52% 62%, transparent 62%),
+    radial-gradient(circle at 72% 34%, var(--slate) 0 24%, transparent 25%);
+  transform: translate(-50%, -50%) rotate(-15deg);
+  opacity: 0.84;
+}
+
+.suprematist-viz-bars {
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  height: 38%;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  align-items: end;
+  gap: 4px;
+}
+
+.suprematist-viz-bars span {
+  display: block;
+  height: var(--viz-height);
+  min-height: 8px;
+  background: var(--ink);
+  transform-origin: bottom;
+  animation: suprematist-viz-bars var(--beat-ms, 950ms) ease-out infinite;
+  animation-delay: calc(var(--beat-offset, 0ms) + var(--viz-delay, 0ms));
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.suprematist-viz-trace {
+  inset: 20px;
+}
+
+.suprematist-viz-trace span {
+  inset: 18% 8%;
+  border: 2px solid var(--cobalt);
+  border-radius: 50%;
+  transform: rotate(calc(var(--viz-index, 1) * 14deg));
+  opacity: 0.48;
+  animation: suprematist-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.suprematist-viz-trace span:nth-child(2) {
+  inset: 26% 16%;
+  border-color: var(--green);
+  transform: rotate(-18deg);
+}
+
+.suprematist-viz-trace span:nth-child(3) {
+  inset: 34% 24%;
+  border-color: var(--salmon);
+  transform: rotate(31deg);
+}
+
+@keyframes suprematist-viz-bars {
+  0% { transform: scaleY(var(--eq-peak-scale, 1.34)); }
+  42% { transform: scaleY(0.48); }
+  100% { transform: scaleY(0.78); }
+}
+
+@keyframes suprematist-viz-trace {
+  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
+  50% { transform: rotate(10deg) scale(0.92); }
+  100% { transform: rotate(-8deg) scale(1); }
+}

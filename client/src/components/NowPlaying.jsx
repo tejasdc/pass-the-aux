@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { getThemeById, DEFAULT_THEME_ID } from '../themes';
 
 function formatTime(ms) {
   if (!ms || ms < 0) return '0:00';
@@ -8,7 +9,7 @@ function formatTime(ms) {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 }
 
-function NowPlaying({ track, isLoading }) {
+function NowPlaying({ track, isLoading, activeTheme }) {
   const progressPercent = useMemo(() => {
     if (!track || !track.duration_ms || !track.progress_ms) return 0;
     return Math.max(0, Math.min(100, (track.progress_ms / track.duration_ms) * 100));
@@ -19,7 +20,7 @@ function NowPlaying({ track, isLoading }) {
   if (isLoading && !track) {
     return (
       <section className="now-playing">
-        <VisualizerStage />
+        <VisualizerStage activeTheme={activeTheme} track={track} />
         <div className="loading-state">Loading now playing...</div>
       </section>
     );
@@ -29,7 +30,7 @@ function NowPlaying({ track, isLoading }) {
     return (
       <section className="now-playing">
         <div className="now-kicker">Now Playing</div>
-        <VisualizerStage />
+        <VisualizerStage activeTheme={activeTheme} track={track} />
         <div className="album-plane is-empty">
           <img src={defaultImage} alt="No track playing" />
         </div>
@@ -60,7 +61,7 @@ function NowPlaying({ track, isLoading }) {
   return (
     <section className="now-playing">
       <div className="now-kicker">Now Playing</div>
-      <VisualizerStage />
+      <VisualizerStage activeTheme={activeTheme} track={track} />
       <div className="album-plane">
         <img src={albumImage} alt={`${trackName} album art`} />
       </div>
@@ -92,28 +93,13 @@ function NowPlaying({ track, isLoading }) {
   );
 }
 
-function VisualizerStage() {
+function VisualizerStage({ activeTheme, track }) {
+  const theme = activeTheme?.Visualizer ? activeTheme : getThemeById(DEFAULT_THEME_ID);
+  const ActiveVisualizer = theme.Visualizer;
+
   return (
-    <div className="visualizer-stage" aria-hidden="true">
-      <div className="visualizer-grid"></div>
-      <div className="visualizer-core"></div>
-      <div className="visualizer-bars">
-        {Array.from({ length: 16 }, (_, index) => (
-          <span
-            key={index}
-            style={{
-              '--viz-index': index,
-              '--viz-delay': `${-index * 28}ms`,
-              '--viz-height': `${28 + (index % 6) * 11}%`,
-            }}
-          ></span>
-        ))}
-      </div>
-      <div className="visualizer-trace">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+    <div className="visualizer-stage" data-visualizer-theme={theme.id} aria-hidden="true">
+      <ActiveVisualizer track={track} />
     </div>
   );
 }

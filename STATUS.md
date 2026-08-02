@@ -10,6 +10,18 @@ _Last updated 2026-08-02._
 
 ### DONE
 
+- **Visualizer architecture + Suprematist interactivity implemented locally
+  2026-08-02 (not deployed).** Every theme registry entry now owns a
+  `Visualizer` component parallel to `Background`, and `NowPlaying` renders the
+  active theme's visualizer inside the dedicated `aria-hidden` stage with the
+  live track passed through. One isolated visualizer JSX+CSS pair now exists
+  per theme under `client/src/themes/visualizers/`; the old shared
+  `.visualizer-grid/core/bars/trace` markup and theme recolor CSS were removed
+  from `index.css`. Suprematist shapes are draggable/ripple-interactive again
+  by making the field an interactive bottom layer while header/content controls
+  stay above it. Verification passed: `node worker/test/party-session.test.mjs`
+  and `npm --prefix client run build`. Architecture notes:
+  `tmp/reviews/viz-arch.md`.
 - **Theme usability + layout fix DEPLOYED + visually verified 2026-08-02
   (version `420b270b`).** Fixed three reported failures across all 11 themes:
   (1) the theme switcher was being covered by the closed search overlay's

@@ -11,6 +11,17 @@ import {
   VellumHymnalBackground,
   WinampBackground,
 } from './ThemeBackgrounds';
+import AfterglowVisualizer from './visualizers/afterglow';
+import CathodeVisualizer from './visualizers/cathode-vectorscope';
+import FacetVisualizer from './visualizers/facet';
+import FieldVisualizer from './visualizers/field';
+import FlowVisualizer from './visualizers/flow';
+import HoloVisualizer from './visualizers/holo-laminate-pass';
+import MilkdropVisualizer from './visualizers/milkdrop';
+import RisographVisualizer from './visualizers/risograph';
+import SuprematistVisualizer from './visualizers/suprematist';
+import VellumVisualizer from './visualizers/vellum-hymnal';
+import WinampVisualizer from './visualizers/winamp';
 
 export const DEFAULT_THEME_ID = 'suprematist';
 
@@ -22,6 +33,7 @@ export const THEMES = [
     href: 'https://www.moma.org/collection/works/80387',
     className: 'theme-suprematist',
     Background: AnimatedBackground,
+    Visualizer: SuprematistVisualizer,
   },
   {
     id: 'facet',
@@ -30,6 +42,7 @@ export const THEMES = [
     href: 'https://www.moma.org/search/?query=geometric%20abstraction',
     className: 'theme-facet',
     Background: EmptyBackground,
+    Visualizer: FacetVisualizer,
   },
   {
     id: 'field',
@@ -38,6 +51,7 @@ export const THEMES = [
     href: 'https://www.moma.org/search/?query=Villalba',
     className: 'theme-field',
     Background: FieldBackground,
+    Visualizer: FieldVisualizer,
   },
   {
     id: 'winamp',
@@ -46,6 +60,7 @@ export const THEMES = [
     href: 'https://winamp.com/',
     className: 'theme-winamp',
     Background: WinampBackground,
+    Visualizer: WinampVisualizer,
   },
   {
     id: 'milkdrop',
@@ -54,6 +69,7 @@ export const THEMES = [
     href: 'https://www.geisswerks.com/milkdrop/',
     className: 'theme-milkdrop',
     Background: MilkdropBackground,
+    Visualizer: MilkdropVisualizer,
   },
   {
     id: 'flow',
@@ -62,6 +78,7 @@ export const THEMES = [
     href: 'https://processing.org/',
     className: 'theme-flow',
     Background: GenerativeFlowBackground,
+    Visualizer: FlowVisualizer,
   },
   {
     id: 'risograph',
@@ -70,6 +87,7 @@ export const THEMES = [
     href: 'https://www.riso.co.jp/english/',
     className: 'theme-risograph',
     Background: RisographBackground,
+    Visualizer: RisographVisualizer,
   },
   {
     id: 'afterglow',
@@ -78,6 +96,7 @@ export const THEMES = [
     href: 'https://032c.com/',
     className: 'theme-afterglow',
     Background: AfterglowBackground,
+    Visualizer: AfterglowVisualizer,
   },
   {
     id: 'cathode-vectorscope',
@@ -86,6 +105,7 @@ export const THEMES = [
     href: 'https://oscilloscopemusic.com/watch/oscilloscope_music',
     className: 'theme-cathode',
     Background: CathodeVectorscopeBackground,
+    Visualizer: CathodeVisualizer,
   },
   {
     id: 'vellum-hymnal',
@@ -94,6 +114,7 @@ export const THEMES = [
     href: 'https://digitalcollections.tcd.ie/collections/ks65hc20t?locale=en',
     className: 'theme-vellum',
     Background: VellumHymnalBackground,
+    Visualizer: VellumVisualizer,
   },
   {
     id: 'holo-laminate-pass',
@@ -102,6 +123,7 @@ export const THEMES = [
     href: 'https://holopasses.com/en/collections/backstagepasslaminateholo',
     className: 'theme-holo',
     Background: HoloLaminateBackground,
+    Visualizer: HoloVisualizer,
   },
 ];
 

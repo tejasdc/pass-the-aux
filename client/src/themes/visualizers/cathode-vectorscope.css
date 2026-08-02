@@ -1,0 +1,71 @@
+.visualizer-stage[data-visualizer-theme="cathode-vectorscope"] {
+  min-height: clamp(188px, 50vw, 280px);
+  border: 1px solid var(--faint);
+  border-radius: 16px;
+  background:
+    linear-gradient(90deg, rgba(127, 255, 156, 0.08) 1px, transparent 1px),
+    linear-gradient(0deg, rgba(127, 255, 156, 0.08) 1px, transparent 1px),
+    radial-gradient(circle at center, rgba(127, 255, 156, 0.08), transparent 68%),
+    #020605;
+  background-size: 34px 34px, 34px 34px, auto, auto;
+  box-shadow: inset 0 0 42px rgba(127, 255, 156, 0.08);
+}
+
+.cathode-visualizer,
+.cathode-visualizer * {
+  pointer-events: none;
+}
+
+.cathode-visualizer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.cathode-viz-grid,
+.cathode-viz-core,
+.cathode-viz-bars,
+.cathode-viz-trace,
+.cathode-viz-trace span {
+  position: absolute;
+}
+
+.cathode-viz-grid,
+.cathode-viz-core,
+.cathode-viz-bars {
+  display: none;
+}
+
+.cathode-viz-trace {
+  inset: 18px;
+  filter: drop-shadow(0 0 10px rgba(127, 255, 156, 0.68));
+}
+
+.cathode-viz-trace span {
+  inset: 14% 12%;
+  border: 1px solid var(--ink);
+  border-radius: 46% 54% 50% 50%;
+  transform: rotate(calc(var(--viz-index, 1) * 14deg));
+  opacity: 0.48;
+  animation: cathode-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.cathode-viz-trace span:nth-child(2) {
+  inset: 22% 20%;
+  border-color: rgba(127, 255, 156, 0.62);
+  transform: rotate(-18deg);
+}
+
+.cathode-viz-trace span:nth-child(3) {
+  inset: 36% 34%;
+  border-color: var(--salmon);
+  transform: rotate(31deg);
+}
+
+@keyframes cathode-viz-trace {
+  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
+  50% { transform: rotate(10deg) scale(0.92); }
+  100% { transform: rotate(-8deg) scale(1); }
+}

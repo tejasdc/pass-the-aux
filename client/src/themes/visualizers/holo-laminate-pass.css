@@ -1,0 +1,115 @@
+.visualizer-stage[data-visualizer-theme="holo-laminate-pass"] {
+  min-height: clamp(170px, 44vw, 250px);
+  border: 1px solid rgba(244, 237, 225, 0.16);
+  border-radius: 12px;
+  background:
+    linear-gradient(112deg, rgba(176, 56, 255, 0.42), rgba(34, 227, 196, 0.28) 30%, rgba(255, 179, 0, 0.34) 52%, rgba(255, 47, 138, 0.36)),
+    linear-gradient(158deg, #191d33 0%, #0d1122 60%, #06080f 100%);
+  background-size: 220% 100%, 100% 100%;
+  box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.holo-visualizer,
+.holo-visualizer * {
+  pointer-events: none;
+}
+
+.holo-visualizer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.holo-viz-grid,
+.holo-viz-core,
+.holo-viz-bars,
+.holo-viz-trace,
+.holo-viz-trace span {
+  position: absolute;
+}
+
+.holo-viz-grid {
+  inset: 0;
+  opacity: 0.8;
+}
+
+.holo-viz-core {
+  left: 50%;
+  top: 50%;
+  width: 70%;
+  height: 62%;
+  border: 1px solid rgba(244, 237, 225, 0.22);
+  border-radius: 12px;
+  background:
+    linear-gradient(115deg, transparent 25%, rgba(255, 255, 255, 0.5) 48%, transparent 70%),
+    rgba(5, 7, 16, 0.42);
+  transform: translate(-50%, -50%) rotate(-3deg);
+  animation: holo-viz-drift var(--bar-ms, 4s) linear infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.holo-viz-bars {
+  left: 16px;
+  right: 16px;
+  bottom: 14px;
+  height: 22%;
+  display: grid;
+  grid-template-columns: repeat(16, 1fr);
+  align-items: end;
+  gap: 4px;
+}
+
+.holo-viz-bars span {
+  display: block;
+  height: var(--viz-height);
+  min-height: 8px;
+  background: linear-gradient(to top, #ff2f8a, #ffb300, #22e3c4, #4a6bff);
+  transform-origin: bottom;
+  animation: holo-viz-bars var(--beat-ms, 950ms) ease-out infinite;
+  animation-delay: calc(var(--beat-offset, 0ms) + var(--viz-delay, 0ms));
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.holo-viz-trace {
+  inset: 20px;
+}
+
+.holo-viz-trace span {
+  inset: 18% 8%;
+  border: 2px solid var(--cobalt);
+  border-radius: 50%;
+  transform: rotate(calc(var(--viz-index, 1) * 14deg));
+  opacity: 0.48;
+  animation: holo-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.holo-viz-trace span:nth-child(2) {
+  inset: 26% 16%;
+  border-color: var(--green);
+  transform: rotate(-18deg);
+}
+
+.holo-viz-trace span:nth-child(3) {
+  inset: 34% 24%;
+  border-color: var(--salmon);
+  transform: rotate(31deg);
+}
+
+@keyframes holo-viz-bars {
+  0% { transform: scaleY(var(--eq-peak-scale, 1.34)); }
+  42% { transform: scaleY(0.48); }
+  100% { transform: scaleY(0.78); }
+}
+
+@keyframes holo-viz-trace {
+  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
+  50% { transform: rotate(10deg) scale(0.92); }
+  100% { transform: rotate(-8deg) scale(1); }
+}
+
+@keyframes holo-viz-drift {
+  to { background-position: 240% 50%, 0 0; }
+}

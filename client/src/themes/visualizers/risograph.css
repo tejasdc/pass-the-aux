@@ -1,0 +1,83 @@
+.visualizer-stage[data-visualizer-theme="risograph"] {
+  border: 3px solid var(--ink);
+  background:
+    radial-gradient(circle at 30% 38%, rgba(255, 61, 122, 0.48) 0 8%, transparent 9% 100%),
+    radial-gradient(circle at 68% 54%, rgba(15, 127, 121, 0.42) 0 8%, transparent 9% 100%),
+    #efe3c4;
+  background-size: 18px 18px, 16px 16px, auto;
+  box-shadow: var(--shadow);
+}
+
+.risograph-visualizer,
+.risograph-visualizer * {
+  pointer-events: none;
+}
+
+.risograph-visualizer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.risograph-viz-grid,
+.risograph-viz-core,
+.risograph-viz-bars,
+.risograph-viz-trace,
+.risograph-viz-trace span {
+  position: absolute;
+}
+
+.risograph-viz-grid,
+.risograph-viz-bars {
+  display: none;
+}
+
+.risograph-viz-core {
+  left: 50%;
+  top: 50%;
+  width: min(48vw, 210px);
+  aspect-ratio: 1;
+  border: 24px solid var(--ink);
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #efe3c4 0 3px, var(--ink) 3px 5px);
+  transform: translate(-50%, -50%);
+  animation: risograph-viz-spin var(--riso-spin-ms, 8s) linear infinite;
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.risograph-viz-trace {
+  inset: 20px;
+}
+
+.risograph-viz-trace span {
+  inset: 18% 8%;
+  border: 2px solid var(--cobalt);
+  border-radius: 50%;
+  transform: rotate(calc(var(--viz-index, 1) * 14deg));
+  opacity: 0.48;
+  animation: risograph-viz-trace var(--bar-ms, 3800ms) ease-in-out infinite;
+  animation-delay: var(--beat-offset, 0ms);
+  animation-play-state: var(--theme-motion-state, paused);
+}
+
+.risograph-viz-trace span:nth-child(2) {
+  inset: 26% 16%;
+  border-color: var(--green);
+  transform: rotate(-18deg);
+}
+
+.risograph-viz-trace span:nth-child(3) {
+  inset: 34% 24%;
+  border-color: var(--salmon);
+  transform: rotate(31deg);
+}
+
+@keyframes risograph-viz-spin {
+  to { transform: translate(-50%, -50%) rotate(1turn); }
+}
+
+@keyframes risograph-viz-trace {
+  0% { transform: rotate(-8deg) scale(var(--scope-peak-scale, 1.08)); }
+  50% { transform: rotate(10deg) scale(0.92); }
+  100% { transform: rotate(-8deg) scale(1); }
+}
