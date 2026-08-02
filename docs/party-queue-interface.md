@@ -182,7 +182,7 @@ Location: `/render.yaml`
 - Single scrollable page (Now Playing → Queue)
 - Search button in header (top right)
 - No visible rate limit indicator (error only when exceeded)
-- "Electric Love" logo in Nabla font (psychedelic/musical)
+- "Pass the Aux" logo in Nabla font (psychedelic/musical)
 - Color palette: electric-pink, purple, blue, yellow on dark void background
 - Animated blob background with floating particles
 
