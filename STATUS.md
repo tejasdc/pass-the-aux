@@ -10,6 +10,14 @@ _Last updated 2026-08-02._
 
 ### DONE
 
+- **Theme system implemented locally 2026-08-02 (not deployed):** real
+  now-playing ReccoBeats BPM/energy is exposed in `/api/now-playing`, cached in
+  KV per track, and shown as a live badge when available. Client theme selection
+  now persists per device in localStorage with Suprematist as the default
+  fallback and random assignment for new visitors. Theme roster currently wired:
+  Suprematist, Facet, Field, Winamp, Milkdrop, Generative Flow, and Risograph.
+  Beat-reactive theme motion is driven only by current-track BPM/energy plus
+  Spotify playhead progress, pauses when hidden, and respects reduced motion.
 - Ported from Render (Express, `server/`) to a single **Cloudflare Worker**
   (`worker/src/index.js`) serving `/api/*` + the Vite client via Workers Assets.
   All state in KV — host tokens survive deploys/crashes (the reason for the port).
@@ -55,13 +63,10 @@ _Last updated 2026-08-02._
   facet full-replace port was cancelled) — decision reversed to "keep suprematist,
   fix mobile sizing, add facet as a SECOND theme via a theme system."
 
-### NEXT — theme system (not built yet, awaiting Tejas's roster + switcher calls)
+### NEXT
 
-- Multiple selectable themes; each carries its design-inspiration (artist +
-  artwork + MoMA link) shown in a tooltip/label. Roster to ship: Suprematist
-  (default, live) + Facet (`design/moma-mockups/facet-final.html`, finished).
-  Architect for more; skip the rejected reactive experiments. Persist the
-  guest's choice (localStorage). Build on the now-fixed suprematist.
+- Review the local theme ports on device, then deploy when approved. Theme
+  summary and remaining polish notes live in `tmp/reviews/theme-system.md`.
 
 ### Superseded — visualizer gallery redesign (design exploration, NOT in prod)
 

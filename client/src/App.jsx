@@ -90,7 +90,7 @@ function App() {
   if (isHostRoute) {
     return (
       <div className={`theme-root ${activeTheme.className}`} data-theme={activeTheme.id}>
-        <ActiveBackground />
+        <ActiveBackground track={nowPlaying} partyStatus={partyStatus} />
         <HostPage
           partyStatus={partyStatus}
           onStatusChange={handlePartyStatusChanged}
@@ -109,7 +109,7 @@ function App() {
 
   return (
     <div className={`theme-root ${activeTheme.className}`} data-theme={activeTheme.id}>
-      <ActiveBackground />
+      <ActiveBackground track={nowPlaying} partyStatus={partyStatus} />
 
       <div className="app">
         <header className="header">

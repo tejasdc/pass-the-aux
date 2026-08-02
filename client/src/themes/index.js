@@ -1,4 +1,12 @@
 import AnimatedBackground from '../components/AnimatedBackground';
+import {
+  EmptyBackground,
+  FieldBackground,
+  GenerativeFlowBackground,
+  MilkdropBackground,
+  RisographBackground,
+  WinampBackground,
+} from './ThemeBackgrounds';
 
 export const DEFAULT_THEME_ID = 'suprematist';
 
@@ -10,6 +18,54 @@ export const THEMES = [
     href: 'https://www.moma.org/collection/works/80387',
     className: 'theme-suprematist',
     Background: AnimatedBackground,
+  },
+  {
+    id: 'facet',
+    name: 'Facet',
+    reference: 'Crisp geometric abstraction after the Facet MoMA prototype',
+    href: 'https://www.moma.org/search/?query=geometric%20abstraction',
+    className: 'theme-facet',
+    Background: EmptyBackground,
+  },
+  {
+    id: 'field',
+    name: 'Field',
+    reference: 'Villalba field study with a vertical cut and progress wedge',
+    href: 'https://www.moma.org/search/?query=Villalba',
+    className: 'theme-field',
+    Background: FieldBackground,
+  },
+  {
+    id: 'winamp',
+    name: 'Winamp',
+    reference: 'Winamp 2.x classic skin and fire spectrum analyzer',
+    href: 'https://winamp.com/',
+    className: 'theme-winamp',
+    Background: WinampBackground,
+  },
+  {
+    id: 'milkdrop',
+    name: 'Milkdrop',
+    reference: 'Ryan Geiss, Milkdrop 2 beat-clock visualizer',
+    href: 'https://www.geisswerks.com/milkdrop/',
+    className: 'theme-milkdrop',
+    Background: MilkdropBackground,
+  },
+  {
+    id: 'flow',
+    name: 'Flow',
+    reference: 'Processing-era generative flow fields by Reas, Fry, and peers',
+    href: 'https://processing.org/',
+    className: 'theme-flow',
+    Background: GenerativeFlowBackground,
+  },
+  {
+    id: 'risograph',
+    name: 'Risograph',
+    reference: 'Risograph zine and gig-poster print language',
+    href: 'https://www.riso.co.jp/english/',
+    className: 'theme-risograph',
+    Background: RisographBackground,
   },
 ];
 
