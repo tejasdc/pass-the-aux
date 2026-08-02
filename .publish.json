@@ -1,8 +1,8 @@
 {
-  "slug": "electric-love",
-  "title": "Electric Love",
-  "desc": "Ever shared your Spotify at a house party and watched someone play a song instead of queuing it? Here guests can only search and queue — and every pick has to pass the vibe check.",
-  "external": "https://party.tejas.nyc/",
+  "slug": "pass-the-aux",
+  "title": "Pass the Aux",
+  "desc": "Ever shared your Spotify at a party and watched someone play a song instead of queuing it? Guests here can only search and queue — nobody can skip, pause, or hijack the playlist, and no one needs a Spotify account, AirPlay, or even WiFi. Every pick has to pass the vibe check.",
+  "external": "https://aux.tejas.nyc/",
   "level": "sovereign",
   "types": [
     "project"
