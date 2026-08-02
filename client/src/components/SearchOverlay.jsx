@@ -54,6 +54,7 @@ function SearchItem({ track, onAdd, addingUri, wasAdded, wasRejected, rejectedRe
 function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
+  const [searchError, setSearchError] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [addingUri, setAddingUri] = useState(null);
   const [addedUris, setAddedUris] = useState(new Set());
@@ -73,6 +74,7 @@ function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
     if (!isOpen) {
       setQuery('');
       setResults([]);
+      setSearchError('');
       setAddedUris(new Set());
       setRejectedUris(new Map());
     }
@@ -91,11 +93,15 @@ function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
       if (response.ok) {
         const data = await response.json();
         setResults(data.tracks || []);
+        setSearchError('');
       } else {
+        const data = await response.json().catch(() => ({}));
+        setSearchError(data.message || data.error || 'Search is not available right now');
         setResults([]);
       }
     } catch (err) {
       console.error('Search error:', err);
+      setSearchError('Search is not available right now');
       setResults([]);
     } finally {
       setIsSearching(false);
@@ -191,14 +197,21 @@ function SearchOverlay({ isOpen, onClose, onAddToQueue, onShowToast }) {
           <div className="loading-state">Searching...</div>
         )}
 
-        {!isSearching && query && results.length === 0 && (
+        {!isSearching && searchError && (
+          <div className="search-empty">
+            <p>{searchError}</p>
+            <small>Try again when the host opens the queue</small>
+          </div>
+        )}
+
+        {!isSearching && !searchError && query && results.length === 0 && (
           <div className="search-empty">
             <p>No results found</p>
             <small>Try a different search term</small>
           </div>
         )}
 
-        {!isSearching && !query && (
+        {!isSearching && !searchError && !query && (
           <div className="search-empty">
             <p>Search for songs</p>
             <small>Type to find tracks to add to the queue</small>

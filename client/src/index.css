@@ -928,3 +928,167 @@ body {
 .add-btn.rejected span {
   font-size: 1.2rem;
 }
+
+/* ============ CLOSED PARTY ============ */
+.no-party {
+  min-height: calc(100vh - 80px);
+  padding: 6rem 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.no-party-mark {
+  width: 86px;
+  height: 86px;
+  border-radius: 50%;
+  border: 1px solid rgba(41, 221, 221, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  color: var(--electric-blue);
+  box-shadow: var(--glow-blue);
+  margin-bottom: 1.5rem;
+}
+
+.no-party h2,
+.host-panel h2 {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.6rem;
+  line-height: 1.1;
+  margin-bottom: 0.75rem;
+}
+
+.no-party p,
+.host-copy {
+  max-width: 320px;
+  color: var(--text-dim);
+  font-size: 0.82rem;
+  line-height: 1.6;
+}
+
+.host-link {
+  margin-top: 3rem;
+  color: rgba(255, 255, 255, 0.22);
+  font-size: 0.62rem;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.host-link:hover {
+  color: var(--electric-blue);
+}
+
+/* ============ HOST ============ */
+.host-app {
+  min-height: 100%;
+}
+
+.host-back {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--glass-edge);
+  background: var(--glass);
+  color: var(--text-bright);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+}
+
+.host-back:hover {
+  border-color: var(--electric-blue);
+  box-shadow: 0 0 20px rgba(41, 221, 221, 0.2);
+}
+
+.host-back svg {
+  width: 20px;
+  height: 20px;
+}
+
+.host-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem 4rem;
+}
+
+.host-panel {
+  width: 100%;
+  border: 1px solid var(--glass-edge);
+  background: rgba(15, 5, 30, 0.7);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+}
+
+.host-kicker {
+  color: var(--electric-blue);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 0.7rem;
+}
+
+.host-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.host-input {
+  width: 100%;
+  padding: 0.9rem 1rem;
+  background: var(--glass);
+  border: 1px solid var(--glass-edge);
+  border-radius: 12px;
+  color: var(--text-bright);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.9rem;
+  outline: none;
+}
+
+.host-input:focus {
+  border-color: var(--electric-purple);
+  box-shadow: 0 0 20px rgba(184, 41, 221, 0.2);
+}
+
+.host-button {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(41, 221, 221, 0.45);
+  border-radius: 100px;
+  background: var(--electric-blue);
+  color: var(--void);
+  font-family: 'Syne', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.host-button:hover:not(:disabled) {
+  box-shadow: var(--glow-blue);
+  transform: translateY(-1px);
+}
+
+.host-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.host-button.secondary {
+  margin-top: 0.75rem;
+  background: transparent;
+  color: var(--electric-pink);
+  border-color: rgba(255, 45, 146, 0.45);
+}

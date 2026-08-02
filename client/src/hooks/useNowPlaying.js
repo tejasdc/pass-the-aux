@@ -2,12 +2,19 @@ import { useState, useEffect, useCallback } from 'react';
 
 const REFRESH_INTERVAL = 5000; // 5 seconds
 
-export function useNowPlaying() {
+export function useNowPlaying({ enabled = true } = {}) {
   const [track, setTrack] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchNowPlaying = useCallback(async () => {
+    if (!enabled) {
+      setTrack(null);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/now-playing');
 
@@ -48,7 +55,7 @@ export function useNowPlaying() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   // Initial fetch
   useEffect(() => {
@@ -57,9 +64,11 @@ export function useNowPlaying() {
 
   // Auto-refresh
   useEffect(() => {
+    if (!enabled) return undefined;
+
     const interval = setInterval(fetchNowPlaying, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchNowPlaying]);
+  }, [enabled, fetchNowPlaying]);
 
   return { track, isLoading, error, refetch: fetchNowPlaying };
 }

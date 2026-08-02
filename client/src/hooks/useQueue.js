@@ -2,12 +2,19 @@ import { useState, useEffect, useCallback } from 'react';
 
 const REFRESH_INTERVAL = 10000; // 10 seconds
 
-export function useQueue() {
+export function useQueue({ enabled = true } = {}) {
   const [queue, setQueue] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchQueue = useCallback(async () => {
+    if (!enabled) {
+      setQueue([]);
+      setError(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch('/api/queue');
 
@@ -35,7 +42,7 @@ export function useQueue() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [enabled]);
 
   // Initial fetch
   useEffect(() => {
@@ -44,12 +51,21 @@ export function useQueue() {
 
   // Auto-refresh
   useEffect(() => {
+    if (!enabled) return undefined;
+
     const interval = setInterval(fetchQueue, REFRESH_INTERVAL);
     return () => clearInterval(interval);
-  }, [fetchQueue]);
+  }, [enabled, fetchQueue]);
 
   // Add to queue function
   const addToQueue = useCallback(async (uri) => {
+    if (!enabled) {
+      return {
+        success: false,
+        error: 'No party right now. Check back when the host starts one.',
+      };
+    }
+
     try {
       const response = await fetch('/api/queue', {
         method: 'POST',
@@ -81,7 +97,7 @@ export function useQueue() {
       console.error('Error adding to queue:', err);
       return { success: false, error: err.message };
     }
-  }, [fetchQueue]);
+  }, [enabled, fetchQueue]);
 
   return { queue, isLoading, error, refetch: fetchQueue, addToQueue };
 }
