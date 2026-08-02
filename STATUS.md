@@ -10,6 +10,26 @@ _Last updated 2026-08-02._
 
 ### DONE
 
+- **Theme usability + layout fix DEPLOYED + visually verified 2026-08-02
+  (version `420b270b`).** Fixed three reported failures across all 11 themes:
+  (1) the theme switcher was being covered by the closed search overlay's
+  close button and by visualizer background SVGs (elementFromPoint returned
+  `button.search-close` / `path` at the switcher center) — now a single
+  pointer-events/stacking contract makes header chrome topmost-hittable and
+  forces all closed/decorative layers non-hittable; switcher clickable on
+  11/11 and widened to read "THEME / ‹name› N/11". (2) The provenance footer
+  was near-black (`rgba(20,18,14,.48)`) and invisible on dark themes
+  (Milkdrop, Winamp) — now every theme sets a legible `--provenance-color`.
+  (3) Visualizations were full-screen backgrounds hidden behind the cards and
+  album art — NowPlaying now has a dedicated `.visualizer-stage` plus a
+  separate album-art frame (side-by-side at wider viewports), so each theme's
+  visualization and album art both have space. Verified with Playwright
+  against the deployed bundle: 11/11 switcher-clickable, 11/11 footer legible
+  (screenshots reviewed), dedicated viz stage + album frame on every theme,
+  zero console errors. KNOWN TRADEOFF: Suprematist floating shapes are no
+  longer drag/ripple-interactive (they became decorative under the new
+  pointer-events invariant); they still animate. Restoring draggability with
+  header-above-shapes is a possible follow-up.
 - **Theme system DEPLOYED + verified live on aux.tejas.nyc 2026-08-02
   (version `6f937120`).** All 11 themes are live and browseable via the
   switcher: Suprematist (default), Facet, Field, Winamp, Milkdrop, Generative
