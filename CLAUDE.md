@@ -47,15 +47,22 @@ DONE (cont.):
   srv-d68csver433s73cic0mg) now return 503. Cloudflare is sole production.
   Tejas confirmed a real host flow + queued song worked first.
 
-PENDING (in priority order):
-1. **Deploy the suprematist skin to production** — the new theme is built and
-   committed but party.tejas.nyc may still serve the old neon build until the
-   next `wrangler deploy`. (An automated check is deploying + screenshotting.)
-2. **Optional cleanup**: fully delete the suspended Render services and remove
-   `server/` + `render.yaml` from the repo once you're sure Cloudflare is
-   stable. Suspended costs nothing, so no rush.
-3. **/host polish**: show the End Party state on load instead of the stale
+DONE (cont.):
+- **Suprematist skin DEPLOYED to production 2026-08-02** (version
+  339d3083). party.tejas.nyc now serves the Pass the Aux gallery-cream theme
+  with ambient Malevich physics; verified live (title "Pass the Aux", no
+  "Electric Love" strings, bg rgb(237,232,219), shapes present) at 430px and
+  1390px. Client copy leads with the no-hijack value prop across meta/OG tags.
+
+PENDING (optional, no rush):
+1. **/host polish**: show End Party state on load instead of the stale
    "Continue with Spotify" button when already the bound host (cosmetic).
+2. **Full Render deletion**: suspended services cost nothing; delete them and
+   remove `server/` + `render.yaml` from the repo whenever you're confident
+   Cloudflare is stable.
+3. **Shape-vs-legibility tuning** (if desired): floating shapes occasionally
+   overlap queue rows; lower opacity or bias them toward margins if it reads
+   too busy at a real party.
 
 ## Architecture
 
