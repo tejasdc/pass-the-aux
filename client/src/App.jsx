@@ -173,7 +173,7 @@ function NoPartyState() {
 function ProvenanceFooter() {
   return (
     <footer className="provenance">
-      Design after Kazimir Malevich,{' '}
+      Design inspired by Kazimir Malevich&rsquo;s{' '}
       <a href="https://www.moma.org/collection/works/80387" target="_blank" rel="noreferrer">
         Suprematist Painting (1916-17)
       </a>
