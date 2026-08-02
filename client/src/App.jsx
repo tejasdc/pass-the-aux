@@ -1,11 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
-import AnimatedBackground from './components/AnimatedBackground';
 import NowPlaying from './components/NowPlaying';
 import QueueList from './components/QueueList';
 import SearchOverlay from './components/SearchOverlay';
+import ThemeSwitcher from './components/ThemeSwitcher';
 import Toast from './components/Toast';
 import { useNowPlaying } from './hooks/useNowPlaying';
 import { useQueue } from './hooks/useQueue';
+import { useThemeSelection } from './hooks/useThemeSelection';
 import './index.css';
 
 const PARTY_STATUS_REFRESH_MS = 30000;
@@ -16,6 +17,8 @@ function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', isVisible: false, isError: false });
   const [partyStatus, setPartyStatus] = useState({ live: false, isLoading: true });
+  const { activeTheme, cycleTheme } = useThemeSelection();
+  const ActiveBackground = activeTheme.Background;
 
   const isGuestExperienceLive = partyStatus.live && !isHostRoute;
   const { track: nowPlaying, isLoading: isNowPlayingLoading } = useNowPlaying({
@@ -86,12 +89,13 @@ function App() {
 
   if (isHostRoute) {
     return (
-      <>
-        <AnimatedBackground />
+      <div className={`theme-root ${activeTheme.className}`} data-theme={activeTheme.id}>
+        <ActiveBackground />
         <HostPage
           partyStatus={partyStatus}
           onStatusChange={handlePartyStatusChanged}
           onShowToast={showToast}
+          activeTheme={activeTheme}
         />
         <Toast
           message={toast.message}
@@ -99,17 +103,17 @@ function App() {
           isError={toast.isError}
           onHide={hideToast}
         />
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <AnimatedBackground />
+    <div className={`theme-root ${activeTheme.className}`} data-theme={activeTheme.id}>
+      <ActiveBackground />
 
       <div className="app">
         <header className="header">
-          <div className="header-spacer"></div>
+          <ThemeSwitcher activeTheme={activeTheme} onCycle={cycleTheme} />
           <a className="wordmark" href="/" aria-label={`${PRODUCT_NAME} home`}>
             {PRODUCT_NAME}
             <span>{partyStatus.live ? 'the queue is open' : 'gallery closed'}</span>
@@ -135,7 +139,7 @@ function App() {
             <NoPartyState />
           )}
         </main>
-        <ProvenanceFooter />
+        <ProvenanceFooter activeTheme={activeTheme} />
       </div>
 
       <SearchOverlay
@@ -151,7 +155,7 @@ function App() {
         isError={toast.isError}
         onHide={hideToast}
       />
-    </>
+    </div>
   );
 }
 
@@ -170,18 +174,18 @@ function NoPartyState() {
   );
 }
 
-function ProvenanceFooter() {
+function ProvenanceFooter({ activeTheme }) {
   return (
     <footer className="provenance">
-      Design inspired by Kazimir Malevich&rsquo;s{' '}
-      <a href="https://www.moma.org/collection/works/80387" target="_blank" rel="noreferrer">
-        Suprematist Painting (1916-17)
+      Design inspired by{' '}
+      <a href={activeTheme.href} target="_blank" rel="noreferrer">
+        {activeTheme.reference}
       </a>
     </footer>
   );
 }
 
-function HostPage({ partyStatus, onStatusChange, onShowToast }) {
+function HostPage({ partyStatus, onStatusChange, onShowToast, activeTheme }) {
   const [isStarting, setIsStarting] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
 
@@ -261,7 +265,7 @@ function HostPage({ partyStatus, onStatusChange, onShowToast }) {
           )}
         </section>
       </main>
-      <ProvenanceFooter />
+      <ProvenanceFooter activeTheme={activeTheme} />
     </div>
   );
 }

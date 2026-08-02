@@ -33,6 +33,12 @@ body {
   overflow-x: hidden;
 }
 
+.theme-root {
+  min-height: 100vh;
+  background: var(--canvas);
+  color: var(--ink);
+}
+
 button,
 input {
   font: inherit;
@@ -252,6 +258,7 @@ a {
 .search-close:focus-visible,
 .search-input:focus-visible,
 .host-link:focus-visible,
+.theme-switcher:focus-visible,
 .provenance a:focus-visible {
   outline: 3px solid var(--cobalt);
   outline-offset: 3px;
@@ -261,6 +268,65 @@ a {
 .host-back svg {
   width: 21px;
   height: 21px;
+}
+
+.theme-switcher {
+  width: 48px;
+  height: 48px;
+  border: 2px solid var(--ink);
+  border-radius: 0;
+  background: var(--pink);
+  color: var(--ink);
+  display: inline-grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  cursor: pointer;
+  text-align: left;
+  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
+}
+
+.theme-switcher:hover {
+  transform: translateY(-2px) rotate(2deg);
+  background: var(--green);
+  color: var(--canvas);
+}
+
+.theme-switcher-mark {
+  width: 12px;
+  height: 28px;
+  background: var(--red);
+  transform: rotate(24deg);
+  box-shadow: 8px -4px 0 var(--cobalt);
+}
+
+.theme-switcher-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.theme-switcher-copy span,
+.theme-switcher-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.theme-switcher-copy span {
+  font-size: 0.48rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.theme-switcher-copy small {
+  color: currentColor;
+  font-size: 0.46rem;
+  font-weight: 800;
+  line-height: 1;
 }
 
 /* Now playing */
