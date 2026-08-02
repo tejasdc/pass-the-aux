@@ -17,7 +17,7 @@ Spotify's own sharing options — Jam, shared speakers, handing your phone aroun
 ## How it works
 
 - **Party sessions** — the public app is closed until the host starts a live party. Live sessions last 8 hours and can be ended explicitly by the host.
-- **Host-only auth** — the party host opens `/host`, enters the host passphrase, then authenticates with Spotify Premium; the server holds and refreshes that one token. Guests never log in — zero friction, and it sidesteps Spotify's dev-mode user limit.
+- **Host-only auth** — the party host opens `/host` and authenticates with Spotify Premium. The first Spotify user to complete host OAuth is bound as the host in KV; after that, any other Spotify identity is refused. Guests never log in — zero friction, and Spotify development mode limits OAuth to the owner and explicitly allowlisted users.
 - **Now Playing + Up Next** — everyone sees the current track and the upcoming queue.
 - **Search & queue** — full Spotify catalog search, one tap to add.
 - **Rate limiting** — 10 songs per hour per guest, so nobody floods the queue.
@@ -47,10 +47,9 @@ Set local Worker secrets in `.dev.vars` when testing real Spotify auth:
 SPOTIFY_CLIENT_ID=...
 SPOTIFY_CLIENT_SECRET=...
 SPOTIFY_REDIRECT_URI=http://localhost:8787/api/auth/callback
-HOST_KEY=...
 ```
 
-Then open `/host`, enter the host passphrase, and continue through Spotify OAuth. Guests continue to use the same origin app and relative `/api/*` routes. When no party is live, guests see a closed-party state and the Worker refuses Spotify-backed search and queue requests server-side.
+Then open `/host` and continue through Spotify OAuth. Guests continue to use the same origin app and relative `/api/*` routes. When no party is live, guests see a closed-party state and the Worker refuses Spotify-backed search and queue requests server-side.
 
 ## Deploy
 
@@ -60,7 +59,6 @@ Cloudflare Workers is the primary deployment target. From the repo root:
 npm install
 npx wrangler secret put SPOTIFY_CLIENT_ID
 npx wrangler secret put SPOTIFY_CLIENT_SECRET
-npx wrangler secret put HOST_KEY
 npx wrangler deploy
 ```
 
@@ -70,10 +68,19 @@ Configure the Spotify app redirect URI to the deployed Worker origin plus `/api/
 
 ## Party flow
 
-1. The host visits `/host` and enters the passphrase stored in the `HOST_KEY` Worker secret.
-2. The Worker verifies the passphrase, creates a short-lived OAuth grant, and redirects the host through Spotify OAuth.
-3. After Spotify returns successfully, the Worker stores the host token and opens a single live party session in KV with an 8-hour expiry.
-4. Guests can search and add tracks only while that session is live. If the host ends the party, or the KV session expires, search and queue endpoints return `403` and the app shows "No party right now."
+1. The host visits `/host` and starts Spotify OAuth.
+2. After Spotify returns successfully, the Worker fetches the Spotify user profile. If no host is bound yet, that Spotify user id is saved in KV as the host.
+3. The Worker stores the bound host's token, issues a host session cookie, and opens a single live party session in KV with an 8-hour expiry.
+4. Future host OAuth attempts must come from the same Spotify user id. Other Spotify identities are refused before tokens are saved or a party is started.
+5. Guests can search and add tracks only while that session is live. If the host ends the party, or the KV session expires, search and queue endpoints return `403` and the app shows "No party right now."
+
+## Change the bound host
+
+If the host Spotify account ever needs to change, delete the binding from the production KV namespace, then have the new host start OAuth from `/host`:
+
+```bash
+npx wrangler kv key delete "host:spotify-user-id" --binding PARTY_QUEUE_KV --remote
+```
 
 ## Provenance
 

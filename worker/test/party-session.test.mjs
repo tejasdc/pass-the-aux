@@ -40,7 +40,6 @@ class MemoryKV {
 function createEnv(overrides = {}) {
   return {
     PARTY_QUEUE_KV: new MemoryKV(),
-    HOST_KEY: "open sesame",
     SPOTIFY_CLIENT_ID: "spotify-client",
     SPOTIFY_CLIENT_SECRET: "spotify-secret",
     ASSETS: {
@@ -72,23 +71,23 @@ function getRedirectLocation(response) {
   return location;
 }
 
-async function assertPartyClosed(env) {
-  const response = await call(env, "/api/party/status");
+function getHostCookie(response) {
+  const setCookie = response.headers.get("Set-Cookie");
+  assert.ok(setCookie, "expected host session Set-Cookie header");
+  assert.match(setCookie, /^el_host_session=/);
+  return setCookie.split(";")[0];
+}
+
+async function assertPartyClosed(env, init = {}) {
+  const response = await call(env, "/api/party/status", init);
   assert.equal(response.status, 200);
   const status = await responseJson(response);
   assert.equal(status.live, false);
   assert.equal(status.expiresAt, null);
 }
 
-async function startThroughOAuth(env) {
-  const startResponse = await callJson(env, "/api/party/start", {
-    passphrase: "open sesame",
-  });
-  assert.equal(startResponse.status, 200);
-  const start = await responseJson(startResponse);
-  assert.match(start.authUrl, /^\/api\/auth\/login\?grant=/);
-
-  const loginResponse = await call(env, start.authUrl);
+async function beginOAuth(env, path = "/api/auth/login?returnTo=/host") {
+  const loginResponse = await call(env, path);
   assert.equal(loginResponse.status, 302);
   const spotifyLocation = getRedirectLocation(loginResponse);
   const spotifyUrl = new URL(spotifyLocation);
@@ -96,47 +95,79 @@ async function startThroughOAuth(env) {
   assert.equal(spotifyUrl.searchParams.get("client_id"), "spotify-client");
   const oauthState = spotifyUrl.searchParams.get("state");
   assert.ok(oauthState);
+  return oauthState;
+}
 
+async function completeOAuth(env, oauthState, spotifyUserId) {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
-    assert.equal(String(url), "https://accounts.spotify.com/api/token");
-    return Response.json({
-      access_token: "access-token",
-      refresh_token: "refresh-token",
-      expires_in: 3600,
-    });
+    if (String(url) === "https://accounts.spotify.com/api/token") {
+      return Response.json({
+        access_token: `access-token-${spotifyUserId}`,
+        refresh_token: `refresh-token-${spotifyUserId}`,
+        expires_in: 3600,
+      });
+    }
+
+    if (String(url) === "https://api.spotify.com/v1/me") {
+      return Response.json({ id: spotifyUserId, display_name: spotifyUserId });
+    }
+
+    throw new Error(`Unexpected fetch: ${url}`);
   };
 
   try {
-    const callbackResponse = await call(
+    return await call(
       env,
       `/api/auth/callback?code=spotify-code&state=${oauthState}`,
-    );
-    assert.equal(callbackResponse.status, 302);
-    assert.equal(
-      getRedirectLocation(callbackResponse),
-      `${BASE_URL}/host?authenticated=true&party=live`,
     );
   } finally {
     globalThis.fetch = originalFetch;
   }
 }
 
-async function testStartRefusesWithoutHostKeyMatch() {
-  const missingSecretEnv = createEnv({ HOST_KEY: undefined });
-  const missingSecretResponse = await callJson(missingSecretEnv, "/api/party/start", {
-    passphrase: "open sesame",
-  });
-  assert.equal(missingSecretResponse.status, 403);
+async function startThroughOAuth(env, spotifyUserId = "spotify-host") {
+  const oauthState = await beginOAuth(env);
+  const callbackResponse = await completeOAuth(env, oauthState, spotifyUserId);
 
-  const wrongPassphraseEnv = createEnv();
-  const wrongPassphraseResponse = await callJson(wrongPassphraseEnv, "/api/party/start", {
-    passphrase: "wrong",
-  });
-  assert.equal(wrongPassphraseResponse.status, 403);
+  assert.equal(callbackResponse.status, 302);
+  assert.equal(
+    getRedirectLocation(callbackResponse),
+    `${BASE_URL}/host?authenticated=true&party=live`,
+  );
 
-  const bareLoginResponse = await call(wrongPassphraseEnv, "/api/auth/login");
-  assert.equal(bareLoginResponse.status, 403);
+  return getHostCookie(callbackResponse);
+}
+
+async function testAuthStartsWithoutPassphrase() {
+  const env = createEnv();
+  const startResponse = await call(env, "/api/party/start", { method: "POST" });
+  assert.equal(startResponse.status, 200);
+  const start = await responseJson(startResponse);
+  assert.equal(start.authUrl, "/api/auth/login?returnTo=%2Fhost");
+
+  const oauthState = await beginOAuth(env, start.authUrl);
+  const callbackResponse = await completeOAuth(env, oauthState, "spotify-host");
+
+  assert.equal(callbackResponse.status, 302);
+  assert.equal(await env.PARTY_QUEUE_KV.get("host:spotify-user-id"), "spotify-host");
+  assert.equal((await env.PARTY_QUEUE_KV.get("host:tokens", "json")).hostUserId, "spotify-host");
+}
+
+async function testFirstHostBindingRefusesSecondIdentity() {
+  const env = createEnv();
+  await startThroughOAuth(env, "spotify-host");
+
+  assert.equal(await env.PARTY_QUEUE_KV.get("host:spotify-user-id"), "spotify-host");
+
+  const oauthState = await beginOAuth(env);
+  const callbackResponse = await completeOAuth(env, oauthState, "someone-else");
+
+  assert.equal(callbackResponse.status, 302);
+  assert.equal(getRedirectLocation(callbackResponse), `${BASE_URL}/host?error=host_mismatch`);
+  assert.equal(callbackResponse.headers.get("Set-Cookie"), null);
+  assert.equal(await env.PARTY_QUEUE_KV.get("host:spotify-user-id"), "spotify-host");
+  assert.equal((await env.PARTY_QUEUE_KV.get("host:tokens", "json")).hostUserId, "spotify-host");
 }
 
 async function testGuestRoutesRefuseWhenNoPartyIsLive() {
@@ -160,25 +191,58 @@ async function testGuestRoutesRefuseWhenNoPartyIsLive() {
   assert.equal(queueWriteResponse.status, 403);
 }
 
+async function testEndAndLogoutRequireHostSession() {
+  const env = createEnv();
+  const hostCookie = await startThroughOAuth(env);
+
+  const guestEndResponse = await call(env, "/api/party/end", { method: "POST" });
+  assert.equal(guestEndResponse.status, 403);
+
+  const hostEndResponse = await call(env, "/api/party/end", {
+    method: "POST",
+    headers: { Cookie: hostCookie },
+  });
+  assert.equal(hostEndResponse.status, 200);
+  await assertPartyClosed(env, { headers: { Cookie: hostCookie } });
+
+  const guestLogoutResponse = await call(env, "/api/auth/logout", { method: "POST" });
+  assert.equal(guestLogoutResponse.status, 403);
+
+  await startThroughOAuth(env);
+  const hostLogoutResponse = await call(env, "/api/auth/logout", {
+    method: "POST",
+    headers: { Cookie: hostCookie },
+  });
+  assert.equal(hostLogoutResponse.status, 200);
+  assert.match(hostLogoutResponse.headers.get("Set-Cookie"), /Max-Age=0/);
+  assert.equal(await env.PARTY_QUEUE_KV.get("host:tokens", "json"), null);
+  assert.equal(await env.PARTY_QUEUE_KV.get("party:session", "json"), null);
+}
+
 async function testPartyLifecycle() {
   const env = createEnv();
 
   await assertPartyClosed(env);
-  await startThroughOAuth(env);
+  const hostCookie = await startThroughOAuth(env);
 
-  const liveResponse = await call(env, "/api/party/status");
+  const liveResponse = await call(env, "/api/party/status", {
+    headers: { Cookie: hostCookie },
+  });
   assert.equal(liveResponse.status, 200);
   const live = await responseJson(liveResponse);
   assert.equal(live.live, true);
+  assert.equal(live.hostSession, true);
   assert.ok(live.expiresAt);
   assert.ok(live.secondsRemaining <= 8 * 60 * 60);
 
   const session = await env.PARTY_QUEUE_KV.get("party:session", "json");
   assert.equal(session.live, true);
+  assert.equal(session.hostUserId, "spotify-host");
   assert.equal(session.durationSeconds, 8 * 60 * 60);
 
-  const endResponse = await callJson(env, "/api/party/end", {
-    passphrase: "open sesame",
+  const endResponse = await call(env, "/api/party/end", {
+    method: "POST",
+    headers: { Cookie: hostCookie },
   });
   assert.equal(endResponse.status, 200);
   await assertPartyClosed(env);
@@ -194,8 +258,10 @@ const realDateNow = Date.now;
 Date.now = () => fakeNow;
 
 try {
-  await testStartRefusesWithoutHostKeyMatch();
+  await testAuthStartsWithoutPassphrase();
+  await testFirstHostBindingRefusesSecondIdentity();
   await testGuestRoutesRefuseWhenNoPartyIsLive();
+  await testEndAndLogoutRequireHostSession();
   await testPartyLifecycle();
   console.log("party-session worker harness passed");
 } finally {
