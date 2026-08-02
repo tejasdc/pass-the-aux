@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pass the Aux — Field</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Spline+Sans+Mono:wght@300;400;500&family=Schibsted+Grotesk:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --field: #4E9E92;
+    --field-deep: #43948a;
+    --seam: rgba(10, 30, 28, .55);
+    --ink: #10201E;
+    --charcoal: #232430;
+    --paper: #EDE8D6;
+    --butter: #E9DfA0;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    background:
+      radial-gradient(140% 110% at 30% 20%, var(--field) 55%, var(--field-deep) 100%);
+    color: var(--ink);
+    font-family: 'Spline Sans Mono', monospace;
+    position: relative;
+    overflow-x: hidden;
+  }
+  /* canvas weave */
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .25;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .04 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* the seam — full height hairline, slightly right of center */
+  .seam { position: fixed; top: 0; bottom: 0; left: 62%; width: 1px; background: var(--seam); opacity: .5; }
+  .seam2 { position: fixed; top: 34%; left: 18%; width: 64px; height: 1px; background: var(--seam); opacity: .5; }
+
+  /* the wedge = progress, descending from top */
+  .wedge {
+    position: fixed; top: 0; left: 60.6%;
+    width: 26px; height: 47vh; /* progress */
+    background: var(--charcoal);
+    clip-path: polygon(0 0, 100% 0, 78% 100%, 22% 100%);
+  }
+  .wedge-tick {
+    position: fixed; top: calc(47vh + 10px); left: 59.2%;
+    width: 14px; height: 6px; background: var(--butter);
+  }
+
+  .page { position: relative; z-index: 2; max-width: 430px; margin: 0 auto; min-height: 100vh; padding: 30px 30px 48px; display: flex; flex-direction: column; }
+
+  .wordmark { font-size: 11px; letter-spacing: .38em; text-transform: lowercase; color: var(--ink); font-weight: 500; }
+  .status { font-size: 10px; letter-spacing: .2em; margin-top: 6px; color: rgba(16,32,30,.66); }
+
+  .now { margin-top: auto; padding-top: 46vh; }
+  .np-label { font-size: 10px; letter-spacing: .32em; color: rgba(16,32,30,.6); }
+  h1 {
+    font-family: 'Schibsted Grotesk', sans-serif; font-weight: 500;
+    font-size: 30px; line-height: 1.08; margin-top: 10px; letter-spacing: -.01em;
+  }
+  .artist { font-size: 12px; margin-top: 8px; letter-spacing: .08em; color: rgba(16,32,30,.75); }
+  .time { font-size: 11px; letter-spacing: .18em; margin-top: 8px; color: rgba(16,32,30,.6); }
+
+  .queue { margin-top: 42px; }
+  .q-label { font-size: 10px; letter-spacing: .32em; color: rgba(16,32,30,.6); margin-bottom: 4px; }
+  .row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding: 13px 0; border-top: 1px solid var(--seam);
+  }
+  .row:first-of-type { border-top: none; }
+  .t { font-family: 'Schibsted Grotesk', sans-serif; font-weight: 500; font-size: 15px; }
+  .a { font-size: 11px; color: rgba(16,32,30,.7); margin-top: 3px; letter-spacing: .05em; }
+  .n { font-size: 10px; letter-spacing: .2em; color: rgba(16,32,30,.55); }
+
+  .search { margin-top: 44px; position: relative; }
+  .search input {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid var(--ink);
+    font-family: 'Spline Sans Mono', monospace; font-size: 14px; letter-spacing: .04em;
+    padding: 12px 40px 12px 0; outline: none; color: var(--ink);
+  }
+  .search input::placeholder { color: rgba(16,32,30,.5); }
+  .search button {
+    position: absolute; right: 0; bottom: 8px; background: none; border: none;
+    font-family: 'Spline Sans Mono', monospace; font-size: 16px; cursor: pointer; color: var(--ink);
+  }
+  .foot { margin-top: 16px; font-size: 9px; letter-spacing: .26em; color: rgba(16,32,30,.55); }
+  .foot b { color: var(--paper); font-weight: 400; }
+</style>
+</head>
+<body>
+  <div class="seam"></div>
+  <div class="seam2"></div>
+  <div class="wedge"></div>
+  <div class="wedge-tick"></div>
+
+  <div class="page">
+    <header>
+      <div class="wordmark">pass the aux</div>
+      <div class="status">queue open · 2:47 elapsed</div>
+    </header>
+
+    <section class="now">
+      <div class="np-label">now playing</div>
+      <h1>Bohemian Rhapsody</h1>
+      <div class="artist">Queen · A Night at the Opera</div>
+      <div class="time">2:47 / 5:55 — the wedge is the song</div>
+    </section>
+
+    <section class="queue">
+      <div class="q-label">up next · 3</div>
+      <div class="row"><div><div class="t">Dancing Queen</div><div class="a">ABBA</div></div><span class="n">maya</span></div>
+      <div class="row"><div><div class="t">Juice</div><div class="a">Lizzo</div></div><span class="n">sam</span></div>
+      <div class="row"><div><div class="t">September</div><div class="a">Earth, Wind &amp; Fire</div></div><span class="n">dev</span></div>
+    </section>
+
+    <div class="search">
+      <input placeholder="search the catalog">
+      <button>↳</button>
+    </div>
+    <div class="foot">vibe check passing · 10 adds / hour</div>
+  </div>
+</body>
+</html>

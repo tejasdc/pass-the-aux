@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pass the Aux — Suprematist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #EDE8DB;
+    --ink: #14120E;
+    --salmon: #E89A84;
+    --pink: #EFC9BF;
+    --green: #1E7A5A;
+    --slate: #8D94A0;
+    --cobalt: #2438B8;
+    --red: #C6371F;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--canvas);
+    color: var(--ink);
+    font-family: 'Archivo', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+  /* canvas grain */
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .35;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  /* floating suprematist furniture */
+  .shape { position: fixed; pointer-events: none; }
+  .pink-beam { width: 620px; height: 74px; background: var(--pink); transform: rotate(38deg); top: 12%; left: -180px; }
+  .slate-oval { width: 340px; height: 250px; background: var(--slate); border-radius: 50%; bottom: -90px; right: -110px; opacity: .9; }
+  .ghost-circle { width: 180px; height: 180px; background: #CFCBBE; border-radius: 50%; top: 8%; right: 14%; }
+  .green-stripes { top: 58px; left: 26px; transform: rotate(-32deg); }
+  .green-stripes i { display: block; background: var(--green); height: 9px; margin-bottom: 9px; }
+  .green-stripes i:nth-child(1) { width: 110px; }
+  .green-stripes i:nth-child(2) { width: 150px; }
+  .green-stripes i:nth-child(3) { width: 74px; background: var(--cobalt); height: 6px; }
+  .red-tick { width: 34px; height: 7px; background: var(--red); transform: rotate(-55deg); top: 46%; left: 8%; }
+
+  .page { position: relative; z-index: 2; max-width: 420px; margin: 0 auto; padding: 28px 26px 60px; }
+
+  .wordmark { font-family: 'Archivo Black'; font-size: 15px; letter-spacing: .34em; text-transform: uppercase; }
+  .wordmark small { display: block; font-family: 'Archivo'; font-weight: 500; font-size: 10px; letter-spacing: .22em; margin-top: 5px; color: #6F6A5C; }
+
+  .stage { margin-top: 54px; position: relative; height: 300px; }
+  .art {
+    width: 208px; height: 208px; background: var(--salmon);
+    transform: rotate(-8deg); position: absolute; left: 6px; top: 18px;
+    box-shadow: 14px 18px 0 rgba(20,18,14,.08);
+    display: flex; align-items: flex-end; padding: 14px;
+  }
+  .art span { font-family: 'Archivo Black'; font-size: 11px; letter-spacing: .18em; color: rgba(20,18,14,.55); text-transform: uppercase; }
+  .black-bar {
+    position: absolute; height: 34px; background: var(--ink);
+    right: -26px; top: 150px; width: 250px; transform: rotate(-8deg);
+  }
+  .black-bar b {
+    position: absolute; inset: 0; width: 62%; overflow: hidden;
+    border-right: 6px solid var(--canvas);
+  }
+  .times { position: absolute; right: 0; top: 196px; font-size: 11px; letter-spacing: .12em; color: #6F6A5C; transform: rotate(-8deg); }
+
+  .now { margin-top: 8px; }
+  .kicker { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--red); font-weight: 600; }
+  h1 { font-family: 'Archivo Black'; font-size: 34px; line-height: 1.02; text-transform: uppercase; margin-top: 8px; }
+  .artist { font-size: 14px; font-weight: 500; margin-top: 6px; letter-spacing: .06em; }
+
+  .queue { margin-top: 44px; }
+  .queue-head { display: flex; justify-content: space-between; align-items: baseline; }
+  h2 { font-family: 'Archivo Black'; font-size: 13px; letter-spacing: .28em; text-transform: uppercase; }
+  .count { font-size: 11px; letter-spacing: .14em; color: #6F6A5C; }
+  .row { display: flex; align-items: center; gap: 16px; padding: 15px 0; border-bottom: 1.5px solid rgba(20,18,14,.14); }
+  .tick { width: 26px; height: 8px; flex: none; }
+  .row:nth-child(2) .tick { background: var(--green); transform: rotate(-32deg); }
+  .row:nth-child(3) .tick { background: var(--cobalt); transform: rotate(20deg); }
+  .row:nth-child(4) .tick { background: var(--salmon); transform: rotate(-10deg); }
+  .row div { flex: 1; }
+  .t { font-weight: 600; font-size: 15px; }
+  .a { font-size: 12px; color: #6F6A5C; margin-top: 2px; letter-spacing: .04em; }
+  .by { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #6F6A5C; }
+
+  .search { margin-top: 46px; display: flex; gap: 0; }
+  .search input {
+    flex: 1; background: transparent; border: none; border-bottom: 3px solid var(--ink);
+    font-family: 'Archivo'; font-size: 16px; padding: 12px 2px; outline: none;
+  }
+  .search input::placeholder { color: #9B9585; }
+  .search button {
+    width: 54px; height: 54px; background: var(--ink); color: var(--canvas);
+    border: none; font-family: 'Archivo Black'; font-size: 18px; cursor: pointer;
+    transform: translateY(2px);
+  }
+  .vibe { margin-top: 18px; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: #6F6A5C; }
+  .vibe b { color: var(--green); }
+</style>
+</head>
+<body>
+  <div class="shape pink-beam"></div>
+  <div class="shape slate-oval"></div>
+  <div class="shape ghost-circle"></div>
+  <div class="shape green-stripes"><i></i><i></i><i></i></div>
+  <div class="shape red-tick"></div>
+
+  <div class="page">
+    <header class="wordmark">Pass the Aux<small>the queue is open</small></header>
+
+    <section class="stage">
+      <div class="art"><span>Queen</span></div>
+      <div class="black-bar"><b></b></div>
+      <div class="times">2:47 — 5:55</div>
+    </section>
+
+    <section class="now">
+      <div class="kicker">Now Playing</div>
+      <h1>Bohemian<br>Rhapsody</h1>
+      <div class="artist">Queen — A Night at the Opera</div>
+    </section>
+
+    <section class="queue">
+      <div class="queue-head"><h2>Up Next</h2><span class="count">3 queued</span></div>
+      <div class="row"><span class="tick"></span><div><div class="t">Dancing Queen</div><div class="a">ABBA</div></div><span class="by">Maya</span></div>
+      <div class="row"><span class="tick"></span><div><div class="t">Juice</div><div class="a">Lizzo</div></div><span class="by">Sam</span></div>
+      <div class="row"><span class="tick"></span><div><div class="t">September</div><div class="a">Earth, Wind &amp; Fire</div></div><span class="by">Dev</span></div>
+    </section>
+
+    <div class="search">
+      <input placeholder="Search a song to queue…">
+      <button>→</button>
+    </div>
+    <div class="vibe">Vibe check <b>· passing</b> — 10 adds/hour</div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pass the Aux — Facet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Spline+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wall: #D8D5CC;
+    --line: #101410;
+    --deep: #14453A;
+    --pine: #1E5C43;
+    --sage: #86AE8F;
+    --palesage: #A9C4A9;
+    --chartreuse: #B4C22C;
+    --lime: #8FA824;
+    --oxblood: #8E2222;
+    --brick: #A03026;
+    --yellow: #D8CE28;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--wall);
+    font-family: 'Spline Sans', sans-serif;
+    color: var(--line);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .3;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='130' height='130' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .page { max-width: 430px; margin: 0 auto; padding: 26px 22px 56px; position: relative; }
+
+  .wordmark {
+    font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 17px;
+    letter-spacing: .02em; display: inline-block;
+    background: var(--line); color: var(--wall); padding: 7px 12px 8px;
+    transform: rotate(-1.6deg);
+  }
+  .sub { font-size: 11px; letter-spacing: .18em; text-transform: uppercase; margin-top: 8px; color: #5C5A50; }
+
+  /* faceted now-playing assembly */
+  .assembly { margin-top: 34px; transform: rotate(-2deg); filter: drop-shadow(10px 14px 0 rgba(16,20,16,.16)); }
+  .panel {
+    border: 3px solid var(--line);
+    position: relative;
+  }
+  .panel-top {
+    height: 190px; background: var(--pine);
+    clip-path: polygon(0 6%, 100% 0, 97% 100%, 3% 94%);
+    display: grid; grid-template-columns: 1.2fr 1fr .8fr; grid-template-rows: 1fr 1fr;
+    overflow: hidden; border: none;
+  }
+  .cell { border: 3px solid var(--line); margin: -1.5px; }
+  .c1 { background: var(--oxblood); }
+  .c2 { background: var(--sage); grid-row: span 2; display: flex; align-items: center; justify-content: center; }
+  .c3 { background: var(--deep); }
+  .c4 { background: var(--yellow); }
+  .c5 { background: var(--brick); }
+  .c2 span { font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 34px; transform: rotate(-90deg); letter-spacing: .04em; color: var(--line); white-space: nowrap; }
+
+  .np-block {
+    background: var(--palesage); border: 3px solid var(--line); border-top: none;
+    padding: 18px 18px 16px;
+    clip-path: polygon(0 0, 100% 0, 98.5% 100%, 1% 96%);
+  }
+  .kicker { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; font-weight: 500; }
+  h1 { font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 30px; line-height: 1; margin-top: 6px; }
+  .artist { font-size: 13px; margin-top: 5px; }
+  .bar { margin-top: 14px; height: 16px; border: 3px solid var(--line); background: var(--wall); position: relative; }
+  .bar b { position: absolute; inset: 0; width: 47%; background: var(--chartreuse); border-right: 3px solid var(--line); }
+  .times { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .12em; margin-top: 6px; }
+
+  .queue { margin-top: 40px; }
+  h2 { font-family: 'Bricolage Grotesque'; font-weight: 700; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 14px; }
+  .row {
+    display: flex; align-items: center; justify-content: space-between;
+    border: 3px solid var(--line); padding: 13px 16px; margin-bottom: -3px;
+    background: var(--wall);
+  }
+  .row:nth-child(2) { transform: rotate(.7deg); background: #CFD3C0; }
+  .row:nth-child(3) { transform: rotate(-.9deg); }
+  .row:nth-child(4) { transform: rotate(.5deg); background: #D2CDBB; }
+  .t { font-weight: 500; font-size: 15px; }
+  .a { font-size: 12px; color: #55534A; margin-top: 2px; }
+  .chip {
+    font-size: 10px; font-weight: 500; letter-spacing: .1em; text-transform: uppercase;
+    border: 2.5px solid var(--line); padding: 4px 8px;
+  }
+  .row:nth-child(2) .chip { background: var(--chartreuse); }
+  .row:nth-child(3) .chip { background: var(--sage); }
+  .row:nth-child(4) .chip { background: var(--brick); color: var(--wall); }
+
+  .search { margin-top: 38px; display: flex; }
+  .search input {
+    flex: 1; border: 3px solid var(--line); background: #E4E1D6;
+    font-family: 'Spline Sans'; font-size: 15px; padding: 14px; outline: none;
+  }
+  .search button {
+    border: 3px solid var(--line); border-left: none; background: var(--yellow);
+    font-family: 'Bricolage Grotesque'; font-weight: 800; font-size: 14px;
+    padding: 0 18px; cursor: pointer; text-transform: uppercase; letter-spacing: .04em;
+  }
+  .vibe { margin-top: 16px; font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: #5C5A50; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <span class="wordmark">PASS THE AUX</span>
+    <div class="sub">Queue open · vibe check on</div>
+
+    <div class="assembly">
+      <div class="panel-top">
+        <div class="cell c1"></div>
+        <div class="cell c2"><span>QUEEN</span></div>
+        <div class="cell c3"></div>
+        <div class="cell c4"></div>
+        <div class="cell c5"></div>
+      </div>
+      <div class="np-block">
+        <div class="kicker">Now Playing</div>
+        <h1>Bohemian Rhapsody</h1>
+        <div class="artist">Queen — A Night at the Opera</div>
+        <div class="bar"><b></b></div>
+        <div class="times"><span>2:47</span><span>5:55</span></div>
+      </div>
+    </div>
+
+    <section class="queue">
+      <h2>Up next — 3</h2>
+      <div class="row"><div><div class="t">Dancing Queen</div><div class="a">ABBA</div></div><span class="chip">Maya</span></div>
+      <div class="row"><div><div class="t">Juice</div><div class="a">Lizzo</div></div><span class="chip">Sam</span></div>
+      <div class="row"><div><div class="t">September</div><div class="a">Earth, Wind &amp; Fire</div></div><span class="chip">Dev</span></div>
+    </section>
+
+    <div class="search">
+      <input placeholder="Search a song…">
+      <button>Queue</button>
+    </div>
+    <div class="vibe">Every pick passes the vibe check</div>
+  </div>
+</body>
+</html>

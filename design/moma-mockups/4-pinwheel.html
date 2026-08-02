@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pass the Aux — Pinwheel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #E9E4D4;
+    --ink: #17150F;
+    --red: #C6371F;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'Azeret Mono', monospace;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .32;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .page { max-width: 430px; margin: 0 auto; padding: 30px 28px 54px; }
+
+  .head { display: flex; justify-content: space-between; align-items: baseline; }
+  .wordmark { font-weight: 600; font-size: 13px; letter-spacing: .3em; text-transform: uppercase; }
+  .live { font-size: 10px; letter-spacing: .22em; color: var(--red); font-weight: 500; }
+
+  /* pinwheel: rotational strokes = the record spinning */
+  .wheel-wrap { margin: 42px auto 0; width: 280px; height: 280px; position: relative; }
+  .wheel { position: absolute; inset: 0; animation: spin 24s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .stroke {
+    position: absolute; left: 50%; top: 50%;
+    height: 9px; background: var(--ink); transform-origin: 0 50%;
+    clip-path: polygon(0 40%, 100% 0, 100% 100%, 0 60%);
+  }
+  .center-dot { position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; background: var(--red); border-radius: 50%; }
+  .t-elapsed { position: absolute; left: -6px; bottom: -8px; font-size: 10px; letter-spacing: .18em; }
+  .t-total { position: absolute; right: -6px; bottom: -8px; font-size: 10px; letter-spacing: .18em; color: #77715F; }
+
+  .now { text-align: center; margin-top: 34px; }
+  .kicker { font-size: 10px; letter-spacing: .34em; text-transform: uppercase; color: #77715F; }
+  h1 { font-weight: 600; font-size: 22px; letter-spacing: .01em; margin-top: 10px; }
+  .artist { font-size: 12px; margin-top: 6px; letter-spacing: .06em; color: #55503F; }
+
+  .queue { margin-top: 46px; }
+  .q-head { display: flex; justify-content: space-between; font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: #77715F; margin-bottom: 6px; }
+  .row { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid rgba(23,21,15,.25); }
+  .dash { flex: none; width: 30px; height: 7px; background: var(--ink); clip-path: polygon(0 30%, 100% 0, 100% 100%, 0 70%); }
+  .row:nth-child(3) .dash { transform: rotate(8deg); }
+  .row:nth-child(4) .dash { transform: rotate(-8deg); }
+  .row div { flex: 1; }
+  .t { font-weight: 500; font-size: 14px; }
+  .a { font-size: 11px; color: #55503F; margin-top: 2px; }
+  .n { font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: #77715F; }
+
+  .search { margin-top: 42px; display: flex; align-items: center; gap: 14px; }
+  .search input {
+    flex: 1; background: transparent; border: none; border-bottom: 2px solid var(--ink);
+    font-family: 'Azeret Mono', monospace; font-size: 14px; padding: 11px 0; outline: none; letter-spacing: .02em;
+  }
+  .search input::placeholder { color: #99937E; }
+  .search button {
+    background: transparent; border: 2px solid var(--ink); width: 46px; height: 46px;
+    font-family: 'Azeret Mono'; font-size: 16px; cursor: pointer; color: var(--ink);
+  }
+  .search button:hover { background: var(--ink); color: var(--paper); }
+  .foot { margin-top: 16px; font-size: 9px; letter-spacing: .28em; text-transform: uppercase; color: #77715F; }
+  .foot em { color: var(--red); font-style: normal; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="head">
+      <span class="wordmark">Pass the Aux</span>
+      <span class="live">● live</span>
+    </header>
+
+    <div class="wheel-wrap">
+      <div class="wheel" id="wheel"></div>
+      <div class="center-dot"></div>
+      <span class="t-elapsed">2:47</span>
+      <span class="t-total">5:55</span>
+    </div>
+
+    <section class="now">
+      <div class="kicker">Now Playing</div>
+      <h1>Bohemian Rhapsody</h1>
+      <div class="artist">Queen — A Night at the Opera</div>
+    </section>
+
+    <section class="queue">
+      <div class="q-head"><span>Up Next</span><span>3 queued</span></div>
+      <div class="row"><span class="dash"></span><div><div class="t">Dancing Queen</div><div class="a">ABBA</div></div><span class="n">Maya</span></div>
+      <div class="row"><span class="dash"></span><div><div class="t">Juice</div><div class="a">Lizzo</div></div><span class="n">Sam</span></div>
+      <div class="row"><span class="dash"></span><div><div class="t">September</div><div class="a">Earth, Wind &amp; Fire</div></div><span class="n">Dev</span></div>
+    </section>
+
+    <div class="search">
+      <input placeholder="search to queue">
+      <button>+</button>
+    </div>
+    <div class="foot">47% played · vibe check <em>passing</em></div>
+  </div>
+
+<script>
+  // pinwheel: 4 arms of tapered strokes, lengths stepping down — progress darkens played arms
+  const wheel = document.getElementById('wheel');
+  const ARMS = 4, PER = 7;
+  for (let arm = 0; arm < ARMS; arm++) {
+    for (let i = 0; i < PER; i++) {
+      const s = document.createElement('div');
+      s.className = 'stroke';
+      const angle = arm * 90 + i * 10;
+      const len = 128 - i * 13;
+      const inset = 18 + i * 9;
+      s.style.width = len + 'px';
+      s.style.transform = `rotate(${angle}deg) translateX(${inset}px)`;
+      const played = (arm * PER + i) / (ARMS * PER) < .47;
+      s.style.opacity = played ? 1 : .28;
+      wheel.appendChild(s);
+    }
+  }
+</script>
+</body>
+</html>
