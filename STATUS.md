@@ -10,8 +10,27 @@ _Last updated 2026-08-02._
 
 ### DONE
 
+- **Unique per-theme visualizers DEPLOYED + visually verified 2026-08-02
+  (version `81812ce8`).** Every theme's visualizer was the same shared
+  rings+bars primitive recolored; now each theme renders its OWN distinct
+  reactive visualizer, built by one design agent per theme (11 in parallel,
+  each owning only its `visualizers/<id>.jsx`+`.css`): Cathode = XY Lissajous
+  oscilloscope (canvas, phosphor persistence), Milkdrop = plasma + superscope
+  (canvas), Winamp = fire spectrum LED bars + falling peak caps (canvas), Flow
+  = generative ink-stroke flow field (canvas), Afterglow = cinematic chromatic
+  bloom + lens streak (CSS), Holo = holographic prism laminate + magnetic-strip
+  progress (CSS), Vellum = illuminated gold rosette + rubric flourishes (SVG),
+  Risograph = spinning halftone vinyl disc (CSS), Suprematist = Malevich
+  planes, Facet = shattered stained-glass mosaic (SVG), Field = calm two-tone
+  color-field + moving seam/wedge. All phase-locked to real BPM/energy via
+  `useBeatStyle`, pause on no-beat/hidden/reduced-motion, no fake FFT. Verified
+  with Playwright against the deployed bundle: all 11 screenshots reviewed and
+  confirmed VISUALLY DISTINCT, switcher clickable 11/11, footers legible, zero
+  console errors, build+worker tests pass. Suprematist shape drag/ripple
+  interactivity RESTORED and verified (a shape's transform moved under a
+  simulated drag while the switcher stayed clickable).
 - **Visualizer architecture + Suprematist interactivity implemented locally
-  2026-08-02 (not deployed).** Every theme registry entry now owns a
+  2026-08-02 (deployed).** Every theme registry entry now owns a
   `Visualizer` component parallel to `Background`, and `NowPlaying` renders the
   active theme's visualizer inside the dedicated `aria-hidden` stage with the
   live track passed through. One isolated visualizer JSX+CSS pair now exists
