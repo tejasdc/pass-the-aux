@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pass the Aux — Facet Reactive</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Spline+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --wall:#D8D5CC; --line:#101410; --deep:#14453A; --pine:#1E5C43;
+    --sage:#86AE8F; --palesage:#A9C4A9; --chartreuse:#B4C22C; --lime:#8FA824;
+    --oxblood:#8E2222; --brick:#A03026; --yellow:#D8CE28;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--wall); font-family:'Spline Sans',sans-serif; color:var(--line); min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+  body::after { content:''; position:fixed; inset:0; pointer-events:none; opacity:.3;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='130' height='130' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .page { max-width:430px; margin:0 auto; padding:26px 22px 44px; position:relative; }
+
+  .top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .wordmark { font-family:'Bricolage Grotesque'; font-weight:800; font-size:17px; letter-spacing:.02em;
+    display:inline-block; background:var(--line); color:var(--wall); padding:7px 12px 8px; transform:rotate(-1.6deg); }
+  .bpm { font-size:10px; letter-spacing:.14em; text-transform:uppercase; text-align:right; color:#5C5A50; line-height:1.5; }
+  .bpm b { font-family:'Bricolage Grotesque'; font-weight:800; font-size:15px; color:var(--line); }
+  .sub { font-size:11px; letter-spacing:.18em; text-transform:uppercase; margin-top:10px; color:#5C5A50; }
+
+  /* faceted assembly — the reactive floor */
+  .assembly { margin-top:22px; transform:rotate(-2deg); filter:drop-shadow(10px 14px 0 rgba(16,20,16,.16)); }
+  .panel-top {
+    height:250px; background:var(--pine);
+    clip-path:polygon(0 5%, 100% 0, 97% 100%, 3% 95%);
+    display:grid; grid-template-columns:repeat(5,1fr); grid-template-rows:repeat(4,1fr);
+    overflow:hidden;
+  }
+  .cell { border:3px solid var(--line); margin:-1.5px; will-change:background; }
+  .cell.wide { grid-column:span 2; }
+  .cell.tall { grid-row:span 2; }
+  .cell .lbl { width:100%; height:100%; display:flex; align-items:center; justify-content:center;
+    font-family:'Bricolage Grotesque'; font-weight:800; font-size:30px; letter-spacing:.04em; color:var(--line); white-space:nowrap; }
+  .cell .lbl span { transform:rotate(-90deg); }
+
+  .np-block { background:var(--palesage); border:3px solid var(--line); border-top:none;
+    padding:18px 18px 16px; clip-path:polygon(0 0, 100% 0, 98.5% 100%, 1% 96%); }
+  .kicker { font-size:10px; letter-spacing:.3em; text-transform:uppercase; font-weight:500; }
+  h1 { font-family:'Bricolage Grotesque'; font-weight:800; font-size:32px; line-height:1; margin-top:6px; }
+  .artist { font-size:13px; margin-top:6px; }
+  .bar { margin-top:14px; height:16px; border:3px solid var(--line); background:var(--wall); position:relative; }
+  .bar b { position:absolute; inset:0; width:19%; background:var(--chartreuse); border-right:3px solid var(--line); }
+  .times { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.12em; margin-top:6px; }
+
+  .queue { margin-top:38px; }
+  h2 { font-family:'Bricolage Grotesque'; font-weight:700; font-size:14px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:14px; }
+  .row { display:flex; align-items:center; gap:14px; border:3px solid var(--line); padding:11px 14px; margin-bottom:-3px; background:var(--wall); }
+  .row:nth-child(2) { transform:rotate(.7deg); background:#CFD3C0; }
+  .row:nth-child(3) { transform:rotate(-.9deg); }
+  .row:nth-child(4) { transform:rotate(.5deg); background:#D2CDBB; }
+  .row:nth-child(5) { transform:rotate(-.6deg); }
+  .row-art { width:44px; height:44px; flex:none; object-fit:cover; border:2.5px solid var(--line); background:#333; }
+  .row-meta { flex:1; min-width:0; }
+  .t { font-weight:500; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .a { font-size:12px; color:#55534A; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .chip { font-size:10px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; border:2.5px solid var(--line); padding:4px 8px; flex:none; }
+  .row:nth-child(2) .chip { background:var(--chartreuse); }
+  .row:nth-child(3) .chip { background:var(--sage); }
+  .row:nth-child(4) .chip { background:var(--brick); color:var(--wall); }
+  .row:nth-child(5) .chip { background:var(--yellow); }
+
+  .search { margin-top:38px; display:flex; }
+  .search input { flex:1; border:3px solid var(--line); background:#E4E1D6; font-family:'Spline Sans'; font-size:15px; padding:14px; outline:none; }
+  .search button { border:3px solid var(--line); border-left:none; background:var(--yellow); font-family:'Bricolage Grotesque'; font-weight:800; font-size:14px; padding:0 18px; cursor:pointer; text-transform:uppercase; letter-spacing:.04em; }
+  .vibe { margin-top:16px; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#5C5A50; }
+  .prov { margin-top:6px; font-size:10px; color:#7A7768; }
+  .prov a { color:inherit; }
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="top">
+      <span class="wordmark">PASS THE AUX</span>
+      <div class="bpm"><b id="bpmv">126</b> BPM<br>high energy</div>
+    </div>
+    <div class="sub">Queue open · vibe check on</div>
+
+    <div class="assembly">
+      <div class="panel-top" id="floor"></div>
+      <div class="np-block">
+        <div class="kicker">Now Playing</div>
+        <h1>Stay</h1>
+        <div class="artist">FISHER — Stay</div>
+        <div class="bar"><b></b></div>
+        <div class="times"><span>0:32</span><span>2:45</span></div>
+      </div>
+    </div>
+
+    <section class="queue">
+      <h2>Up next — 20</h2>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0"><div class="row-meta"><div class="t">If You Need Me</div><div class="a">Caius, iamalex, Hazy Year</div></div><span class="chip">Maya</span></div>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946"><div class="row-meta"><div class="t">What A Life</div><div class="a">John Summit, Guz, Stevie Appleton</div></div><span class="chip">Sam</span></div>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae2432651"><div class="row-meta"><div class="t">ten</div><div class="a">Fred again.., Jozzy</div></div><span class="chip">Dev</span></div>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b273c5716278abba6a103ad13aa7"><div class="row-meta"><div class="t">Oblivious</div><div class="a">Mild Minds</div></div><span class="chip">Ari</span></div>
+    </section>
+
+    <div class="search"><input placeholder="Search a song…"><button>Queue</button></div>
+    <div class="vibe">Every pick passes the vibe check</div>
+    <div class="prov">Design inspired by a geometric abstraction at <a href="https://www.moma.org" target="_blank" rel="noreferrer">MoMA</a></div>
+  </div>
+
+<script>
+  // ---- build the faceted floor: crisp slanted cells, facet palette ----
+  const floor = document.getElementById('floor');
+  const PAL = ['#14453A','#1E5C43','#86AE8F','#4E7A3C','#A9C4A9','#2C6E5A'];
+  const RARE = ['#D8CE28','#B4C22C','#A03026','#8E2222'];
+  // a curated 5x4 layout with a couple of wide/tall cells for that irregular quilt feel
+  const layout = [
+    {c:'#8E2222'},{c:'#86AE8F',wide:true},{c:'#8FA824'},{c:'#A03026'},
+    {c:'#14453A'},{c:'#D8CE28',wide:true},{c:'#1E5C43'},
+    {c:'#A9C4A9'},{c:'#2C6E5A'},{c:'#4E7A3C',wide:true},{c:'#86AE8F'},
+    {c:'#1E5C43'},{c:'#B4C22C'},{c:'#14453A'},{c:'#A9C4A9'},{c:'#8E2222'},
+  ];
+  const cells = layout.map((L, i) => {
+    const el = document.createElement('div');
+    el.className = 'cell' + (L.wide?' wide':'') + (L.tall?' tall':'');
+    el.style.background = L.c;
+    if (i === 5) el.innerHTML = '<div class="lbl"><span>STAY</span></div>';
+    floor.appendChild(el);
+    return { el, base:hex(L.c), col:i % 5, glow:0 };
+  });
+  function hex(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+  function mix(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t].map(Math.round); }
+  const LIT = [246,240,205];
+
+  // ---- beat engine (prod: BPM/energy from ReccoBeats, phase from Spotify progress_ms) ----
+  let BPM = 126, ENERGY = 0.92;
+  let start = performance.now(), lastBeat = -1;
+  function beat(now){
+    const t = now - start, bl = 60000/BPM;
+    const bi = Math.floor(t/bl);
+    const waveCol = ((t/(bl*2)) % 1) * 6 - 0.5;   // sweep across 5 columns per 2 beats
+    let kick = 0;
+    if (bi !== lastBeat){ lastBeat = bi; kick = (bi%4===0 ? 1.0 : 0.55) * ENERGY; }
+    for (const c of cells){
+      const d = Math.abs(c.col - waveCol);
+      const wave = Math.exp(-((d/1.1)**2)) * ENERGY * 0.85;
+      c.glow += (Math.max(wave, kick*0.7) - c.glow)*0.4 + kick*0.35*(0.6+0.4*Math.random());
+      c.glow *= 0.88; c.glow = Math.max(0, Math.min(1, c.glow));
+      const col = mix(c.base, LIT, c.glow*0.8);
+      c.el.style.background = `rgb(${col[0]},${col[1]},${col[2]})`;
+    }
+    requestAnimationFrame(beat);
+  }
+  requestAnimationFrame(beat);
+
+  // ---- keep facet's hung-canvas sway ----
+  const assembly = document.querySelector('.assembly');
+  let tX=0, tY=0, cX=0, cY=0;
+  document.addEventListener('pointermove', e => { tX=(e.clientX/innerWidth-.5)*3; tY=(e.clientY/innerHeight-.5)*-2.4; }, {passive:true});
+  document.addEventListener('pointerleave', () => { tX=0; tY=0; });
+  (function sway(){ cX+=(tX-cX)*.06; cY+=(tY-cY)*.06;
+    assembly.style.transform = `rotate(-2deg) perspective(900px) rotateY(${cX}deg) rotateX(${cY}deg)`;
+    requestAnimationFrame(sway); })();
+</script>
+</body>
+</html>
