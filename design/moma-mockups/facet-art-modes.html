@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pass the Aux — Album Breakup Modes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Spline+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --wall:#D8D5CC; --line:#101410; --palesage:#A9C4A9; --chartreuse:#B4C22C; --yellow:#D8CE28; --sage:#86AE8F; --brick:#A03026; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--wall); font-family:'Spline Sans',sans-serif; color:var(--line); min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+  body::after { content:''; position:fixed; inset:0; pointer-events:none; opacity:.3;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='130' height='130'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .045 0'/%3E%3C/filter%3E%3Crect width='130' height='130' filter='url(%23n)'/%3E%3C/svg%3E"); }
+  .page { max-width:430px; margin:0 auto; padding:26px 22px 44px; position:relative; }
+  .top { display:flex; justify-content:space-between; align-items:flex-start; }
+  .wordmark { font-family:'Bricolage Grotesque'; font-weight:800; font-size:17px; background:var(--line); color:var(--wall); padding:7px 12px 8px; transform:rotate(-1.6deg); }
+  .bpm { font-size:10px; letter-spacing:.14em; text-transform:uppercase; text-align:right; color:#5C5A50; line-height:1.5; }
+  .bpm b { font-family:'Bricolage Grotesque'; font-weight:800; font-size:15px; color:var(--line); }
+  .search { margin-top:16px; display:flex; }
+  .search input { flex:1; border:3px solid var(--line); background:#E4E1D6; font-family:'Spline Sans'; font-size:15px; padding:13px 14px; outline:none; }
+  .search button { border:3px solid var(--line); border-left:none; background:var(--yellow); font-family:'Bricolage Grotesque'; font-weight:800; padding:0 18px; text-transform:uppercase; letter-spacing:.04em; cursor:pointer; }
+
+  .assembly { margin-top:20px; transform:rotate(-2deg); filter:drop-shadow(10px 14px 0 rgba(16,20,16,.16)); }
+  .panel-top { height:250px; clip-path:polygon(0 5%, 100% 0, 97% 100%, 3% 95%); overflow:hidden; position:relative; cursor:pointer; background:#0C100C; }
+  .panel-top svg { width:100%; height:100%; display:block; }
+  .mode-hud { position:absolute; left:0; right:0; bottom:0; z-index:3; display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:linear-gradient(to top, rgba(12,16,12,.8), transparent); pointer-events:none; }
+  .mode-name { font-family:'Bricolage Grotesque'; font-weight:800; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:#EDE8DB; }
+  .mode-dots { display:flex; gap:5px; } .mode-dots i { width:7px; height:7px; border:1.5px solid #EDE8DB; } .mode-dots i.on { background:var(--yellow); border-color:var(--yellow); }
+  .tap-hint { position:absolute; top:8px; right:10px; z-index:3; font-size:9px; letter-spacing:.14em; text-transform:uppercase; color:rgba(237,232,219,.6); pointer-events:none; }
+
+  .np-block { background:var(--palesage); border:3px solid var(--line); border-top:none; padding:18px 18px 16px; clip-path:polygon(0 0, 100% 0, 98.5% 100%, 1% 96%); }
+  .kicker { font-size:10px; letter-spacing:.3em; text-transform:uppercase; font-weight:500; }
+  h1 { font-family:'Bricolage Grotesque'; font-weight:800; font-size:32px; line-height:1; margin-top:6px; }
+  .artist { font-size:13px; margin-top:6px; }
+  .bar { margin-top:14px; height:16px; border:3px solid var(--line); background:var(--wall); position:relative; }
+  .bar b { position:absolute; inset:0; width:19%; background:var(--chartreuse); border-right:3px solid var(--line); }
+  .times { display:flex; justify-content:space-between; font-size:10px; letter-spacing:.12em; margin-top:6px; }
+
+  .queue { margin-top:38px; }
+  h2 { font-family:'Bricolage Grotesque'; font-weight:700; font-size:14px; letter-spacing:.06em; text-transform:uppercase; margin-bottom:14px; }
+  .row { display:flex; align-items:center; gap:14px; border:3px solid var(--line); padding:11px 14px; margin-bottom:-3px; background:var(--wall); }
+  .row:nth-child(2){ transform:rotate(.7deg); background:#CFD3C0; } .row:nth-child(3){ transform:rotate(-.9deg); }
+  .row-art { width:44px; height:44px; flex:none; object-fit:cover; border:2.5px solid var(--line); }
+  .row-meta{ flex:1; min-width:0; } .t{ font-weight:500; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; } .a{ font-size:12px; color:#55534A; margin-top:2px; }
+  .chip{ font-size:10px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; border:2.5px solid var(--line); padding:4px 8px; }
+  .row:nth-child(1) .chip{ background:var(--chartreuse);} .row:nth-child(2) .chip{ background:var(--sage);} .row:nth-child(3) .chip{ background:var(--brick); color:var(--wall);}
+</style>
+</head>
+<body>
+  <div class="page">
+    <div class="top"><span class="wordmark">PASS THE AUX</span><div class="bpm"><b>126</b> BPM<br>high energy</div></div>
+    <div class="search"><input placeholder="Search a song to queue…"><button>Queue</button></div>
+
+    <div class="assembly">
+      <div class="panel-top" id="panel">
+        <svg id="floor" viewBox="0 0 400 250" preserveAspectRatio="none">
+          <defs id="defs"></defs>
+          <rect x="0" y="0" width="400" height="250" fill="#0C100C"/>
+          <g id="tiles"></g>
+        </svg>
+        <div class="tap-hint">tap to switch ›</div>
+        <div class="mode-hud"><span class="mode-name" id="mname">01 · Flash</span><span class="mode-dots" id="mdots"></span></div>
+      </div>
+      <div class="np-block">
+        <div class="kicker">Now Playing</div>
+        <h1>Stay</h1><div class="artist">FISHER — Stay</div>
+        <div class="bar"><b></b></div>
+        <div class="times"><span>0:32</span><span>2:45</span></div>
+      </div>
+    </div>
+
+    <section class="queue">
+      <h2>Up next — 20</h2>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0"><div class="row-meta"><div class="t">If You Need Me</div><div class="a">Caius, iamalex, Hazy Year</div></div><span class="chip">Maya</span></div>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946"><div class="row-meta"><div class="t">What A Life</div><div class="a">John Summit, Guz</div></div><span class="chip">Sam</span></div>
+    </section>
+  </div>
+
+<script>
+  const NS='http://www.w3.org/2000/svg';
+  const COVER='https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f';
+  const W=400,H=250,COLS=5,ROWS=4;
+  const defs=document.getElementById('defs'), gTiles=document.getElementById('tiles');
+  const rnd=(a,b)=>a+Math.random()*(b-a);
+  const pts=[]; for(let j=0;j<=ROWS;j++){pts[j]=[];for(let i=0;i<=COLS;i++){
+    const jx=(i===0||i===COLS)?0:rnd(-13,13), jy=(j===0||j===ROWS)?0:rnd(-15,15);
+    pts[j][i]=[i/COLS*W+jx, j/ROWS*H+jy];}}
+  const tiles=[];
+  let idx=0;
+  for(let j=0;j<ROWS;j++)for(let i=0;i<COLS;i++){
+    const p=[pts[j][i],pts[j][i+1],pts[j+1][i+1],pts[j+1][i]];
+    const ptsStr=p.map(q=>q.join(',')).join(' ');
+    const cp=document.createElementNS(NS,'clipPath'); cp.id='c'+idx;
+    const cpoly=document.createElementNS(NS,'polygon'); cpoly.setAttribute('points',ptsStr); cp.appendChild(cpoly); defs.appendChild(cp);
+    const g=document.createElementNS(NS,'g');
+    const img=document.createElementNS(NS,'image'); img.setAttribute('href',COVER); img.setAttribute('x',0);img.setAttribute('y',0);img.setAttribute('width',W);img.setAttribute('height',H); img.setAttribute('preserveAspectRatio','xMidYMid slice'); img.setAttribute('clip-path','url(#c'+idx+')');
+    const seam=document.createElementNS(NS,'polygon'); seam.setAttribute('points',ptsStr); seam.setAttribute('fill','#F6F0CD'); seam.setAttribute('fill-opacity','0'); seam.setAttribute('stroke','#0C100C'); seam.setAttribute('stroke-width','3'); seam.setAttribute('stroke-linejoin','round');
+    g.appendChild(img); g.appendChild(seam); gTiles.appendChild(g);
+    tiles.push({ g, seam, row:j, col:i, cx:(p[0][0]+p[2][0])/2, cy:(p[0][1]+p[2][1])/2, group:(i+j)%4, ox:0, oy:0, glow:0 });
+    idx++;
+  }
+  function apply(){ for(const t of tiles){ t.g.setAttribute('transform',`translate(${t.ox.toFixed(1)},${t.oy.toFixed(1)})`); t.seam.setAttribute('fill-opacity',(Math.max(0,t.glow)*0.7).toFixed(3)); } }
+
+  // ---- beat clock + energy (prod: ReccoBeats + Spotify progress_ms) ----
+  let BPM=126, ENERGY=0.9, start=performance.now(), lastBeat=-1, kick=0;
+
+  // ---- the four breakup modes ----
+  const MODES=[
+    { name:'Flash', fn(bs){ if(bs.fired){const grp=bs.bi%4; for(const t of tiles) if(t.group===grp) t.glow=ENERGY*(bs.strong?0.85:0.66);}
+        for(const t of tiles){ t.glow*=0.88; t.ox*=0.6; t.oy*=0.6; } } },
+    { name:'Slices', fn(bs){ for(const t of tiles){ const dir=(t.row%2?1:-1); const target=dir*bs.kick*38; t.ox+=(target-t.ox)*0.4; t.oy*=0.6; t.glow*=0.85; } } },
+    { name:'Waves', fn(bs){ const amp=5+bs.kick*26; for(const t of tiles){ t.oy=Math.sin(t.cx*0.028 - bs.t*0.0075)*amp; t.ox*=0.6; t.glow*=0.8; } } },
+    { name:'Shatter', fn(bs){ if(bs.fired && bs.strong){ for(const t of tiles){ const dx=t.cx-200,dy=t.cy-125,d=Math.hypot(dx,dy)||1; t.ox+=dx/d*bs.kick*30; t.oy+=dy/d*bs.kick*30; t.glow=ENERGY*0.6; } }
+        for(const t of tiles){ t.ox*=0.86; t.oy*=0.86; t.glow*=0.85; } } },
+  ];
+  let mode=0;
+  const mname=document.getElementById('mname'), mdots=document.getElementById('mdots');
+  MODES.forEach(()=>mdots.appendChild(document.createElement('i')));
+  function setMode(m){ mode=(m+MODES.length)%MODES.length; for(const t of tiles){t.ox=0;t.oy=0;t.glow=0;}
+    mname.textContent=String(mode+1).padStart(2,'0')+' · '+MODES[mode].name;
+    [...mdots.children].forEach((d,k)=>d.classList.toggle('on',k===mode)); }
+  document.getElementById('panel').addEventListener('click', ()=>setMode(mode+1));
+  setMode(0);
+
+  function loop(now){
+    const t=now-start, bl=60000/BPM, bi=Math.floor(t/bl), fired=bi!==lastBeat, strong=bi%4===0;
+    if(fired){ lastBeat=bi; kick=ENERGY*(strong?1:0.6); } else kick*=0.88;
+    MODES[mode].fn({t,bi,fired,strong,kick});
+    apply();
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  // hung-canvas sway
+  const assembly=document.querySelector('.assembly'); let tX=0,tY=0,cX=0,cY=0;
+  document.addEventListener('pointermove', e=>{ tX=(e.clientX/innerWidth-.5)*3; tY=(e.clientY/innerHeight-.5)*-2.4; }, {passive:true});
+  document.addEventListener('pointerleave', ()=>{ tX=0; tY=0; });
+  (function sway(){ cX+=(tX-cX)*.06; cY+=(tY-cY)*.06; assembly.style.transform=`rotate(-2deg) perspective(900px) rotateY(${cX}deg) rotateX(${cY}deg)`; requestAnimationFrame(sway); })();
+</script>
+</body>
+</html>
