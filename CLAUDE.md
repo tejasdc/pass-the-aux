@@ -30,10 +30,14 @@ PENDING (in priority order):
    name is now **Pass the Aux**. Rename alongside the redesign (below), not as
    a separate pass.
 2. **Redesign**: Tejas wants the neon-rave theme replaced with a direction from
-   `design/moma-mockups/` — four mockups derived from MoMA geometric-abstraction
-   paintings (photos in `design/inspiration/`): 1-suprematist (Malevich),
-   2-field (Villalba teal), 3-facet (stained-glass), 4-pinwheel (concrete art;
-   agent's recommendation). **Tejas has NOT picked yet — ask before building.**
+   `design/moma-mockups/` — four INTERACTIVE mockups derived from MoMA
+   geometric-abstraction paintings (photos in `design/inspiration/`):
+   1-suprematist (Malevich; ambient collision physics, shapes are draggable
+   fidget toys, taps ripple), 2-field (Villalba teal; touch etches fading
+   hairline incisions, wedge = live progress), 3-facet (stained-glass; hung-
+   canvas pointer tilt), 4-pinwheel (concrete art; record-scratch spin with
+   inertia). Design intent: guests waiting to queue play with the page.
+   **Tejas has NOT picked a direction yet — ask before building the real skin.**
 3. **README additions**: (a) User Management — how a friend gets host access
    (see below); (b) "Deploy your own" — fork, create own Spotify dev app, set
    secrets, `wrangler deploy`, plus a Cloudflare one-click deploy button.
