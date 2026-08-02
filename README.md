@@ -5,11 +5,10 @@ to the host's Spotify. They cannot skip, pause, or take over playback, and every
 pick passes a vibe check. Guests need no Spotify account, no AirPlay access, no
 WiFi - just the QR.
 
-**Live → [aux.tejas.nyc](https://aux.tejas.nyc/)**
+**Live → [aux.tejas.nyc](https://aux.tejas.nyc/)** — that one's my house party. Want
+your own? [Set one up in a few minutes ↓](#run-your-own-party)
 
 <p align="center"><img src="screenshots/app.png" width="340" alt="Pass the Aux — now playing and the up-next queue" /></p>
-
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tejasdc/pass-the-aux)
 
 ## Why
 
@@ -70,35 +69,42 @@ same-origin app and relative `/api/*` routes. When no party is live, guests see 
 closed-party state and the Worker refuses Spotify-backed search and queue
 requests server-side.
 
-## Deploy your own
+## Run your own party
 
-1. Fork this repo.
-2. Create a free Spotify developer app at
-   [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard).
-3. Register your callback URL in the Spotify app settings. For local testing,
-   use `http://localhost:8787/api/auth/callback`; for production, use your
-   deployed Worker origin plus `/api/auth/callback`.
-4. Set the three Worker secrets:
+`aux.tejas.nyc` is my house party — a single Cloudflare Worker I run. Yours is
+about five minutes away. You need a free Cloudflare account and a Spotify Premium
+account for yourself as the host (Spotify's queue controls are Premium-only).
+**Guests need nothing** — no account, no app, no login, no WiFi.
+
+**1. Put the app on the internet.** Click the button. Cloudflare copies this repo,
+builds it, and deploys it to your own account:
+
+[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/tejasdc/pass-the-aux)
+
+You end up with a live URL like `https://pass-the-aux.<you>.workers.dev`.
+
+**2. Make a free Spotify app.** Open the
+[Spotify developer dashboard](https://developer.spotify.com/dashboard), create an
+app, and copy its **Client ID** and **Client Secret**. In that app's settings, add
+one **Redirect URI**: your live URL plus `/api/auth/callback` — e.g.
+`https://pass-the-aux.<you>.workers.dev/api/auth/callback`.
+
+**3. Hand the app your Spotify keys.** From a clone of the repo, set three secrets:
 
 ```bash
-npx wrangler secret put SPOTIFY_CLIENT_ID
-npx wrangler secret put SPOTIFY_CLIENT_SECRET
-npx wrangler secret put SPOTIFY_REDIRECT_URI
+npx wrangler secret put SPOTIFY_CLIENT_ID       # from step 2
+npx wrangler secret put SPOTIFY_CLIENT_SECRET    # from step 2
+npx wrangler secret put SPOTIFY_REDIRECT_URI     # your callback URL from step 2
 ```
 
-5. Deploy:
+**4. Start the party.** Go to `/host` on your live URL, connect Spotify, and hit
+start. Print the QR code, tape it to the wall, and guests can scan, search, and
+queue — nothing else. Done.
 
-```bash
-npm install
-npx wrangler deploy
-```
-
-`wrangler deploy` runs the client build, uploads `client/dist` as Workers Assets,
-deploys the Worker API, and auto-provisions the `PARTY_QUEUE_KV` namespace
-declared in `wrangler.jsonc` if it does not already exist.
-
-You can also start from the Cloudflare one-click flow:
-[Deploy to Cloudflare](https://deploy.workers.cloudflare.com/?url=https://github.com/tejasdc/pass-the-aux).
+Prefer the command line to the button? Fork the repo and run
+`npm install && npx wrangler deploy` instead of step 1 — it builds the client,
+uploads it as Workers Assets, and auto-creates the `PARTY_QUEUE_KV` namespace
+declared in `wrangler.jsonc`.
 
 ## Party flow
 
