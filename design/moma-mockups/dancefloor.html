@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pass the Aux — Dance Floor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:#0E0F0C; --cream:#EDE8DB; --mute:#8C8677;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html,body { height:100%; }
+  body {
+    background:var(--ink); color:var(--cream);
+    font-family:'Archivo',sans-serif; overflow:hidden; -webkit-font-smoothing:antialiased;
+  }
+  .app { max-width:460px; margin:0 auto; height:100%; display:flex; flex-direction:column; }
+
+  /* HERO = the dance floor */
+  .floor-wrap { position:relative; height:440px; flex:none; overflow:hidden; }
+  #floor { position:absolute; inset:0; width:100%; height:100%; display:block; }
+  .floor-fade { position:absolute; left:0; right:0; bottom:0; height:120px; z-index:2; pointer-events:none;
+    background:linear-gradient(to bottom, transparent, var(--ink)); }
+
+  .hero-content { position:absolute; inset:0; z-index:3; padding:24px 26px; display:flex; flex-direction:column; pointer-events:none; }
+  .wordmark { font-family:'Archivo Black'; font-size:15px; letter-spacing:.3em; text-transform:uppercase; text-shadow:0 2px 12px rgba(0,0,0,.6); }
+  .wordmark small { display:block; font-family:'Archivo'; font-weight:600; font-size:9px; letter-spacing:.22em; margin-top:5px; color:#CFCABA; }
+  .bpm { position:absolute; top:26px; right:26px; font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:#CFCABA; text-align:right; }
+  .bpm b { color:#D6CE28; }
+  .np { margin-top:auto; text-shadow:0 2px 16px rgba(0,0,0,.55); }
+  .np-kicker { font-size:9px; letter-spacing:.32em; text-transform:uppercase; color:#E8B4A0; font-weight:600; }
+  .np-title { font-family:'Archivo Black'; font-size:40px; line-height:.92; margin-top:8px; }
+  .np-artist { font-weight:600; font-size:16px; margin-top:8px; }
+  .np-album { font-size:12px; color:#CFCABA; margin-top:2px; }
+  .np-prog { margin-top:16px; }
+  .np-bar { height:4px; background:rgba(255,255,255,.16); position:relative; }
+  .np-bar b { position:absolute; inset:0; width:19%; background:#D6CE28; }
+  .np-times { display:flex; justify-content:space-between; font-size:11px; color:#CFCABA; margin-top:6px; letter-spacing:.1em; }
+
+  /* QUEUE */
+  .queue { position:relative; z-index:4; background:var(--ink); flex:1; overflow-y:auto; padding:8px 26px 8px; }
+  .q-head { display:flex; justify-content:space-between; align-items:baseline; margin:10px 0 4px; }
+  .q-head h2 { font-family:'Archivo Black'; font-size:13px; letter-spacing:.26em; text-transform:uppercase; }
+  .q-count { font-size:11px; letter-spacing:.12em; color:var(--mute); }
+  .row { display:flex; align-items:center; gap:15px; padding:11px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+  .row-art { width:48px; height:48px; flex:none; object-fit:cover; background:#333; }
+  .row-meta { flex:1; min-width:0; }
+  .row-t { font-weight:600; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row-a { font-size:12px; color:var(--mute); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row-right { text-align:right; flex:none; }
+  .row-n { font-family:'Archivo Black'; font-size:11px; color:var(--mute); }
+  .row-d { font-size:11px; color:var(--mute); margin-top:3px; letter-spacing:.06em; }
+
+  .search { flex:none; background:var(--ink); padding:14px 26px 22px; display:flex; }
+  .search input { flex:1; background:transparent; border:none; border-bottom:2px solid var(--cream); font-family:'Archivo'; font-size:16px; padding:12px 2px; outline:none; color:var(--cream); }
+  .search input::placeholder { color:#6b6558; }
+  .search button { width:52px; height:52px; background:var(--cream); color:var(--ink); border:none; font-family:'Archivo Black'; font-size:18px; }
+  .provenance { flex:none; text-align:center; font-size:10px; color:var(--mute); padding:2px 26px 22px; }
+  .provenance a { color:inherit; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <section class="floor-wrap">
+      <svg id="floor" viewBox="0 0 400 440" preserveAspectRatio="xMidYMid slice"></svg>
+      <div class="floor-fade"></div>
+      <div class="hero-content">
+        <div class="wordmark">Pass the Aux<small>the queue is open</small></div>
+        <div class="bpm"><b id="bpmv">126</b> bpm<br>high energy</div>
+        <div class="np">
+          <div class="np-kicker">Now Playing</div>
+          <div class="np-title">Stay</div>
+          <div class="np-artist">FISHER</div>
+          <div class="np-album">Stay</div>
+          <div class="np-prog"><div class="np-bar"><b></b></div><div class="np-times"><span>0:32</span><span>2:45</span></div></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="queue">
+      <div class="q-head"><h2>Up Next</h2><span class="q-count">20 songs</span></div>
+      <div id="rows"></div>
+    </section>
+    <div class="search"><input placeholder="Search a song to queue…"><button>→</button></div>
+    <div class="provenance">Design inspired by a geometric abstraction at <a href="https://www.moma.org" target="_blank" rel="noreferrer">MoMA</a></div>
+  </div>
+
+<script>
+  // ---------- queue ----------
+  const songs = [
+    ['If You Need Me','Caius, iamalex, Hazy Year','2:46','ab67616d0000b2732e8ed79e177ff6011076f5f0'],
+    ['What A Life','John Summit, Guz, Stevie Appleton','2:51','ab67616d0000b273bd26ede1ae69327010d49946'],
+    ['ten','Fred again.., Jozzy','3:01','ab67616d0000b2734e0362c225863f6ae2432651'],
+    ['Oblivious','Mild Minds','2:53','ab67616d0000b273c5716278abba6a103ad13aa7'],
+    ['All Mine','PLS&TY','3:01','ab67616d0000b273148ae94f91d539c9666ee7c9'],
+  ];
+  document.getElementById('rows').innerHTML = songs.map((s,i)=>`
+    <div class="row"><img class="row-art" src="https://i.scdn.co/image/${s[3]}" alt="">
+      <div class="row-meta"><div class="row-t">${s[0]}</div><div class="row-a">${s[1]}</div></div>
+      <div class="row-right"><div class="row-n">${String(i+1).padStart(2,'0')}</div><div class="row-d">${s[2]}</div></div></div>`).join('');
+
+  // ---------- the dance floor: irregular tiled quilt (after the tiled MoMA painting) ----------
+  const svg = document.getElementById('floor');
+  const W = 400, Hh = 440, COLS = 5, ROWS = 6;
+  // jittered lattice -> quadrilateral tiles with black seams
+  function rnd(a,b){ return a + Math.random()*(b-a); }
+  const pts = [];
+  for (let j=0;j<=ROWS;j++){ pts[j]=[];
+    for (let i=0;i<=COLS;i++){
+      const bx = i/COLS*W, by = j/ROWS*Hh;
+      const jx = (i===0||i===COLS)?0:rnd(-16,16);
+      const jy = (j===0||j===ROWS)?0:rnd(-20,20);
+      pts[j][i] = [bx+jx, by+jy];
+    }
+  }
+  // palette from the painting: mostly greens, a yellow, a couple reds
+  const PAL = ['#16463B','#1E5C43','#7FA98C','#4E7A3C','#5C8A3F','#7BA83C','#A9C4A9','#2C6E5A'];
+  const RARE = ['#C9C42A','#A32E22','#8E2A20']; // yellow + reds, sprinkled
+  const tiles = [];
+  for (let j=0;j<ROWS;j++) for (let i=0;i<COLS;i++){
+    const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    const p = [pts[j][i], pts[j][i+1], pts[j+1][i+1], pts[j+1][i]];
+    poly.setAttribute('points', p.map(q=>q.join(',')).join(' '));
+    poly.setAttribute('stroke','#0E0F0C'); poly.setAttribute('stroke-width','2.5'); poly.setAttribute('stroke-linejoin','round');
+    const base = Math.random()<0.16 ? RARE[Math.floor(Math.random()*RARE.length)] : PAL[Math.floor(Math.random()*PAL.length)];
+    poly.setAttribute('fill', base);
+    svg.appendChild(poly);
+    const cx = (p[0][0]+p[1][0]+p[2][0]+p[3][0])/4, cy = (p[0][1]+p[1][1]+p[2][1]+p[3][1])/4;
+    tiles.push({ el:poly, base:hex2rgb(base), cx, cy, glow:0 });
+  }
+  function hex2rgb(h){ const n=parseInt(h.slice(1),16); return [n>>16&255, n>>8&255, n&255]; }
+  function mix(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t].map(Math.round); }
+  const LIT = [255, 246, 210]; // warm white — the "lit up" state
+
+  // ---------- beat engine ----------
+  // In production: BPM/energy/valence come from ReccoBeats (already fetched for the vibe check),
+  // and the beat PHASE is locked to Spotify's live progress_ms. Here we simulate a 126-BPM house track.
+  let BPM = 126, ENERGY = 0.9;
+  const beatLen = () => 60000 / BPM;
+  let start = performance.now(), lastBeat = -1;
+
+  function frame(now){
+    const t = now - start;
+    const bl = beatLen();
+    const beatIndex = Math.floor(t / bl);
+    const phase = (t % bl) / bl;                 // 0..1 within the beat
+    // a wave sweeps across the floor, one pass per 2 beats
+    const waveY = ((t / (bl*2)) % 1) * Hh;
+
+    // on a new beat, kick the whole floor a touch; downbeats (every 4th) hit harder
+    let kick = 0;
+    if (beatIndex !== lastBeat){ lastBeat = beatIndex; kick = (beatIndex % 4 === 0 ? 0.9 : 0.5) * ENERGY; }
+
+    for (const tl of tiles){
+      const d = Math.abs(tl.cy - waveY);
+      const waveGlow = Math.exp(-((d/(Hh*0.14))**2)) * ENERGY * 0.9;
+      const target = Math.max(waveGlow, kick*0.6);
+      tl.glow += (target - tl.glow) * 0.35 + kick*0.4*(0.6+0.4*Math.random());
+      tl.glow *= 0.90;                            // decay
+      tl.glow = Math.max(0, Math.min(1, tl.glow));
+      const c = mix(tl.base, LIT, tl.glow*0.85);
+      tl.el.setAttribute('fill', `rgb(${c[0]},${c[1]},${c[2]})`);
+    }
+    requestAnimationFrame(frame);
+  }
+  let running=true;
+  document.addEventListener('visibilitychange',()=>{ running=!document.hidden; if(running){ start=performance.now()-0; requestAnimationFrame(frame);} });
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>
