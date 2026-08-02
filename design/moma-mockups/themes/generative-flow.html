@@ -1,0 +1,799 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Pass the Aux — Generative Flow</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@300..600&display=swap" rel="stylesheet">
+<style>
+  /* ------------------------------------------------------------------------ *
+   *  PASS THE AUX — Theme: Generative Flow                                    *
+   *  A quiet Perlin-noise flow field on warm paper, synchronized to a         *
+   *  synthesized 126 BPM beat clock. Ink strokes drift; on each beat the      *
+   *  field breathes; on each bar (every 4 beats) a warm coral wash passes     *
+   *  through the paper. Gallery generative art, not a screensaver.            *
+   * ------------------------------------------------------------------------ */
+  :root {
+    --cream:      #ece4d1;
+    --paper:      #f2ebd8;
+    --ink:        #14110d;
+    --ink-2:      #2b241c;
+    --ink-soft:   #3d3327;
+    --taupe:      #8a7663;
+    --taupe-2:    #b8a48d;
+    --hairline:   rgba(20,17,13,0.10);
+    --hairline-2: rgba(20,17,13,0.06);
+    --coral:      #cc4a2b;
+    --coral-soft: #e28160;
+    --amber:      #c9922e;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-font-smoothing: antialiased; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Instrument Sans', -apple-system, sans-serif;
+    background: #17130d;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 24px 12px;
+    overflow: auto;
+    background-image:
+      radial-gradient(ellipse 60% 40% at 50% 20%, rgba(204,74,43,0.06), transparent 60%),
+      radial-gradient(ellipse 80% 60% at 50% 100%, rgba(255,232,195,0.03), transparent 70%);
+  }
+
+  /* ------------------------------------------------------------------------ *
+   *  Phone frame                                                              *
+   * ------------------------------------------------------------------------ */
+  .phone {
+    width: 430px;
+    max-width: 100%;
+    height: 932px;
+    max-height: calc(100vh - 48px);
+    position: relative;
+    border-radius: 46px;
+    overflow: hidden;
+    background: var(--cream);
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03),
+      0 40px 80px -20px rgba(0,0,0,0.6),
+      0 20px 40px -10px rgba(0,0,0,0.35),
+      inset 0 0 0 1px rgba(20,17,13,0.10);
+    isolation: isolate;
+  }
+
+  /* ------------------------------------------------------------------------ *
+   *  Background layers: canvas + vignette + film grain                        *
+   * ------------------------------------------------------------------------ */
+  #bgcanvas {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    display: block;
+    z-index: 0;
+  }
+  .vignette {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 3;
+    background:
+      radial-gradient(ellipse at 50% 15%, transparent 55%, rgba(20,17,13,0.10) 100%),
+      radial-gradient(ellipse at 50% 100%, transparent 55%, rgba(20,17,13,0.18) 100%);
+  }
+  .grain {
+    position: absolute; inset: 0;
+    pointer-events: none;
+    z-index: 4;
+    opacity: 0.40;
+    mix-blend-mode: multiply;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.08  0 0 0 0 0.07  0 0 0 0 0.05  0 0 0 0.32 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  }
+
+  /* ------------------------------------------------------------------------ *
+   *  Content stack                                                            *
+   * ------------------------------------------------------------------------ */
+  .content {
+    position: relative;
+    z-index: 10;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 26px 22px 22px;
+    gap: 0;
+  }
+
+  /* --- Header ------------------------------------------------------------- */
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 22px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--hairline);
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: -3px;
+    height: 1px;
+    background: var(--hairline-2);
+  }
+
+  .wordmark {
+    display: flex; flex-direction: column;
+    line-height: 0.86;
+    color: var(--ink);
+  }
+  .wordmark .row {
+    display: block;
+    font-family: 'Fraunces', serif;
+  }
+  .wordmark .top {
+    font-variation-settings: "opsz" 24, "wght" 500;
+    font-style: normal;
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
+    margin-bottom: 6px;
+  }
+  .wordmark .mid {
+    font-variation-settings: "opsz" 96, "wght" 400;
+    font-style: italic;
+    font-size: 26px;
+    letter-spacing: -0.015em;
+  }
+  .wordmark .big {
+    font-variation-settings: "opsz" 144, "wght" 500;
+    font-style: italic;
+    font-size: 44px;
+    letter-spacing: -0.035em;
+    color: var(--ink);
+    margin-top: 2px;
+  }
+  .wordmark .big em {
+    color: var(--coral);
+    font-style: italic;
+  }
+
+  .badge {
+    display: flex; flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .badge .plate {
+    font-size: 8.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+  .badge .bpm {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    font-weight: 500;
+  }
+  .badge .dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--coral);
+    box-shadow: 0 0 0 0 rgba(204,74,43,0.5);
+    animation: dotPulse calc(60000ms / 126) ease-out infinite;
+  }
+  @keyframes dotPulse {
+    0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(204,74,43,0.55); }
+    60%  { transform: scale(1.35); box-shadow: 0 0 0 6px rgba(204,74,43,0); }
+    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(204,74,43,0); }
+  }
+  .badge .meter {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+  .badge .meter .bars { display: inline-flex; gap: 2px; align-items: flex-end; }
+  .badge .meter .bars span {
+    display: inline-block;
+    width: 3px;
+    background: var(--ink-2);
+    border-radius: 0.5px;
+    opacity: 0.85;
+    animation: barBounce calc(60000ms / 126) ease-in-out infinite;
+  }
+  .badge .meter .bars span:nth-child(1) { height: 6px;  animation-delay: 0ms;   }
+  .badge .meter .bars span:nth-child(2) { height: 10px; animation-delay: 80ms;  }
+  .badge .meter .bars span:nth-child(3) { height: 7px;  animation-delay: 160ms; }
+  .badge .meter .bars span:nth-child(4) { height: 9px;  animation-delay: 240ms; }
+  @keyframes barBounce {
+    0%,100% { transform: scaleY(0.55); }
+    50%     { transform: scaleY(1.2);  }
+  }
+
+  /* --- Search ------------------------------------------------------------- */
+  .search {
+    display: flex; align-items: center;
+    gap: 6px;
+    background: rgba(255, 250, 236, 0.55);
+    backdrop-filter: blur(14px) saturate(1.05);
+    -webkit-backdrop-filter: blur(14px) saturate(1.05);
+    border: 1px solid rgba(20,17,13,0.12);
+    border-radius: 999px;
+    padding: 5px 5px 5px 16px;
+    margin-bottom: 22px;
+    box-shadow: 0 1px 0 rgba(255,255,255,0.5) inset;
+  }
+  .search svg {
+    flex: 0 0 15px; width: 15px; height: 15px;
+    color: var(--taupe);
+  }
+  .search input {
+    flex: 1;
+    min-width: 0;
+    border: none; outline: none; background: transparent;
+    font-family: 'Instrument Sans', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    padding: 11px 8px 11px 6px;
+    letter-spacing: 0.005em;
+  }
+  .search input::placeholder {
+    color: var(--taupe);
+    font-style: italic;
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 24, "wght" 400;
+    font-size: 13.5px;
+  }
+  .search button {
+    border: none;
+    background: var(--ink);
+    color: var(--cream);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.20em;
+    text-transform: uppercase;
+    padding: 11px 18px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: transform 220ms cubic-bezier(.2,.8,.2,1), background 200ms ease;
+  }
+  .search button:hover { background: var(--coral); }
+  .search button:active { transform: scale(0.96); }
+
+  /* --- Now Playing -------------------------------------------------------- */
+  .now-playing {
+    position: relative;
+    display: flex; gap: 14px;
+    padding: 16px 14px 14px;
+    background: rgba(255, 250, 236, 0.55);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(20,17,13,0.10);
+    border-radius: 18px;
+    margin-bottom: 24px;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,0.55) inset,
+      0 20px 40px -20px rgba(20,17,13,0.25);
+  }
+  .now-playing .plate {
+    position: absolute;
+    top: -8px; left: 16px;
+    padding: 2px 8px;
+    background: var(--cream);
+    color: var(--coral);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .now-playing .plate::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--coral);
+    box-shadow: 0 0 6px rgba(204,74,43,0.7);
+  }
+  .np-cover {
+    width: 76px; height: 76px;
+    border-radius: 4px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow:
+      0 6px 20px -6px rgba(20,17,13,0.35),
+      0 0 0 0.5px rgba(20,17,13,0.15);
+    position: relative;
+  }
+  .np-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .np-cover::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(155deg, rgba(255,255,255,0.15), transparent 40%);
+    pointer-events: none;
+  }
+  .np-info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+  .np-title {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 48, "wght" 500;
+    font-size: 18px;
+    line-height: 1.15;
+    color: var(--ink);
+    letter-spacing: -0.012em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .np-artist {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin-top: 3px;
+    letter-spacing: 0.005em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .np-progress {
+    margin-top: 12px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .np-bar {
+    flex: 1;
+    height: 2px;
+    background: rgba(20,17,13,0.12);
+    border-radius: 1px;
+    overflow: hidden;
+    position: relative;
+  }
+  .np-bar-fill {
+    position: absolute; left: 0; top: 0; bottom: 0;
+    width: 0%;
+    background: linear-gradient(90deg, var(--ink), var(--coral));
+    border-radius: 1px;
+    box-shadow: 0 0 8px -1px rgba(204,74,43,0.4);
+  }
+  .np-time {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9.5px;
+    color: var(--taupe);
+    letter-spacing: 0.05em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Section head ------------------------------------------------------- */
+  .section-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .section-head .title {
+    font-family: 'Fraunces', serif;
+    font-style: italic;
+    font-variation-settings: "opsz" 96, "wght" 400;
+    font-size: 20px;
+    color: var(--ink);
+    letter-spacing: -0.015em;
+  }
+  .section-head .title em {
+    color: var(--coral);
+    font-style: italic;
+    font-variation-settings: "opsz" 96, "wght" 500;
+  }
+  .section-head .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.20em;
+    color: var(--taupe);
+    text-transform: uppercase;
+  }
+
+  /* --- Queue -------------------------------------------------------------- */
+  .queue {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: none;
+  }
+  .queue::-webkit-scrollbar { display: none; }
+
+  .queue-row {
+    display: grid;
+    grid-template-columns: 22px 44px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 11px 0;
+    border-bottom: 1px solid var(--hairline-2);
+    position: relative;
+  }
+  .queue-row:last-child { border-bottom: 1px solid var(--hairline); }
+  .q-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--taupe);
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.03em;
+  }
+  .q-cover {
+    width: 44px; height: 44px;
+    border-radius: 3px;
+    overflow: hidden;
+    box-shadow:
+      0 3px 10px -4px rgba(20,17,13,0.35),
+      0 0 0 0.5px rgba(20,17,13,0.12);
+  }
+  .q-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .q-info { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .q-title {
+    font-family: 'Fraunces', serif;
+    font-variation-settings: "opsz" 24, "wght" 500;
+    font-size: 14px;
+    color: var(--ink);
+    letter-spacing: -0.008em;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    line-height: 1.15;
+  }
+  .q-meta {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11px;
+    color: var(--taupe);
+    min-width: 0;
+  }
+  .q-artist {
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    letter-spacing: 0.005em;
+  }
+  .q-chip {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 2px 8px 3px;
+    border-radius: 999px;
+    background: rgba(204,74,43,0.09);
+    color: var(--coral);
+    border: 0.5px solid rgba(204,74,43,0.22);
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .q-dur {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-2);
+    letter-spacing: 0.04em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Footer ------------------------------------------------------------- */
+  .foot {
+    margin-top: 8px;
+    padding-top: 14px;
+    border-top: 1px solid var(--hairline);
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 8.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--taupe);
+  }
+  .foot .status { display: flex; align-items: center; gap: 8px; }
+  .foot .status::before {
+    content: ''; width: 5px; height: 5px; border-radius: 50%;
+    background: var(--coral);
+    animation: pulseDot 2s ease-in-out infinite;
+  }
+  @keyframes pulseDot { 0%,100% { opacity: 0.35; } 50% { opacity: 1; } }
+  .foot .room { color: var(--ink-soft); }
+
+  /* Load-in reveal */
+  .content > * {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: rise 700ms cubic-bezier(.2,.75,.2,1) forwards;
+  }
+  .content > *:nth-child(1) { animation-delay:  80ms; }
+  .content > *:nth-child(2) { animation-delay: 180ms; }
+  .content > *:nth-child(3) { animation-delay: 260ms; }
+  .content > *:nth-child(4) { animation-delay: 340ms; }
+  .content > *:nth-child(5) { animation-delay: 420ms; }
+  .content > *:nth-child(6) { animation-delay: 520ms; }
+  @keyframes rise {
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+  <div class="phone" id="phone">
+    <canvas id="bgcanvas"></canvas>
+    <div class="vignette"></div>
+    <div class="grain"></div>
+
+    <div class="content">
+      <header class="header">
+        <div class="wordmark">
+          <span class="row top">Set 001 &nbsp;·&nbsp; Kitchen</span>
+          <span class="row mid">Pass the</span>
+          <span class="row big"><em>Aux.</em></span>
+        </div>
+        <div class="badge">
+          <span class="plate">Live · 2026</span>
+          <div class="bpm"><span class="dot"></span>126 BPM</div>
+          <div class="meter">
+            <span class="bars"><span></span><span></span><span></span><span></span></span>
+            High
+          </div>
+        </div>
+      </header>
+
+      <form class="search" onsubmit="event.preventDefault();">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="text" placeholder="Search a song, artist, or a vibe…" />
+        <button type="submit">Queue</button>
+      </form>
+
+      <section class="now-playing">
+        <span class="plate">Now Playing</span>
+        <div class="np-cover">
+          <img src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="album art" />
+        </div>
+        <div class="np-info">
+          <div class="np-title">Midnight City</div>
+          <div class="np-artist">M83 &nbsp;·&nbsp; Hurry Up, We're Dreaming</div>
+          <div class="np-progress">
+            <div class="np-time" id="pbnow">1:24</div>
+            <div class="np-bar"><div class="np-bar-fill" id="pbfill"></div></div>
+            <div class="np-time">4:03</div>
+          </div>
+        </div>
+      </section>
+
+      <div class="section-head">
+        <div class="title">Up <em>Next</em></div>
+        <div class="count">06 · 22 min · 8 guests</div>
+      </div>
+
+      <div class="queue" id="queue"></div>
+
+      <div class="foot">
+        <div class="status">Live queue open</div>
+        <div class="room">#kitchen-party · scan to join</div>
+      </div>
+    </div>
+  </div>
+
+<script>
+// ============================================================================
+//  Data: canonical album covers reused across tracks
+// ============================================================================
+const COVERS = {
+  a: 'https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f',
+  b: 'https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0',
+  c: 'https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946',
+  d: 'https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae2432651',
+};
+
+const QUEUE = [
+  { n:'01', cover: COVERS.b, title:'Redbone',           artist:'Childish Gambino', guest:'Maya',   dur:'5:26' },
+  { n:'02', cover: COVERS.c, title:'Nights',            artist:'Frank Ocean',      guest:'Jordan', dur:'5:07' },
+  { n:'03', cover: COVERS.d, title:'Two Weeks',         artist:'FKA twigs',        guest:'Priya',  dur:'4:11' },
+  { n:'04', cover: COVERS.a, title:'Time to Pretend',   artist:'MGMT',             guest:'Sam',    dur:'4:22' },
+  { n:'05', cover: COVERS.b, title:'Ivy',               artist:'Frank Ocean',      guest:'Maya',   dur:'4:09' },
+  { n:'06', cover: COVERS.c, title:'Electric Feel',     artist:'MGMT',             guest:'Devon',  dur:'3:49' },
+];
+
+document.getElementById('queue').innerHTML = QUEUE.map(t => `
+  <div class="queue-row">
+    <div class="q-num">${t.n}</div>
+    <div class="q-cover"><img src="${t.cover}" alt="" loading="lazy"></div>
+    <div class="q-info">
+      <div class="q-title">${t.title}</div>
+      <div class="q-meta">
+        <div class="q-artist">${t.artist}</div>
+        <span class="q-chip">${t.guest}</span>
+      </div>
+    </div>
+    <div class="q-dur">${t.dur}</div>
+  </div>
+`).join('');
+
+// ============================================================================
+//  Generative flow field — Perlin noise → ink strokes on paper
+//  Beat clock (BPM=126) modulates field amplitude and drift; every 4 beats
+//  (bar) a subtle coral wash passes through. Motion is synthesized, not
+//  driven by real audio.
+// ============================================================================
+const canvas = document.getElementById('bgcanvas');
+const ctx    = canvas.getContext('2d');
+const DPR    = Math.min(window.devicePixelRatio || 1, 2);
+
+let W = 0, H = 0;
+let particles = [];
+
+// ---- Palette (ink washes on paper) -----------------------------------------
+const PAPER   = '#ece4d1';
+const CLEAR   = 'rgba(236, 228, 209, 0.055)'; // per-frame wash
+const INKS    = ['#14110d', '#241d16', '#3d3327'];
+const ACCENT  = '#cc4a2b';
+const AMBER   = '#c9922e';
+
+// ---- Beat clock ------------------------------------------------------------
+const BPM       = 126;
+const BEAT_MS   = 60000 / BPM;
+const ENERGY    = 0.85; // 0..1, "high"
+const START     = performance.now();
+let   lastBeat  = -1;
+let   beatPulse = 0;   // 0..1 envelope, resets on every beat
+let   barPulse  = 0;   // 0..1 envelope, resets on every 4th beat
+let   lastFrame = performance.now();
+let   hidden    = false;
+let   noiseZ    = 0;   // drift through 3rd dimension of noise
+
+// ---- Progress bar (mocked, not audio) --------------------------------------
+const TRACK_MS   = 4 * 60 * 1000 + 3 * 1000; // 4:03
+let   pbAnchor   = performance.now();
+const pbSeekMs0  = 84 * 1000;                // start at 1:24
+const pbFill     = document.getElementById('pbfill');
+const pbNowEl    = document.getElementById('pbnow');
+function fmtTime(ms) {
+  const s = Math.floor(ms / 1000);
+  return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+}
+
+// ---- Perlin noise (deterministic, seeded) ----------------------------------
+const perm = new Uint8Array(512);
+(() => {
+  const p = new Uint8Array(256);
+  for (let i = 0; i < 256; i++) p[i] = i;
+  let seed = 1337;
+  for (let i = 255; i > 0; i--) {
+    seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+    const j = seed % (i + 1);
+    const t = p[i]; p[i] = p[j]; p[j] = t;
+  }
+  for (let i = 0; i < 512; i++) perm[i] = p[i & 255];
+})();
+const fade = t => t*t*t*(t*(t*6-15)+10);
+const lerp = (a,b,t) => a + t*(b-a);
+function grad(h, x, y) {
+  const g = h & 3;
+  const u = g < 2 ? x : y;
+  const v = g < 2 ? y : x;
+  return ((g & 1) ? -u : u) + ((g & 2) ? -v : v);
+}
+function noise2(x, y) {
+  const X = Math.floor(x) & 255, Y = Math.floor(y) & 255;
+  x -= Math.floor(x); y -= Math.floor(y);
+  const u = fade(x), v = fade(y);
+  const a  = perm[X    ] + Y, b  = perm[X + 1] + Y;
+  return lerp(
+    lerp(grad(perm[a    ], x    , y    ), grad(perm[b    ], x - 1, y    ), u),
+    lerp(grad(perm[a + 1], x    , y - 1), grad(perm[b + 1], x - 1, y - 1), u),
+    v
+  );
+}
+
+// ---- Particle system -------------------------------------------------------
+function spawn(x, y) {
+  const pickAccent = Math.random() < 0.028;
+  const pickAmber  = !pickAccent && Math.random() < 0.02;
+  return {
+    x: x ?? Math.random() * W,
+    y: y ?? Math.random() * H,
+    life:  80 + Math.random() * 260,
+    age:   0,
+    color: pickAccent ? ACCENT : (pickAmber ? AMBER : INKS[(Math.random() * INKS.length) | 0]),
+    w:     Math.random() < 0.14 ? 0.85 : 0.4,
+    speed: 0.55 + Math.random() * 0.9,
+    accent: pickAccent,
+  };
+}
+function seedParticles() {
+  const target = Math.max(180, Math.min(700, Math.floor((W * H) / 950)));
+  particles = new Array(target).fill(0).map(() => spawn());
+}
+
+// ---- Resize / setup --------------------------------------------------------
+function resize() {
+  const rect = canvas.getBoundingClientRect();
+  W = rect.width; H = rect.height;
+  canvas.width  = Math.floor(W * DPR);
+  canvas.height = Math.floor(H * DPR);
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  // paper base
+  ctx.fillStyle = PAPER;
+  ctx.fillRect(0, 0, W, H);
+  // a first faint atmospheric wash — warm below, cool above
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, 'rgba(236,228,209,0)');
+  g.addColorStop(1, 'rgba(204,74,43,0.05)');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+  seedParticles();
+}
+window.addEventListener('resize', resize);
+document.addEventListener('visibilitychange', () => {
+  hidden = document.hidden;
+  if (!hidden) lastFrame = performance.now();
+});
+
+// ---- Main loop -------------------------------------------------------------
+function frame(now) {
+  if (hidden) { requestAnimationFrame(frame); return; }
+  const dt = Math.min(48, now - lastFrame);
+  lastFrame = now;
+
+  // Beat clock: detect crossing into a new beat / bar
+  const elapsed   = now - START;
+  const beatIndex = Math.floor(elapsed / BEAT_MS);
+  if (beatIndex !== lastBeat) {
+    lastBeat  = beatIndex;
+    beatPulse = 1;
+    if (beatIndex % 4 === 0) barPulse = 1;
+  }
+  // Exponential envelope decay (time-independent, dt-normalized)
+  beatPulse *= Math.pow(0.994, dt);
+  barPulse  *= Math.pow(0.997, dt);
+
+  // BPM-modulated field parameters
+  const flowAmp = 1 + beatPulse * (0.5 + ENERGY * 0.55) + barPulse * 0.35;
+  noiseZ += (0.0007 + beatPulse * 0.0032) * dt;
+
+  // Per-frame paper wash — leaves trails that fade to paper
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.fillStyle = CLEAR;
+  ctx.fillRect(0, 0, W, H);
+
+  // Bar wash: a soft coral atmosphere rises on the downbeat
+  if (barPulse > 0.05) {
+    const g = ctx.createRadialGradient(W * 0.5, H * 0.35, 0, W * 0.5, H * 0.35, Math.max(W, H) * 0.95);
+    g.addColorStop(0, `rgba(204,74,43,${0.055 * barPulse})`);
+    g.addColorStop(1, 'rgba(204,74,43,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+  }
+
+  // Draw particles as short ink strokes along the field
+  const SCALE = 0.0040;
+  for (let i = 0; i < particles.length; i++) {
+    const p = particles[i];
+    const nx = p.x * SCALE;
+    const ny = p.y * SCALE;
+    // Two octaves for richness
+    const n =
+      noise2(nx,       ny       + noiseZ) * 0.75 +
+      noise2(nx * 2.1, ny * 2.1 + noiseZ * 1.4) * 0.25;
+    const angle = n * Math.PI * 2 * 1.35;
+    const vx = Math.cos(angle) * p.speed * flowAmp;
+    const vy = Math.sin(angle) * p.speed * flowAmp;
+
+    ctx.strokeStyle = p.color;
+    ctx.globalAlpha = p.accent ? 0.55 : 0.22;
+    ctx.lineWidth   = p.w;
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y);
+    p.x += vx; p.y += vy; p.age++;
+    ctx.lineTo(p.x, p.y);
+    ctx.stroke();
+
+    if (p.age > p.life || p.x < -12 || p.x > W + 12 || p.y < -12 || p.y > H + 12) {
+      particles[i] = spawn();
+    }
+  }
+  ctx.globalAlpha = 1;
+
+  // Progress bar update (visual only)
+  const played = (pbSeekMs0 + (now - pbAnchor)) % TRACK_MS;
+  pbFill.style.width = ((played / TRACK_MS) * 100).toFixed(2) + '%';
+  pbNowEl.textContent = fmtTime(played);
+
+  requestAnimationFrame(frame);
+}
+
+resize();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

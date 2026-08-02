@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pass the Aux — Theme Gallery</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Fraunces:ital,opsz,wght@0,9..144,600;1,9..144,500&display=swap" rel="stylesheet">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#14140f; color:#EDE8DB; font-family:'JetBrains Mono',monospace; padding:40px 24px 80px; -webkit-font-smoothing:antialiased; }
+  header { max-width:1100px; margin:0 auto 8px; }
+  h1 { font-family:'Fraunces',serif; font-weight:600; font-size:2.4rem; }
+  .sub { opacity:.6; font-size:13px; margin-top:8px; line-height:1.6; max-width:640px; }
+  .grid { max-width:1100px; margin:36px auto 0; display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:34px; }
+  .card { border:1px solid rgba(255,255,255,.12); border-radius:10px; overflow:hidden; background:#1b1b14; }
+  .card .frame { width:100%; height:520px; overflow:hidden; position:relative; background:#000; }
+  .card iframe { width:390px; height:806px; border:0; transform:scale(.63); transform-origin:top left; position:absolute; top:0; left:50%; margin-left:-123px; }
+  .meta { padding:16px 18px 18px; }
+  .name { font-family:'Fraunces',serif; font-weight:600; font-size:1.3rem; }
+  .desc { font-size:12px; opacity:.72; line-height:1.6; margin-top:8px; }
+  .open { display:inline-block; margin-top:12px; font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:#D8CE28; text-decoration:none; border:1px solid #D8CE28; padding:6px 12px; border-radius:5px; }
+  .open:hover { background:#D8CE28; color:#14140f; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Pass the Aux — theme gallery</h1>
+    <p class="sub">Four overnight theme candidates for the switchable theme system (every visitor lands on a random one; tap to browse). All beat-timed off a synthesized 126 BPM clock — no real audio, per the data limits. Veto / approve each. Previews are live &amp; interactive; hit "open full" for the real thing.</p>
+  </header>
+  <div class="grid" id="grid"></div>
+<script>
+  const themes = [
+    ['winamp-classic', 'Winamp Classic', 'Pixel-faithful Winamp 2.x — beveled chrome, fire spectrum bars with peak markers, green LCD readouts, a room-code window with QR, and a Win98 taskbar. The queue is a Playlist Editor with guest chips. Pure nostalgia.'],
+    ['milkdrop', 'Milkdrop', 'Full-bleed psychedelic plasma with a bright superscope waveform slicing across, feedback-tunnel depth, and a downbeat radial burst — the visualizer IS the screen, with glass panels keeping the queue legible over the chaos.'],
+    ['generative-flow', 'Generative Flow', 'Gallery-generative art: a warm cream/terracotta field with a Perlin flow-field of ink strokes drifting, a coral wash rising each bar. Editorial Fraunces + mono. The most restrained and grown-up of the four.'],
+    ['risograph-print', 'Risograph Print', 'A communal party zine — newsprint stock, mis-registered fluorescent pink + teal spot inks, halftone dots, hand-stamped BPM badge and rotated guest chips. Tactile, printed, deliberately not a music-player skin.'],
+  ];
+  document.getElementById('grid').innerHTML = themes.map(([slug,name,desc]) => `
+    <div class="card">
+      <div class="frame"><iframe src="./${slug}.html" title="${name}" loading="lazy"></iframe></div>
+      <div class="meta"><div class="name">${name}</div><div class="desc">${desc}</div><a class="open" href="./${slug}.html" target="_blank">open full ↗</a></div>
+    </div>`).join('');
+</script>
+</body>
+</html>

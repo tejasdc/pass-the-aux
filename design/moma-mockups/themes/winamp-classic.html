@@ -1,0 +1,1200 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no" />
+<title>Pass The Aux — Winamp Classic</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Silkscreen:wght@400;700&family=Micro+5&family=DotGothic16&display=swap" rel="stylesheet" />
+<style>
+/* =========================================================
+   PASS THE AUX — Winamp Classic skin
+   A tribute to the '97 base skin: beveled chrome panels,
+   yellow→red spectrum bars, LCD-green pixel text, chunky
+   transport buttons, the dashed progress rail, oscilloscope.
+   ========================================================= */
+
+:root{
+  /* chrome / bevel palette */
+  --chrome-0:#0b0b0d;    /* darkest shadow */
+  --chrome-1:#1a1a1e;    /* panel body */
+  --chrome-2:#2b2b30;    /* mid panel */
+  --chrome-3:#3f3f45;    /* raised */
+  --chrome-4:#5a5a62;    /* highlight edge */
+  --chrome-5:#8a8a94;    /* light bevel */
+  --chrome-6:#c4c4cc;    /* rare hi-light */
+
+  /* titlebar (active window) */
+  --title-a:#2b3a86;
+  --title-b:#3b52b8;
+  --title-c:#68a0e0;
+  --title-txt:#e6ecff;
+
+  /* titlebar (inactive) */
+  --title-off-a:#38383e;
+  --title-off-b:#4b4b52;
+
+  /* LCD greens (numeric readouts) */
+  --lcd-on:#8bff00;
+  --lcd-mid:#3fa000;
+  --lcd-dim:#153f00;
+  --lcd-glow:0 0 4px rgba(139,255,0,.55), 0 0 1px rgba(139,255,0,.9);
+
+  /* LCD amber (kbps/khz cluster) */
+  --amber-on:#ffd23b;
+  --amber-dim:#4a3b06;
+
+  /* Fire-style analyzer */
+  --bar-hi:#ff2a1f;      /* top */
+  --bar-mid:#ffa61a;
+  --bar-lo:#ffe70a;      /* bottom */
+  --bar-peak:#f2f2f2;    /* falling peak marker */
+
+  /* oscilloscope green */
+  --scope:#7bff5c;
+
+  /* accents */
+  --guest:#ffcf3b;
+  --danger:#ff4a3b;
+
+  --font-lcd:'VT323','DotGothic16',monospace;
+  --font-pixel:'Silkscreen',monospace;
+  --font-tiny:'Micro 5','Silkscreen',monospace;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  font-family:var(--font-pixel);
+  color:#dcdce4;
+  background:
+    radial-gradient(1200px 800px at 50% -10%, #262633 0%, #0d0d12 60%, #05050a 100%),
+    #05050a;
+  min-height:100vh;
+  display:flex;
+  justify-content:center;
+  padding:14px 8px 40px;
+  -webkit-font-smoothing:none;
+  font-smooth:never;
+  image-rendering:pixelated;
+  overflow-x:hidden;
+}
+
+/* subtle CRT scanlines over the whole thing */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:repeating-linear-gradient(
+    to bottom,
+    rgba(255,255,255,.025) 0 1px,
+    transparent 1px 3px);
+  pointer-events:none;
+  z-index:9999;
+  mix-blend-mode:overlay;
+}
+/* faint vignette */
+body::after{
+  content:"";
+  position:fixed;inset:0;
+  background:radial-gradient(closest-side at 50% 40%, transparent 55%, rgba(0,0,0,.55) 100%);
+  pointer-events:none;
+  z-index:9998;
+}
+
+.desktop{
+  width:100%;
+  max-width:414px;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  filter:drop-shadow(0 30px 40px rgba(0,0,0,.55));
+}
+
+/* ---------- Generic beveled window ---------- */
+.win{
+  background:linear-gradient(#242429,#161619);
+  border-top:1px solid #55555c;
+  border-left:1px solid #4a4a50;
+  border-right:1px solid #0a0a0d;
+  border-bottom:1px solid #0a0a0d;
+  box-shadow:
+    inset 1px 1px 0 #6a6a72,
+    inset -1px -1px 0 #000,
+    0 0 0 1px #000;
+  padding:2px;
+}
+
+.title{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  height:14px;
+  padding:0 4px;
+  font-family:var(--font-tiny);
+  font-size:10px;
+  letter-spacing:.06em;
+  color:var(--title-txt);
+  background:
+    repeating-linear-gradient(to bottom,
+      #6c8ae6 0 1px, transparent 1px 2px),
+    linear-gradient(#2f3f92,#1c2760);
+  border-top:1px solid #7fa2ff;
+  border-bottom:1px solid #050716;
+  text-shadow:0 1px 0 #000;
+  user-select:none;
+}
+.title.off{
+  background:
+    repeating-linear-gradient(to bottom,
+      #6a6a72 0 1px, transparent 1px 2px),
+    linear-gradient(#3d3d43,#212125);
+  color:#c9c9d0;
+  border-top-color:#7a7a84;
+}
+.title .grip{
+  flex:1;
+  height:6px;
+  background:repeating-linear-gradient(to bottom,
+    rgba(255,255,255,.45) 0 1px,
+    rgba(0,0,0,.35) 1px 2px);
+  margin:0 6px;
+}
+.title-btn{
+  width:11px;height:9px;
+  background:linear-gradient(#c9c9d0,#7f7f88);
+  border-top:1px solid #f0f0f5;
+  border-left:1px solid #f0f0f5;
+  border-right:1px solid #050505;
+  border-bottom:1px solid #050505;
+  color:#000;
+  font-family:var(--font-tiny);
+  font-size:9px;
+  line-height:7px;
+  text-align:center;
+  cursor:pointer;
+}
+.title-btn:active{
+  background:linear-gradient(#5a5a62,#8a8a94);
+  border-color:#050505 #f0f0f5 #f0f0f5 #050505;
+}
+
+/* --- inset beveled sunk area (LCD, viz, playlist body) --- */
+.sunk{
+  background:#000;
+  border-top:1px solid #000;
+  border-left:1px solid #000;
+  border-right:1px solid #6a6a72;
+  border-bottom:1px solid #6a6a72;
+  box-shadow:
+    inset 1px 1px 0 #000,
+    inset -1px -1px 0 #3f3f45;
+}
+
+/* ============================================================
+   MAIN PLAYER WINDOW
+   ============================================================ */
+.player{padding:0}
+.player .title{
+  height:15px;
+}
+.player .title .brand{
+  font-family:var(--font-pixel);
+  font-size:9px;
+  letter-spacing:.14em;
+  color:#fff;
+  text-shadow:0 1px 0 #000, 1px 0 0 #000;
+}
+.bpm-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:1px 4px 0;
+  background:linear-gradient(#111,#000);
+  border:1px solid #000;
+  box-shadow:inset 1px 1px 0 #333, inset -1px -1px 0 #3f3f45;
+  font-family:var(--font-lcd);
+  font-size:12px;
+  line-height:9px;
+  color:var(--lcd-on);
+  text-shadow:var(--lcd-glow);
+}
+.bpm-badge .dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--lcd-on);
+  box-shadow:0 0 6px var(--lcd-on);
+  animation:beatDot var(--beat-ms,476ms) steps(2,end) infinite;
+}
+@keyframes beatDot{
+  0%{opacity:1;transform:scale(1.15)}
+  40%{opacity:.35;transform:scale(.85)}
+  100%{opacity:.15;transform:scale(.85)}
+}
+
+.player-body{
+  padding:4px;
+  display:grid;
+  grid-template-columns:96px 1fr;
+  gap:4px;
+}
+
+/* --- Album art window (left) --- */
+.art{
+  width:96px;
+  height:96px;
+  padding:2px;
+  background:linear-gradient(#3a3a3f,#1a1a1e);
+  box-shadow:
+    inset 1px 1px 0 #6a6a72,
+    inset -1px -1px 0 #000;
+}
+.art .frame{
+  width:100%;height:100%;
+  position:relative;
+  overflow:hidden;
+  background:#000;
+  box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3f3f45;
+}
+.art img{
+  width:100%;height:100%;
+  display:block;
+  image-rendering:pixelated;
+  filter:contrast(1.05) saturate(1.05);
+}
+/* dithered CRT overlay on the art */
+.art .frame::after{
+  content:"";
+  position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(to bottom, rgba(0,0,0,.28) 0 1px, transparent 1px 2px),
+    repeating-linear-gradient(to right,  rgba(0,0,0,.12) 0 1px, transparent 1px 2px);
+  mix-blend-mode:multiply;
+  pointer-events:none;
+}
+.art .frame::before{
+  content:"";
+  position:absolute;inset:0;
+  background:radial-gradient(closest-side at 30% 25%, rgba(255,255,255,.15), transparent 60%);
+  pointer-events:none;
+}
+
+/* --- Right stack: LCD strip, viz, time --- */
+.rstack{display:flex;flex-direction:column;gap:3px}
+
+.lcd-strip{
+  height:14px;
+  padding:0 5px;
+  display:flex;align-items:center;gap:8px;
+  font-family:var(--font-lcd);
+  font-size:13px;
+  line-height:12px;
+  color:var(--amber-on);
+  text-shadow:0 0 3px rgba(255,210,59,.5);
+}
+.lcd-strip .kbps,.lcd-strip .khz{color:var(--amber-on)}
+.lcd-strip .stereo{
+  display:inline-flex;gap:6px;
+  font-size:10px;letter-spacing:.08em;
+  color:var(--amber-on);
+}
+.lcd-strip .stereo b{color:var(--amber-dim);font-weight:400}
+.lcd-strip .stereo b.on{color:var(--amber-on)}
+
+/* --- Marquee (song title) --- */
+.marq{
+  position:relative;
+  height:12px;
+  overflow:hidden;
+  padding:0 4px;
+}
+.marq-inner{
+  display:inline-block;
+  white-space:nowrap;
+  font-family:var(--font-lcd);
+  font-size:13px;
+  line-height:12px;
+  color:var(--lcd-on);
+  text-shadow:var(--lcd-glow);
+  animation:marquee 22s linear infinite;
+}
+@keyframes marquee{
+  from{transform:translateX(0)}
+  to  {transform:translateX(-50%)}
+}
+
+/* --- Viz area (spectrum + oscilloscope) --- */
+.viz{
+  height:44px;
+  padding:2px 3px;
+  position:relative;
+  display:flex;align-items:flex-end;gap:1px;
+  overflow:hidden;
+}
+.viz .scan{
+  position:absolute;inset:0;
+  background:repeating-linear-gradient(to bottom,
+    rgba(20,60,20,.12) 0 1px, transparent 1px 2px);
+  pointer-events:none;
+}
+.bar{
+  position:relative;
+  flex:1;
+  min-width:2px;
+  height:6px;
+  background:linear-gradient(to top,
+    var(--bar-lo) 0%,
+    var(--bar-lo) 30%,
+    var(--bar-mid) 55%,
+    var(--bar-hi) 100%);
+  transform-origin:bottom;
+  transition:height 90ms cubic-bezier(.2,.7,.3,1);
+  box-shadow:0 0 2px rgba(255,140,0,.35);
+}
+.bar::after{
+  /* falling peak marker */
+  content:"";
+  position:absolute;
+  left:0;right:0;
+  height:2px;
+  background:var(--bar-peak);
+  bottom:var(--peak,0px);
+  transition:bottom 260ms linear;
+}
+
+/* Oscilloscope overlay */
+.osc{
+  position:absolute;
+  left:2px;right:2px;top:2px;bottom:2px;
+  pointer-events:none;
+  opacity:.85;
+}
+
+/* --- Big time readout --- */
+.time-row{
+  height:16px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 5px;
+}
+.time-lcd{
+  font-family:var(--font-lcd);
+  font-size:22px;
+  line-height:16px;
+  color:var(--lcd-on);
+  letter-spacing:.02em;
+  text-shadow:var(--lcd-glow);
+  display:flex;align-items:baseline;gap:2px;
+}
+.time-lcd .neg{margin-right:1px}
+.time-lcd .colon{
+  animation:colonBlink var(--beat-ms,476ms) steps(2,end) infinite;
+}
+@keyframes colonBlink{
+  0%,49%{opacity:1}
+  50%,100%{opacity:.25}
+}
+.tag-llama{
+  font-family:var(--font-tiny);
+  font-size:9px;
+  letter-spacing:.06em;
+  color:#8a8a94;
+}
+.tag-llama b{color:var(--lcd-on);text-shadow:var(--lcd-glow)}
+
+/* --- Progress rail --- */
+.progress-wrap{
+  padding:3px 3px 4px;
+}
+.progress{
+  height:10px;
+  position:relative;
+  padding:1px;
+}
+.progress .track{
+  position:relative;
+  height:100%;
+  background:#000;
+  box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3f3f45;
+  overflow:hidden;
+}
+.progress .fill{
+  position:absolute;left:0;top:0;bottom:0;
+  width:37%;
+  background:repeating-linear-gradient(to right,
+    #38b3ff 0 3px,
+    #1e5f8e 3px 4px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.35), inset 0 -1px 0 rgba(0,0,0,.5);
+}
+.progress .thumb{
+  position:absolute;
+  top:-1px;bottom:-1px;
+  width:9px;
+  left:calc(37% - 4px);
+  background:linear-gradient(#e4e4ea,#7c7c86);
+  border-top:1px solid #fff;
+  border-left:1px solid #fff;
+  border-right:1px solid #000;
+  border-bottom:1px solid #000;
+}
+
+/* --- Transport buttons --- */
+.transport{
+  display:flex;gap:2px;
+  padding:3px;
+  align-items:center;
+}
+.tbtn{
+  flex:0 0 auto;
+  width:36px;height:22px;
+  background:linear-gradient(#48484f,#2a2a2f);
+  border-top:1px solid #7a7a84;
+  border-left:1px solid #7a7a84;
+  border-right:1px solid #000;
+  border-bottom:1px solid #000;
+  box-shadow:inset 1px 1px 0 #6a6a72, inset -1px -1px 0 #111;
+  color:#e4e4ea;
+  font-family:var(--font-pixel);
+  font-size:11px;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  text-shadow:0 1px 0 #000;
+}
+.tbtn:active{
+  background:linear-gradient(#1e1e22,#3a3a40);
+  border-color:#000 #6a6a72 #6a6a72 #000;
+  box-shadow:inset 1px 1px 0 #111, inset -1px -1px 0 #6a6a72;
+}
+.tbtn.big{width:44px}
+.tbtn svg{width:12px;height:12px;fill:#e8e8ee}
+.tbtn.play svg{fill:var(--lcd-on);filter:drop-shadow(0 0 3px rgba(139,255,0,.55))}
+
+.right-cluster{
+  margin-left:auto;
+  display:flex;flex-direction:column;gap:2px;
+  align-items:stretch;
+}
+.slider-row{
+  display:flex;gap:3px;
+}
+.slider{
+  position:relative;
+  flex:1;
+  height:8px;
+  background:#000;
+  box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3f3f45;
+  min-width:60px;
+}
+.slider .fill{
+  position:absolute;left:0;top:1px;bottom:1px;
+  background:linear-gradient(to right,
+    #35c650 0%, #35c650 60%, #d6bf1c 75%, #d6412a 100%);
+}
+.slider .knob{
+  position:absolute;top:-1px;bottom:-1px;
+  width:6px;
+  background:linear-gradient(#e4e4ea,#7c7c86);
+  border-top:1px solid #fff;border-left:1px solid #fff;
+  border-right:1px solid #000;border-bottom:1px solid #000;
+}
+.slider .label{
+  position:absolute;left:2px;top:-11px;
+  font-family:var(--font-tiny);
+  font-size:8px;
+  color:#8a8a94;
+  letter-spacing:.08em;
+}
+
+/* ============================================================
+   SEARCH WINDOW
+   ============================================================ */
+.search .body{
+  padding:4px;
+  display:flex;gap:3px;align-items:center;
+}
+.search-input-wrap{
+  flex:1;position:relative;
+  background:#000;
+  padding:3px 6px 3px 20px;
+  box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3f3f45;
+  height:22px;
+  display:flex;align-items:center;
+}
+.search-input-wrap::before{
+  /* magnifier icon */
+  content:"";
+  position:absolute;
+  left:5px;top:50%;
+  width:9px;height:9px;
+  transform:translateY(-50%);
+  border:1px solid var(--lcd-on);
+  border-radius:50%;
+  box-shadow:0 0 3px rgba(139,255,0,.5);
+}
+.search-input-wrap::after{
+  content:"";
+  position:absolute;
+  left:12px;top:calc(50% + 3px);
+  width:4px;height:1px;
+  background:var(--lcd-on);
+  transform:rotate(45deg);
+  box-shadow:0 0 3px rgba(139,255,0,.5);
+}
+.search-input{
+  flex:1;
+  background:transparent;
+  border:0;outline:0;
+  font-family:var(--font-lcd);
+  font-size:15px;
+  line-height:16px;
+  color:var(--lcd-on);
+  text-shadow:var(--lcd-glow);
+  caret-color:var(--lcd-on);
+}
+.search-input::placeholder{color:var(--lcd-mid);text-shadow:none}
+.cursor{
+  display:inline-block;width:8px;height:14px;
+  background:var(--lcd-on);
+  margin-left:2px;
+  vertical-align:-2px;
+  animation:caret .7s steps(2,end) infinite;
+  box-shadow:0 0 4px rgba(139,255,0,.7);
+}
+@keyframes caret{50%{opacity:0}}
+.q-btn{
+  flex:0 0 auto;
+  height:22px;padding:0 10px;
+  background:linear-gradient(#4a4a50,#26262b);
+  border-top:1px solid #7a7a84;
+  border-left:1px solid #7a7a84;
+  border-right:1px solid #000;
+  border-bottom:1px solid #000;
+  box-shadow:inset 1px 1px 0 #6a6a72, inset -1px -1px 0 #111;
+  color:#fff;
+  font-family:var(--font-pixel);
+  font-size:10px;
+  letter-spacing:.1em;
+  cursor:pointer;
+  text-shadow:0 1px 0 #000;
+}
+.q-btn:hover{background:linear-gradient(#5a5a62,#333)}
+.q-btn:active{
+  background:linear-gradient(#1e1e22,#3a3a40);
+  border-color:#000 #6a6a72 #6a6a72 #000;
+  box-shadow:inset 1px 1px 0 #111, inset -1px -1px 0 #6a6a72;
+}
+
+/* ============================================================
+   PLAYLIST EDITOR
+   ============================================================ */
+.pl .title{background:
+    repeating-linear-gradient(to bottom,#6c8ae6 0 1px,transparent 1px 2px),
+    linear-gradient(#2f3f92,#1c2760);}
+.pl-body{
+  padding:2px;
+}
+.pl-list{
+  padding:2px 0;
+  max-height:none;
+}
+.plr{
+  display:grid;
+  grid-template-columns:22px 32px 1fr auto auto;
+  gap:6px;
+  align-items:center;
+  padding:3px 6px;
+  font-family:var(--font-lcd);
+  font-size:14px;
+  line-height:14px;
+  color:#c7c7cf;
+  border-bottom:1px dotted #2a2a30;
+}
+.plr:last-child{border-bottom:0}
+.plr .num{
+  font-family:var(--font-lcd);
+  color:#7a7a84;
+  text-align:right;
+  font-size:13px;
+}
+.plr .thumb-wrap{
+  width:28px;height:28px;
+  background:#000;
+  box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3f3f45;
+  overflow:hidden;
+}
+.plr .thumb-wrap img{
+  width:100%;height:100%;display:block;
+  image-rendering:pixelated;
+}
+.plr .meta{min-width:0}
+.plr .meta .t{
+  font-family:var(--font-lcd);
+  font-size:14px;
+  line-height:14px;
+  color:#e6e6ec;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.plr .meta .a{
+  font-family:var(--font-lcd);
+  font-size:12px;
+  line-height:12px;
+  color:#8a8a94;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.chip{
+  display:inline-flex;align-items:center;gap:3px;
+  padding:1px 5px 0;
+  height:12px;
+  background:linear-gradient(#48411a,#1a1608);
+  border-top:1px solid #d6bf1c;
+  border-left:1px solid #d6bf1c;
+  border-right:1px solid #000;
+  border-bottom:1px solid #000;
+  font-family:var(--font-tiny);
+  font-size:9px;
+  letter-spacing:.06em;
+  color:var(--guest);
+  text-shadow:0 0 3px rgba(255,207,59,.4);
+}
+.chip::before{
+  content:"";
+  width:4px;height:4px;border-radius:50%;
+  background:var(--guest);
+  box-shadow:0 0 3px rgba(255,207,59,.7);
+}
+.plr .dur{
+  font-family:var(--font-lcd);
+  font-size:13px;
+  color:var(--lcd-on);
+  text-shadow:var(--lcd-glow);
+  min-width:36px;text-align:right;
+}
+/* Now-playing row */
+.plr.now{
+  background:linear-gradient(#1a2c66,#0b1636);
+  color:#fff;
+  border-bottom-color:#3b52b8;
+}
+.plr.now .num,.plr.now .meta .a{color:#a7c0ff}
+.plr.now .meta .t{color:#fff;text-shadow:0 0 4px rgba(120,160,255,.7)}
+.plr.now .dur{color:var(--lcd-on)}
+.plr.now .now-mark{
+  display:inline-block;
+  width:0;height:0;
+  border-top:4px solid transparent;
+  border-bottom:4px solid transparent;
+  border-left:5px solid var(--lcd-on);
+  margin-right:2px;
+  filter:drop-shadow(0 0 3px rgba(139,255,0,.6));
+}
+
+.pl-footer{
+  display:flex;justify-content:space-between;
+  padding:3px 6px;
+  border-top:1px solid #3f3f45;
+  background:linear-gradient(#242429,#161619);
+  font-family:var(--font-tiny);
+  font-size:9px;
+  letter-spacing:.06em;
+  color:#8a8a94;
+}
+.pl-footer b{color:var(--lcd-on);text-shadow:var(--lcd-glow);font-weight:400}
+.pl-footer .party{color:var(--guest);text-shadow:0 0 4px rgba(255,207,59,.4)}
+
+/* ============================================================
+   ROOM-CODE / QR MINI WINDOW
+   ============================================================ */
+.roomcode .body{
+  padding:5px 6px;
+  display:flex;align-items:center;gap:8px;
+}
+.qr{
+  width:38px;height:38px;
+  background:
+    linear-gradient(45deg,#fff 25%,transparent 25%,transparent 75%,#fff 75%,#fff) 0 0/8px 8px,
+    linear-gradient(45deg,#fff 25%,#000 25%,#000 75%,#fff 75%,#fff) 4px 4px/8px 8px,
+    #000;
+  box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #6a6a72;
+  padding:3px;
+}
+.qr .inner{
+  width:100%;height:100%;
+  background:
+    linear-gradient(#fff,#fff) 0 0/100% 4px no-repeat,
+    linear-gradient(#fff,#fff) 0 100%/100% 4px no-repeat,
+    linear-gradient(#fff,#fff) 0 0/4px 100% no-repeat,
+    linear-gradient(#fff,#fff) 100% 0/4px 100% no-repeat,
+    repeating-conic-gradient(#000 0% 25%, #fff 0% 50%) 0 0/6px 6px;
+}
+.rc-info{flex:1;min-width:0}
+.rc-info .l{
+  font-family:var(--font-tiny);font-size:9px;letter-spacing:.06em;
+  color:#8a8a94;
+}
+.rc-info .code{
+  font-family:var(--font-lcd);
+  font-size:20px;line-height:18px;
+  color:var(--lcd-on);
+  text-shadow:var(--lcd-glow);
+  letter-spacing:.15em;
+}
+.rc-guests{
+  display:flex;flex-direction:column;gap:2px;
+  align-items:flex-end;
+}
+.rc-guests .num{
+  font-family:var(--font-lcd);
+  font-size:18px;line-height:14px;
+  color:var(--amber-on);
+  text-shadow:0 0 4px rgba(255,210,59,.55);
+}
+.rc-guests .lab{
+  font-family:var(--font-tiny);font-size:9px;letter-spacing:.06em;
+  color:#8a8a94;
+}
+
+/* ============================================================
+   Bottom fake taskbar
+   ============================================================ */
+.taskbar{
+  margin-top:2px;
+  display:flex;gap:3px;align-items:center;
+  padding:2px 3px;
+  background:linear-gradient(#3a3a3f,#22222a);
+  box-shadow:
+    inset 1px 1px 0 #6a6a72,
+    inset -1px -1px 0 #000,
+    0 0 0 1px #000;
+  font-family:var(--font-tiny);
+  font-size:9px;
+  letter-spacing:.06em;
+  color:#c9c9d0;
+  height:20px;
+}
+.start-btn{
+  height:16px;padding:0 6px;
+  background:linear-gradient(#48484f,#26262b);
+  border-top:1px solid #7a7a84;border-left:1px solid #7a7a84;
+  border-right:1px solid #000;border-bottom:1px solid #000;
+  color:#fff;
+  display:flex;align-items:center;gap:4px;
+  text-shadow:0 1px 0 #000;
+}
+.start-btn .llama{
+  width:8px;height:8px;
+  background:var(--guest);
+  border-radius:50% 50% 40% 40%;
+}
+.taskbar .clock{
+  margin-left:auto;
+  font-family:var(--font-lcd);
+  font-size:12px;line-height:10px;
+  color:var(--lcd-on);
+  text-shadow:var(--lcd-glow);
+  padding:2px 4px;
+  background:#000;
+  box-shadow:inset 1px 1px 0 #000, inset -1px -1px 0 #3f3f45;
+}
+.tb-item{
+  height:16px;padding:0 5px;
+  background:linear-gradient(#3f3f45,#2b2b30);
+  border-top:1px solid #5a5a62;border-left:1px solid #5a5a62;
+  border-right:1px solid #000;border-bottom:1px solid #000;
+  display:flex;align-items:center;gap:3px;
+}
+.tb-item .dot{
+  width:5px;height:5px;background:var(--lcd-on);
+  box-shadow:0 0 3px var(--lcd-on);
+}
+
+/* --- Reduced motion --- */
+@media (prefers-reduced-motion:reduce){
+  .marq-inner,.bpm-badge .dot,.time-lcd .colon,.cursor{animation:none !important}
+  .bar{transition:none}
+}
+
+/* --- Tighter phones --- */
+@media (max-width:380px){
+  .desktop{max-width:100%}
+  .player-body{grid-template-columns:80px 1fr}
+  .art{width:80px;height:80px}
+  .tbtn{width:32px}
+  .tbtn.big{width:38px}
+}
+</style>
+
+<div class="desktop" id="app">
+
+  <!-- =============== ROOM CODE + QR mini window =============== -->
+  <section class="win roomcode">
+    <div class="title">
+      <span>PASSTHEAUX.EXE - [ROOM]</span>
+      <span class="grip"></span>
+      <span class="title-btn">_</span>
+      <span class="title-btn">□</span>
+      <span class="title-btn">×</span>
+    </div>
+    <div class="body">
+      <div class="qr" aria-hidden="true"><div class="inner"></div></div>
+      <div class="rc-info">
+        <div class="l">ROOM CODE — SCAN OR TYPE</div>
+        <div class="code">AUX-4472</div>
+      </div>
+      <div class="rc-guests">
+        <div class="num">14</div>
+        <div class="lab">GUESTS ONLINE</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== MAIN PLAYER =============== -->
+  <section class="win player">
+    <div class="title">
+      <span class="brand">PASS THE AUX v5.66</span>
+      <span class="bpm-badge"><span class="dot"></span><span>126 BPM · HIGH ENERGY</span></span>
+      <span class="grip"></span>
+      <span class="title-btn">_</span>
+      <span class="title-btn">□</span>
+      <span class="title-btn">×</span>
+    </div>
+
+    <div class="player-body">
+
+      <!-- Album art (left) -->
+      <div class="art">
+        <div class="frame">
+          <img src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="album art" />
+        </div>
+      </div>
+
+      <!-- Right stack -->
+      <div class="rstack">
+
+        <!-- LCD strip: bitrate/khz/stereo -->
+        <div class="lcd-strip sunk">
+          <span class="kbps">128</span>
+          <span class="khz">44</span>
+          <span class="stereo">
+            <b>MONO</b> <b class="on">STEREO</b>
+          </span>
+        </div>
+
+        <!-- Marquee title -->
+        <div class="marq sunk">
+          <div class="marq-inner" id="marq">
+            <!-- filled by JS with two copies for seamless loop -->
+          </div>
+        </div>
+
+        <!-- Viz: spectrum + oscilloscope -->
+        <div class="viz sunk" id="viz">
+          <div class="scan"></div>
+          <!-- 20 bars injected by JS -->
+          <canvas class="osc" id="osc" width="240" height="80"></canvas>
+        </div>
+
+        <!-- Big time + tagline -->
+        <div class="time-row">
+          <div class="time-lcd">
+            <span class="neg">-</span><span id="tmin">02</span><span class="colon">:</span><span id="tsec">34</span>
+          </div>
+          <div class="tag-llama">IT REALLY <b>WHIPS THE PARTY</b></div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Progress rail (spans full width, below body) -->
+    <div class="progress-wrap">
+      <div class="progress sunk">
+        <div class="track">
+          <div class="fill" id="pfill"></div>
+          <div class="thumb" id="pthumb"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transport row -->
+    <div class="transport">
+      <button class="tbtn" title="prev" aria-label="previous">
+        <svg viewBox="0 0 12 12"><polygon points="10,1 4,6 10,11"/><rect x="2" y="1" width="2" height="10"/></svg>
+      </button>
+      <button class="tbtn play big" title="play" aria-label="play">
+        <svg viewBox="0 0 12 12"><polygon points="2,1 11,6 2,11"/></svg>
+      </button>
+      <button class="tbtn" title="pause" aria-label="pause">
+        <svg viewBox="0 0 12 12"><rect x="2" y="1" width="3" height="10"/><rect x="7" y="1" width="3" height="10"/></svg>
+      </button>
+      <button class="tbtn" title="stop" aria-label="stop">
+        <svg viewBox="0 0 12 12"><rect x="2" y="2" width="8" height="8"/></svg>
+      </button>
+      <button class="tbtn" title="next" aria-label="next">
+        <svg viewBox="0 0 12 12"><polygon points="2,1 8,6 2,11"/><rect x="8" y="1" width="2" height="10"/></svg>
+      </button>
+
+      <div class="right-cluster">
+        <div class="slider-row">
+          <div class="slider" style="width:110px" title="volume">
+            <span class="label">VOL</span>
+            <div class="fill" style="width:72%"></div>
+            <div class="knob" style="left:calc(72% - 3px)"></div>
+          </div>
+          <div class="slider" style="width:70px" title="balance">
+            <span class="label">BAL</span>
+            <div class="fill" style="width:50%"></div>
+            <div class="knob" style="left:calc(50% - 3px)"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== SEARCH WINDOW =============== -->
+  <section class="win search">
+    <div class="title">
+      <span>SEARCH.PLS — QUEUE A TRACK</span>
+      <span class="grip"></span>
+      <span class="title-btn">_</span>
+      <span class="title-btn">□</span>
+      <span class="title-btn">×</span>
+    </div>
+    <div class="body">
+      <div class="search-input-wrap">
+        <input class="search-input" id="q" value="fisher losing " autocomplete="off" spellcheck="false" />
+        <span class="cursor" aria-hidden="true"></span>
+      </div>
+      <button class="q-btn">QUEUE</button>
+    </div>
+  </section>
+
+  <!-- =============== PLAYLIST EDITOR =============== -->
+  <section class="win pl">
+    <div class="title">
+      <span>PLAYLIST EDITOR — UP NEXT</span>
+      <span class="grip"></span>
+      <span class="title-btn">_</span>
+      <span class="title-btn">□</span>
+      <span class="title-btn">×</span>
+    </div>
+
+    <div class="pl-body sunk">
+      <div class="pl-list" id="pl">
+        <!-- Rows injected by JS -->
+      </div>
+      <div class="pl-footer">
+        <span>SEL <b>0</b> / <b>8</b> · <b>MISC</b> · SORT BY GUEST</span>
+        <span class="party">14 ON THE AUX</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- =============== TASKBAR =============== -->
+  <div class="taskbar">
+    <div class="start-btn"><span class="llama"></span>START</div>
+    <div class="tb-item"><span class="dot"></span> PASS THE AUX</div>
+    <div class="tb-item">SEARCH</div>
+    <div class="tb-item">PLAYLIST</div>
+    <span class="clock" id="clock">23:47</span>
+  </div>
+
+</div>
+
+<script>
+/* ================================================================
+   BEAT CLOCK — synthesized reactivity.
+   We do NOT have real audio analysis (no mic; Spotify's audio-analysis
+   endpoint is dead / 403). So everything "reactive" here is choreographed
+   to a BPM-timed clock scaled by an "energy" 0..1. That is honest.
+   ================================================================ */
+const BPM = 126;
+const ENERGY = 0.92;        // 0..1
+const BEAT_MS = 60000 / BPM;   // 476.19ms
+document.documentElement.style.setProperty('--beat-ms', BEAT_MS + 'ms');
+
+/* ---- Queue data (realistic house / dance) ---- */
+const ART = {
+  A:'https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f',
+  B:'https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0',
+  C:'https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946',
+  D:'https://i.scdn.co/image/ab67616d0000b2734e0362c225863f6ae2432651',
+};
+
+const NOW = {
+  n:1, art:ART.A,
+  title:"Losing It",
+  artist:"Fisher",
+  guest:"MAYA",
+  dur:"6:04",
+};
+
+const QUEUE = [
+  {n:2, art:ART.B, title:"San Frandisco",              artist:"Dom Dolla",              guest:"JULES", dur:"3:31"},
+  {n:3, art:ART.C, title:"Turn Off The Lights",        artist:"Chris Lake, Alisha",     guest:"KAI",   dur:"3:15"},
+  {n:4, art:ART.D, title:"It Goes Like (Nanana)",      artist:"Peggy Gou",              guest:"RIO",   dur:"3:19"},
+  {n:5, art:ART.A, title:"Where You Are",              artist:"John Summit, Hayla",     guest:"ZEB",   dur:"3:38"},
+  {n:6, art:ART.B, title:"Rumble",                      artist:"Fred again.., Skrillex, Flowdan", guest:"NIA", dur:"3:20"},
+  {n:7, art:ART.C, title:"Ferrari",                     artist:"James Hype, Miggy Dela Rosa", guest:"THEO", dur:"2:47"},
+  {n:8, art:ART.D, title:"Atmosphere",                  artist:"Kaskade",                 guest:"SOL",   dur:"6:33"},
+];
+
+/* ---- Marquee text ---- */
+const marq = document.getElementById('marq');
+const marqText = ` ✦ NOW PLAYING — 01. FISHER — LOSING IT (EXTENDED MIX)  ·  ADDED BY MAYA  ·  128 KBPS  ·  ROOM AUX-4472  ✦  `;
+marq.textContent = marqText + marqText;   // duplicate for seamless loop
+
+/* ---- Build spectrum bars ---- */
+const viz = document.getElementById('viz');
+const BAR_COUNT = 22;
+const bars = [];
+for (let i = 0; i < BAR_COUNT; i++){
+  const b = document.createElement('div');
+  b.className = 'bar';
+  viz.insertBefore(b, viz.querySelector('.osc'));
+  bars.push({
+    el:b,
+    h:8,       // current height in px
+    peak:0,    // peak in px
+    peakFallStart:0,
+  });
+}
+const VIZ_H = 40;   // usable viz height in px
+
+/* Envelope shape across bars (bass loudest on left, mids middle, highs right) */
+function envAt(i){
+  const t = i / (BAR_COUNT - 1);
+  // classic house shape: strong sub, dip mid, roll off highs
+  const bass = Math.exp(-Math.pow((t-0.05)/0.18, 2));
+  const mid  = 0.65 * Math.exp(-Math.pow((t-0.42)/0.16, 2));
+  const high = 0.55 * Math.exp(-Math.pow((t-0.82)/0.20, 2));
+  return Math.min(1, bass + mid + high);
+}
+
+/* Beat phase → intensity curve (kick, snare-ish on 2/4, hats) */
+function beatIntensity(phase, i){
+  // phase 0..1 over one beat
+  // Kick envelope: sharp attack, decay
+  const kick = Math.pow(1 - phase, 4);
+  // Off-beat hats (16th) — modulate high-frequency bars
+  const hat = Math.pow(Math.max(0, Math.sin(Math.PI * 4 * phase)), 6);
+  const t = i / (BAR_COUNT - 1);
+  const kickMask = Math.exp(-Math.pow(t/0.35, 2));         // bass region
+  const hatMask  = 0.6 * Math.exp(-Math.pow((t-0.85)/0.2, 2)); // high region
+  return kickMask * kick * 1.15 + hatMask * hat + 0.20;
+}
+
+let start = performance.now();
+function tick(now){
+  const elapsed = now - start;
+  const phase = (elapsed % BEAT_MS) / BEAT_MS;   // 0..1 within a beat
+  const barSlot = Math.floor(elapsed / (BEAT_MS * 4)); // 4-beat measure
+
+  for (let i = 0; i < BAR_COUNT; i++){
+    const env = envAt(i);
+    const bi  = beatIntensity(phase, i);
+    // small deterministic per-bar wobble (no real audio, so we fake motion)
+    const seed = (i * 9301 + 49297) % 233280 / 233280;
+    const jitter = 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(now * 0.006 + seed * 6.28 + i));
+    const target = env * bi * jitter * ENERGY;
+    let h = Math.max(2, Math.min(VIZ_H, target * VIZ_H));
+    // smooth
+    bars[i].h += (h - bars[i].h) * 0.55;
+
+    const el = bars[i].el;
+    el.style.height = bars[i].h.toFixed(1) + 'px';
+
+    // Peak marker: rises with bar, falls slowly
+    if (bars[i].h > bars[i].peak){
+      bars[i].peak = bars[i].h;
+      bars[i].peakFallStart = now;
+    } else {
+      const dt = (now - bars[i].peakFallStart) / 1000;
+      // hold 120ms then drop 40px/s
+      const drop = Math.max(0, dt - 0.12) * 40;
+      bars[i].peak = Math.max(bars[i].h, bars[i].peak - drop * 0.016);
+      bars[i].peakFallStart = now;
+    }
+    el.style.setProperty('--peak', bars[i].peak.toFixed(1) + 'px');
+  }
+
+  drawOsc(now, phase);
+  requestAnimationFrame(tick);
+}
+
+/* ---- Oscilloscope: synthesized sine + kick pulse, colored classic green ---- */
+const osc = document.getElementById('osc');
+const octx = osc.getContext('2d');
+function fitCanvas(){
+  const r = osc.getBoundingClientRect();
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  osc.width  = Math.floor(r.width * dpr);
+  osc.height = Math.floor(r.height * dpr);
+  octx.setTransform(dpr,0,0,dpr,0,0);
+}
+window.addEventListener('resize', fitCanvas);
+setTimeout(fitCanvas, 0);
+
+function drawOsc(now, phase){
+  const w = osc.clientWidth, h = osc.clientHeight;
+  if (!w || !h) return;
+  octx.clearRect(0,0,w,h);
+  octx.lineWidth = 1;
+  octx.strokeStyle = 'rgba(123,255,92,0.85)';
+  octx.shadowColor = 'rgba(123,255,92,0.9)';
+  octx.shadowBlur = 3;
+  // envelope tied to beat kick
+  const kick = Math.pow(1 - phase, 3) * 0.9 * ENERGY;
+  octx.beginPath();
+  for (let x = 0; x <= w; x++){
+    const t = x / w;
+    const sub = Math.sin(t * Math.PI * 6 + now * 0.010) * 0.35;
+    const mid = Math.sin(t * Math.PI * 22 + now * 0.020) * 0.20 * (0.6 + kick);
+    const hi  = Math.sin(t * Math.PI * 60 + now * 0.055) * 0.10 * (0.4 + kick*0.8);
+    const y = h/2 + (sub + mid + hi) * h * 0.45 * (0.6 + kick*0.7);
+    if (x === 0) octx.moveTo(x, y); else octx.lineTo(x, y);
+  }
+  octx.stroke();
+  octx.shadowBlur = 0;
+}
+
+/* ---- Time counter (elapsed) ---- */
+let elapsedSec = 154; // 02:34
+setInterval(() => {
+  elapsedSec = (elapsedSec + 1) % (6*60 + 4);
+  const m = String(Math.floor(elapsedSec/60)).padStart(2,'0');
+  const s = String(elapsedSec % 60).padStart(2,'0');
+  document.getElementById('tmin').textContent = m;
+  document.getElementById('tsec').textContent = s;
+  const totalSec = 6*60 + 4;
+  const pct = (elapsedSec / totalSec) * 100;
+  document.getElementById('pfill').style.width  = pct.toFixed(2) + '%';
+  document.getElementById('pthumb').style.left  = 'calc(' + pct.toFixed(2) + '% - 4px)';
+}, 1000);
+
+/* ---- Clock (taskbar) ---- */
+function updateClock(){
+  const d = new Date();
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  document.getElementById('clock').textContent = hh + ':' + mm;
+}
+updateClock();
+setInterval(updateClock, 30_000);
+
+/* ---- Build playlist ---- */
+function chip(name){
+  return `<span class="chip">${name}</span>`;
+}
+function row(t, isNow){
+  const num = String(t.n).padStart(2,'0');
+  return `
+    <div class="plr ${isNow?'now':''}">
+      <div class="num">${isNow?'<span class="now-mark"></span>':''}${num}</div>
+      <div class="thumb-wrap"><img src="${t.art}" alt=""></div>
+      <div class="meta">
+        <div class="t">${t.title}</div>
+        <div class="a">${t.artist}</div>
+      </div>
+      ${chip(t.guest)}
+      <div class="dur">${t.dur}</div>
+    </div>`;
+}
+const pl = document.getElementById('pl');
+pl.insertAdjacentHTML('beforeend', row(NOW, true));
+QUEUE.forEach(t => pl.insertAdjacentHTML('beforeend', row(t, false)));
+
+/* ---- Start viz loop ---- */
+requestAnimationFrame(tick);
+</script>
