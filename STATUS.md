@@ -10,14 +10,26 @@ _Last updated 2026-08-02._
 
 ### DONE
 
-- **Agency theme ports implemented locally 2026-08-02 (not deployed):**
+- **Theme system DEPLOYED + verified live on aux.tejas.nyc 2026-08-02
+  (version `6f937120`).** All 11 themes are live and browseable via the
+  switcher: Suprematist (default), Facet, Field, Winamp, Milkdrop, Generative
+  Flow, Risograph, Afterglow, Cathode Vectorscope, Vellum Hymnal, All-Access
+  Laminate. Every visitor lands on a random theme; the switcher cycles all of
+  them; each surfaces its real design inspiration in the label + provenance
+  footer. Verified with Playwright against the exact deployed bundle: 11/11
+  themes apply their `data-theme`, zero console/page errors, BPM badge renders
+  on all 11 when a track with tempo data is playing (badge correctly hidden
+  when nothing is playing). Live re-check on production aux.tejas.nyc: themes
+  apply, zero errors. README on GitHub reworked into a plain "Run your own
+  party" walkthrough; live link framed as Tejas's own instance.
+- **Agency theme ports implemented 2026-08-02 (deployed):**
   Afterglow, Cathode Vectorscope, Vellum Hymnal, and All-Access Laminate are
   now first-class entries in the persisted theme registry, bringing the local
   selectable roster to 11 themes. Their motion uses the existing live
   now-playing BPM/energy variables and pauses with reduced-motion, hidden tabs,
   or missing audio features. Required verification passed:
   `node worker/test/party-session.test.mjs` and `npm --prefix client run build`.
-- **Theme system implemented locally 2026-08-02 (not deployed):** real
+- **Theme system implemented 2026-08-02 (deployed):** real
   now-playing ReccoBeats BPM/energy is exposed in `/api/now-playing`, cached in
   KV per track, and shown as a live badge when available. Client theme selection
   now persists per device in localStorage with Suprematist as the default
