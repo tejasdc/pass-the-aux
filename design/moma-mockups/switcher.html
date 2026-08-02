@@ -148,7 +148,8 @@
     pname.textContent=String(idx+1).padStart(2,'0')+' · '+PRESETS[idx].name;
     [...dots.children].forEach((d,k)=>d.classList.toggle('on',k===idx)); }
   document.getElementById('vizWrap').addEventListener('click', ()=>load(idx+1));
-  load(0);
+  // every visitor lands on a RANDOM theme (the party-selection idea); tap to browse the rest
+  load(Math.floor(Math.random() * PRESETS.length));
 
   function loop(now){ const bs=tick(now); if(draw) draw(bs); requestAnimationFrame(loop); }
   requestAnimationFrame(loop);
