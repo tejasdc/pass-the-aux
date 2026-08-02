@@ -5,6 +5,7 @@
   "compatibility_date": "2026-08-02",
   "compatibility_flags": ["nodejs_compat"],
   "routes": [
+    { "pattern": "aux.tejas.nyc", "custom_domain": true },
     { "pattern": "party.tejas.nyc", "custom_domain": true }
   ],
   "build": {
