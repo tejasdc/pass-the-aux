@@ -1,0 +1,14 @@
+{
+  "slug": "electric-love",
+  "title": "Electric Love",
+  "desc": "A Spotify party queue for house parties — guests scan a QR code, search, and add songs. Nobody can skip, pause, or wreck the playlist.",
+  "external": "https://electric-love.onrender.com/",
+  "level": "sovereign",
+  "types": [
+    "project"
+  ],
+  "specimen": {
+    "kind": "image"
+  },
+  "files": null
+}
