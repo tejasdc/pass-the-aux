@@ -120,7 +120,7 @@ function App() {
           </button>
         </header>
 
-        <main className="content">
+        <main className={`content ${partyStatus.live ? 'party-content' : ''}`}>
           {partyStatus.isLoading ? (
             <div className="loading-state">Checking party status...</div>
           ) : partyStatus.live ? (
@@ -168,33 +168,12 @@ function NoPartyState() {
 }
 
 function HostPage({ partyStatus, onStatusChange, onShowToast }) {
-  const [passphrase, setPassphrase] = useState('');
   const [isStarting, setIsStarting] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
 
-  const handleStart = async (event) => {
-    event.preventDefault();
+  const handleStart = () => {
     setIsStarting(true);
-
-    try {
-      const response = await fetch('/api/party/start', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passphrase }),
-      });
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        throw new Error(data.message || data.error || 'Unable to start party');
-      }
-
-      if (data.authUrl) {
-        window.location.assign(data.authUrl);
-      }
-    } catch (err) {
-      onShowToast(err.message, true);
-      setIsStarting(false);
-    }
+    window.location.assign('/api/auth/login?returnTo=/host');
   };
 
   const handleEnd = async () => {
@@ -203,8 +182,6 @@ function HostPage({ partyStatus, onStatusChange, onShowToast }) {
     try {
       const response = await fetch('/api/party/end', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ passphrase }),
       });
       const data = await response.json().catch(() => ({}));
 
@@ -213,7 +190,6 @@ function HostPage({ partyStatus, onStatusChange, onShowToast }) {
       }
 
       onShowToast('Party ended');
-      setPassphrase('');
       onStatusChange();
     } catch (err) {
       onShowToast(err.message, true);
@@ -241,31 +217,29 @@ function HostPage({ partyStatus, onStatusChange, onShowToast }) {
           <p className="host-copy">
             {partyStatus.live
               ? `Guests can add songs until ${formatExpiry(partyStatus.expiresAt)}.`
-              : 'Enter the host passphrase to open the queue and connect Spotify.'}
+              : 'Connect Spotify to open the queue.'}
           </p>
 
-          <form className="host-form" onSubmit={handleStart}>
-            <input
-              type="password"
-              value={passphrase}
-              onChange={(event) => setPassphrase(event.target.value)}
-              placeholder="Host passphrase"
-              autoComplete="current-password"
-              className="host-input"
-            />
-            <button className="host-button" type="submit" disabled={isStarting || !passphrase}>
-              {isStarting ? 'Opening Spotify...' : 'Start with Spotify'}
+          {!partyStatus.live && (
+            <button className="host-button" type="button" onClick={handleStart} disabled={isStarting}>
+              {isStarting ? 'Opening Spotify...' : 'Start the party'}
             </button>
-          </form>
+          )}
 
-          {partyStatus.live && (
+          {partyStatus.live && partyStatus.hostSession && (
             <button
               className="host-button secondary"
               type="button"
               onClick={handleEnd}
-              disabled={isEnding || !passphrase}
+              disabled={isEnding}
             >
               {isEnding ? 'Ending...' : 'End party'}
+            </button>
+          )}
+
+          {partyStatus.live && !partyStatus.hostSession && (
+            <button className="host-button" type="button" onClick={handleStart} disabled={isStarting}>
+              {isStarting ? 'Opening Spotify...' : 'Continue with Spotify'}
             </button>
           )}
         </section>

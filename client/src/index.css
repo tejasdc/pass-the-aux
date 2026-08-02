@@ -221,19 +221,37 @@ body {
 /* ============ SCROLLABLE CONTENT ============ */
 .content {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
+}
+
+.party-content {
   padding-bottom: 100px;
 }
 
 .content::-webkit-scrollbar {
-  width: 3px;
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .content::-webkit-scrollbar-thumb {
-  background: var(--electric-purple);
-  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background-clip: content-box;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.28);
+  border: 2px solid transparent;
+  background-clip: content-box;
 }
 
 /* ============ NOW PLAYING ============ */
@@ -656,6 +674,8 @@ body {
 .search-results {
   flex: 1;
   overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.22) transparent;
   padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
@@ -931,8 +951,8 @@ body {
 
 /* ============ CLOSED PARTY ============ */
 .no-party {
-  min-height: calc(100vh - 80px);
-  padding: 6rem 1.5rem 2rem;
+  min-height: 100%;
+  padding: 2rem 1.5rem;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1038,30 +1058,6 @@ body {
   margin-bottom: 0.7rem;
 }
 
-.host-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  margin-top: 1.5rem;
-}
-
-.host-input {
-  width: 100%;
-  padding: 0.9rem 1rem;
-  background: var(--glass);
-  border: 1px solid var(--glass-edge);
-  border-radius: 12px;
-  color: var(--text-bright);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.9rem;
-  outline: none;
-}
-
-.host-input:focus {
-  border-color: var(--electric-purple);
-  box-shadow: 0 0 20px rgba(184, 41, 221, 0.2);
-}
-
 .host-button {
   width: 100%;
   min-height: 46px;
@@ -1074,6 +1070,10 @@ body {
   font-weight: 800;
   cursor: pointer;
   transition: all 0.3s ease;
+}
+
+.host-panel > .host-button {
+  margin-top: 1.5rem;
 }
 
 .host-button:hover:not(:disabled) {
