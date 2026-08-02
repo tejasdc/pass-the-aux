@@ -26,3 +26,6 @@ npm-debug.log*
 
 # Mockup screenshots
 mockup/*.png
+
+# agent working logs
+tmp/
