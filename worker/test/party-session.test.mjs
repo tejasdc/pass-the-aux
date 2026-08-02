@@ -253,6 +253,86 @@ async function testPartyLifecycle() {
   assert.equal(await env.PARTY_QUEUE_KV.get("party:session", "json"), null);
 }
 
+async function testNowPlayingIncludesCachedAudioFeatures() {
+  const env = createEnv();
+  await env.PARTY_QUEUE_KV.put("host:tokens", JSON.stringify({
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    expiresAt: Date.now() + 3600 * 1000,
+  }));
+  await env.PARTY_QUEUE_KV.put("party:session", JSON.stringify({
+    live: true,
+    hostUserId: "spotify-host",
+    startedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + PARTY_TTL_MS).toISOString(),
+    durationSeconds: 8 * 60 * 60,
+  }));
+
+  const originalFetch = globalThis.fetch;
+  let reccoFetches = 0;
+
+  globalThis.fetch = async (url) => {
+    const requestUrl = String(url);
+
+    if (requestUrl === "https://api.spotify.com/v1/me/player/currently-playing") {
+      return Response.json({
+        is_playing: true,
+        progress_ms: 42000,
+        item: {
+          id: "track-123",
+          name: "Real BPM Song",
+          artists: [{ id: "artist-1", name: "The Meters" }],
+          album: { id: "album-1", name: "Party Data", images: [] },
+          duration_ms: 180000,
+          uri: "spotify:track:track-123",
+        },
+      });
+    }
+
+    if (requestUrl === "https://api.reccobeats.com/v1/audio-features?ids=track-123") {
+      reccoFetches += 1;
+      return Response.json({
+        content: [{
+          energy: 0.82,
+          valence: 0.64,
+          danceability: 0.71,
+          tempo: 126.4,
+          acousticness: 0.12,
+          instrumentalness: 0.01,
+          liveness: 0.22,
+          speechiness: 0.04,
+          loudness: -5.8,
+          key: 7,
+          mode: 1,
+        }],
+      });
+    }
+
+    throw new Error(`Unexpected fetch: ${requestUrl}`);
+  };
+
+  try {
+    const firstResponse = await call(env, "/api/now-playing");
+    assert.equal(firstResponse.status, 200);
+    const first = await responseJson(firstResponse);
+    assert.equal(first.playing, true);
+    assert.deepEqual(first.track.audioFeatures, {
+      bpm: 126,
+      tempo: 126.4,
+      energy: 0.82,
+      energyLevel: "high",
+    });
+
+    const secondResponse = await call(env, "/api/now-playing");
+    assert.equal(secondResponse.status, 200);
+    const second = await responseJson(secondResponse);
+    assert.equal(second.track.audioFeatures.bpm, 126);
+    assert.equal(reccoFetches, 1);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 let fakeNow = Date.UTC(2026, 1, 14, 20, 0, 0);
 const realDateNow = Date.now;
 Date.now = () => fakeNow;
@@ -263,6 +343,7 @@ try {
   await testGuestRoutesRefuseWhenNoPartyIsLive();
   await testEndAndLogoutRequireHostSession();
   await testPartyLifecycle();
+  await testNowPlayingIncludesCachedAudioFeatures();
   console.log("party-session worker harness passed");
 } finally {
   Date.now = realDateNow;

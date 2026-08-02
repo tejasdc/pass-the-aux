@@ -6,6 +6,7 @@ const HOST_SESSION_PREFIX = "host:session:";
 const HOST_SESSION_COOKIE = "el_host_session";
 const OAUTH_STATE_PREFIX = "oauth:state:";
 const RATE_LIMIT_PREFIX = "rate-limit:";
+const AUDIO_FEATURES_PREFIX = "audio-features:";
 
 const PARTY_SESSION_TTL_SECONDS = 8 * 60 * 60;
 const PARTY_SESSION_TTL_MS = PARTY_SESSION_TTL_SECONDS * 1000;
@@ -417,9 +418,14 @@ async function handleNowPlaying(env) {
       return json({ playing: false, track: null });
     }
 
+    const audioFeatures = data.item.id ? await getAudioFeatures(env, data.item.id) : null;
+
     return json({
       playing: data.is_playing,
-      track: formatTrack(data.item, { progress_ms: data.progress_ms }),
+      track: formatTrack(data.item, {
+        progress_ms: data.progress_ms,
+        audioFeatures: formatPublicAudioFeatures(audioFeatures),
+      }),
     });
   } catch (err) {
     console.error("Error getting currently playing:", err);
@@ -526,7 +532,7 @@ async function handleAddToQueue(request, env) {
     const currentVibe = await getCurrentVibe(env);
 
     if (currentVibe.settings.enabled) {
-      const audioFeatures = await getAudioFeatures(trackId);
+      const audioFeatures = await getAudioFeatures(env, trackId);
 
       if (audioFeatures) {
         const vibeCheck = await checkVibeMatch(env, currentVibe, audioFeatures);
@@ -638,10 +644,12 @@ async function handleSetVibe(request, env) {
 
 async function handleSpotifyAudioFeatures(env, trackId) {
   try {
-    const response = await spotifyFetch(env, `/audio-features/${trackId}`);
-    const status = response.status;
-    const data = await response.json().catch(() => null);
-    return json({ status, data, trackId });
+    const audioFeatures = await getAudioFeatures(env, trackId);
+    return json({
+      status: audioFeatures ? 200 : 404,
+      data: audioFeatures,
+      trackId,
+    }, { status: audioFeatures ? 200 : 404 });
   } catch (err) {
     return json({ error: err.message, trackId }, { status: 500 });
   }
@@ -692,7 +700,7 @@ async function handleVibeCheck(env, trackId) {
   }
 
   try {
-    const audioFeatures = await getAudioFeatures(trackId);
+    const audioFeatures = await getAudioFeatures(env, trackId);
 
     if (!audioFeatures) {
       return json({
@@ -947,12 +955,20 @@ async function getCurrentVibe(env) {
   return storedVibe || DEFAULT_VIBE;
 }
 
-async function getAudioFeatures(trackId) {
+async function getAudioFeatures(env, trackId) {
+  const cacheKey = `${AUDIO_FEATURES_PREFIX}${trackId}`;
+  const cached = await env.PARTY_QUEUE_KV.get(cacheKey, "json");
+
+  if (cached) {
+    return cached.available ? cached.features : null;
+  }
+
   try {
     const response = await fetch(`https://api.reccobeats.com/v1/audio-features?ids=${trackId}`);
 
     if (!response.ok) {
       console.error(`ReccoBeats API error for ${trackId}: ${response.status}`);
+      await cacheMissingAudioFeatures(env, cacheKey);
       return null;
     }
 
@@ -960,12 +976,13 @@ async function getAudioFeatures(trackId) {
 
     if (!data.content || data.content.length === 0) {
       console.log(`Track ${trackId} not found in ReccoBeats database`);
+      await cacheMissingAudioFeatures(env, cacheKey);
       return null;
     }
 
     const features = data.content[0];
 
-    return {
+    const normalized = {
       energy: features.energy,
       valence: features.valence,
       danceability: features.danceability,
@@ -978,10 +995,28 @@ async function getAudioFeatures(trackId) {
       key: features.key,
       mode: features.mode,
     };
+
+    await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify({
+      available: true,
+      features: normalized,
+      source: "reccobeats",
+      cachedAt: new Date().toISOString(),
+    }));
+
+    return normalized;
   } catch (err) {
     console.error("Error fetching audio features from ReccoBeats:", err.message);
+    await cacheMissingAudioFeatures(env, cacheKey);
     return null;
   }
+}
+
+async function cacheMissingAudioFeatures(env, cacheKey) {
+  await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify({
+    available: false,
+    source: "reccobeats",
+    cachedAt: new Date().toISOString(),
+  }));
 }
 
 async function getCurrentlyPlayingTrackId(env) {
@@ -1012,7 +1047,7 @@ async function checkVibeMatch(env, currentVibe, audioFeatures) {
       return { matches: true, reason: null, note: "Nothing currently playing" };
     }
 
-    referenceFeatures = await getAudioFeatures(nowPlayingId);
+    referenceFeatures = await getAudioFeatures(env, nowPlayingId);
     if (!referenceFeatures) {
       return { matches: true, reason: null, note: "Could not get reference track features" };
     }
@@ -1157,6 +1192,30 @@ function formatTrack(track, extra = {}) {
     uri: track.uri,
     ...extra,
   };
+}
+
+function formatPublicAudioFeatures(audioFeatures) {
+  if (!audioFeatures) return null;
+
+  const tempo = Number(audioFeatures.tempo);
+  const energy = Number(audioFeatures.energy);
+  if (!Number.isFinite(tempo) || tempo <= 0 || !Number.isFinite(energy)) {
+    return null;
+  }
+
+  const clampedEnergy = Math.max(0, Math.min(1, energy));
+  return {
+    bpm: Math.round(tempo),
+    tempo,
+    energy: clampedEnergy,
+    energyLevel: energyLevelLabel(clampedEnergy),
+  };
+}
+
+function energyLevelLabel(energy) {
+  if (energy >= 0.67) return "high";
+  if (energy >= 0.34) return "medium";
+  return "low";
 }
 
 async function readJsonBody(request) {

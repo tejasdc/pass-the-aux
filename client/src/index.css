@@ -350,6 +350,22 @@ a {
   line-height: 1.35;
 }
 
+.track-audio-badge {
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 12px;
+  padding: 7px 10px;
+  border: 2px solid var(--ink);
+  background: var(--pink);
+  color: var(--ink);
+  font-size: 0.62rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  line-height: 1.2;
+  text-transform: uppercase;
+  box-shadow: 5px 5px 0 var(--ink);
+}
+
 .progress {
   grid-area: progress;
   width: 100%;
