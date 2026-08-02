@@ -15,7 +15,6 @@ function QueueItem({ track, position, isNextUp }) {
 
   return (
     <div className={`queue-item ${isNextUp ? 'next-up' : ''}`}>
-      <span className="queue-tick" aria-hidden="true"></span>
       <div className="queue-thumb">
         <img src={albumImage} alt="" />
       </div>

@@ -14,7 +14,7 @@ const SHAPES = [
 
 const MOBILE_MIN_WIDTH = 420;
 const DESKTOP_WIDTH = 768;
-const MOBILE_SHAPE_SCALE = 0.58;
+const MOBILE_SHAPE_SCALE = 0.46;
 
 const shapeScaleForWidth = (viewportWidth) => {
   if (viewportWidth >= DESKTOP_WIDTH) return 1;

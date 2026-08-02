@@ -415,7 +415,7 @@ a {
 
 .queue-item {
   display: grid;
-  grid-template-columns: 34px 52px minmax(0, 1fr) auto;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
   align-items: center;
   gap: 12px;
   min-height: 74px;
@@ -445,28 +445,6 @@ a {
     opacity: 0;
     transform: translateY(8px);
   }
-}
-
-.queue-tick {
-  width: 28px;
-  height: 9px;
-  background: var(--green);
-  transform: rotate(-31deg);
-}
-
-.queue-item:nth-child(3n + 2) .queue-tick {
-  background: var(--cobalt);
-  transform: rotate(19deg);
-}
-
-.queue-item:nth-child(3n) .queue-tick {
-  background: var(--salmon);
-  transform: rotate(-8deg);
-}
-
-.queue-item.next-up .queue-tick {
-  background: var(--red);
-  width: 34px;
 }
 
 .queue-thumb,
@@ -954,7 +932,7 @@ a {
   }
 
   .queue-item {
-    grid-template-columns: 26px 46px minmax(0, 1fr) auto;
+    grid-template-columns: 46px minmax(0, 1fr) auto;
     gap: 10px;
   }
 
