@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pass the Aux — Hopper</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --canvas: #EDE8DB;
+    --panel: #E4DECF;
+    --ink: #14120E;
+    --salmon: #E89A84;
+    --pink: #EFC9BF;
+    --green: #1E7A5A;
+    --slate: #9AA0AC;
+    --cobalt: #2438B8;
+    --red: #C6371F;
+    --mute: #6F6A5C;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    background: var(--canvas); color: var(--ink);
+    font-family: 'Archivo', sans-serif; overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .3; z-index: 50;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .app { max-width: 460px; margin: 0 auto; min-height: 100%; display: flex; flex-direction: column; }
+
+  /* ---------- HERO: the playfield ---------- */
+  .hero { position: relative; height: 420px; flex: none; overflow: hidden; }
+  .playfield { position: absolute; inset: 0; z-index: 1; }
+  .pf-shape { position: absolute; left: 0; top: 0; will-change: transform; }
+  .creature { position: absolute; left: 0; top: 0; z-index: 2; will-change: transform; }
+
+  .hero-content { position: relative; z-index: 3; padding: 22px 24px 0; pointer-events: none; }
+  .wordmark { font-family: 'Archivo Black'; font-size: 15px; letter-spacing: .3em; text-transform: uppercase; }
+  .wordmark small { display: block; font-family: 'Archivo'; font-weight: 600; font-size: 9px; letter-spacing: .22em; margin-top: 5px; color: var(--mute); }
+
+  .np { display: flex; gap: 16px; margin-top: 22px; align-items: flex-end; }
+  .np-art { width: 120px; height: 120px; flex: none; object-fit: cover; box-shadow: 6px 8px 0 rgba(20,18,14,.12); background: #222; }
+  .np-meta { padding-bottom: 4px; }
+  .np-kicker { font-size: 9px; letter-spacing: .3em; text-transform: uppercase; color: var(--red); font-weight: 600; }
+  .np-title { font-family: 'Archivo Black'; font-size: 30px; line-height: .95; margin-top: 6px; }
+  .np-artist { font-weight: 600; font-size: 14px; margin-top: 6px; }
+  .np-album { font-size: 12px; color: var(--mute); }
+  .np-prog { margin: 16px 24px 0; position: relative; z-index: 3; }
+  .np-bar { height: 5px; background: rgba(20,18,14,.14); position: relative; }
+  .np-bar b { position: absolute; inset: 0; width: 19%; background: var(--ink); }
+  .np-times { display: flex; justify-content: space-between; font-size: 11px; color: var(--mute); margin-top: 6px; letter-spacing: .1em; }
+
+  /* ---------- QUEUE: clean foreground panel ---------- */
+  .queue { position: relative; z-index: 4; background: var(--canvas); flex: 1; padding: 26px 24px 20px; }
+  .q-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; }
+  .q-head h2 { font-family: 'Archivo Black'; font-size: 13px; letter-spacing: .26em; text-transform: uppercase; }
+  .q-count { font-size: 11px; letter-spacing: .12em; color: var(--mute); }
+  .row { display: flex; align-items: center; gap: 14px; padding: 13px 0; border-bottom: 1px solid rgba(20,18,14,.12); }
+  .glyph { width: 26px; height: 26px; flex: none; position: relative; }
+  .row-art { width: 46px; height: 46px; flex: none; object-fit: cover; background: #333; }
+  .row-meta { flex: 1; min-width: 0; }
+  .row-t { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-a { font-size: 12px; color: var(--mute); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row-n { font-family: 'Archivo Black'; font-size: 11px; color: var(--mute); }
+  .row-d { font-size: 11px; color: var(--mute); margin-top: 3px; letter-spacing: .06em; }
+  .row-right { text-align: right; flex: none; }
+
+  .search { position: sticky; bottom: 0; z-index: 5; background: var(--canvas); padding: 14px 24px 22px; display: flex; gap: 0; box-shadow: 0 -10px 20px -8px var(--canvas); }
+  .search input { flex: 1; background: transparent; border: none; border-bottom: 3px solid var(--ink); font-family: 'Archivo'; font-size: 16px; padding: 12px 2px; outline: none; }
+  .search input::placeholder { color: #9B9585; }
+  .search button { width: 52px; height: 52px; background: var(--ink); color: var(--canvas); border: none; font-family: 'Archivo Black'; font-size: 18px; }
+
+  .provenance { text-align: center; font-size: 10px; letter-spacing: .06em; color: var(--mute); padding: 4px 24px 26px; }
+  .provenance a { color: inherit; }
+
+  @media (prefers-reduced-motion: reduce) { .creature { display: none; } }
+</style>
+</head>
+<body>
+  <div class="app">
+    <section class="hero">
+      <div class="playfield" id="playfield"></div>
+      <div class="hero-content">
+        <div class="wordmark">Pass the Aux<small>the queue is open</small></div>
+        <div class="np">
+          <img class="np-art" src="https://i.scdn.co/image/ab67616d0000b273e2e352d89826aef6dbd5ff8f" alt="">
+          <div class="np-meta">
+            <div class="np-kicker">Now Playing</div>
+            <div class="np-title">Stay</div>
+            <div class="np-artist">FISHER</div>
+            <div class="np-album">Stay</div>
+          </div>
+        </div>
+      </div>
+      <div class="np-prog">
+        <div class="np-bar"><b></b></div>
+        <div class="np-times"><span>0:32</span><span>2:45</span></div>
+      </div>
+    </section>
+
+    <section class="queue">
+      <div class="q-head"><h2>Up Next</h2><span class="q-count">20 songs</span></div>
+      <div id="rows"></div>
+    </section>
+
+    <div class="search">
+      <input placeholder="Search a song to queue…">
+      <button>→</button>
+    </div>
+    <div class="provenance">Design inspired by Kazimir Malevich&rsquo;s <a href="https://www.moma.org/collection/works/80387" target="_blank" rel="noreferrer">Suprematist Painting (1916-17)</a></div>
+  </div>
+
+<script>
+  // ---------- queue rows with VARIED suprematist glyphs ----------
+  const songs = [
+    ['If You Need Me','Caius, iamalex, Hazy Year','2:46'],
+    ['What A Life','John Summit, Guz, Stevie Appleton','2:51'],
+    ['ten','Fred again.., Jozzy','3:01'],
+    ['Oblivious','Mild Minds','2:53'],
+    ['All Mine','PLS&TY','3:01'],
+    ['Losing It','FISHER','3:00'],
+  ];
+  // each glyph is a distinct Malevich element in a rotating palette
+  const GLYPHS = [
+    c => `<span style="position:absolute;inset:2px;background:${c};border-radius:50%"></span>`,                 // circle
+    c => `<span style="position:absolute;left:11px;top:0;width:5px;height:26px;background:${c};transform:rotate(24deg)"></span>`, // diagonal bar
+    c => `<span style="position:absolute;left:2px;top:11px;width:22px;height:5px;background:${c}"></span><span style="position:absolute;left:11px;top:2px;width:5px;height:22px;background:${c}"></span>`, // cross
+    c => `<span style="position:absolute;left:3px;top:3px;width:20px;height:20px;background:${c};transform:rotate(45deg)"></span>`, // diamond
+    c => `<span style="position:absolute;left:2px;bottom:2px;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:22px solid ${c}"></span>`, // triangle
+    c => `<span style="position:absolute;left:4px;top:4px;width:18px;height:18px;background:${c}"></span>`,      // square
+  ];
+  const COLORS = ['#1E7A5A','#2438B8','#C6371F','#E89A84','#14120E','#9AA0AC'];
+  const arts = ['ab67616d0000b2732e8ed79e177ff6011076f5f0','ab67616d0000b273bd26ede1ae69327010d49946','ab67616d0000b2734e0362c225863f6ae2432651','ab67616d0000b273c5716278abba6a103ad13aa7','ab67616d0000b273148ae94f91d539c9666ee7c9','ab67616d0000b273e2e352d89826aef6dbd5ff8f'];
+  document.getElementById('rows').innerHTML = songs.map((s, i) => `
+    <div class="row">
+      <span class="glyph">${GLYPHS[i % GLYPHS.length](COLORS[i % COLORS.length])}</span>
+      <img class="row-art" src="https://i.scdn.co/image/${arts[i % arts.length]}" alt="">
+      <div class="row-meta"><div class="row-t">${s[0]}</div><div class="row-a">${s[1]}</div></div>
+      <div class="row-right"><div class="row-n">${String(i+1).padStart(2,'0')}</div><div class="row-d">${s[2]}</div></div>
+    </div>`).join('');
+
+  // ---------- the playfield: drifting Malevich shapes = platforms ----------
+  const pf = document.getElementById('playfield');
+  const W = () => pf.clientWidth, H = () => pf.clientHeight;
+
+  const shapeDefs = [
+    { kind:'circle', d:96,  color:'#CFCBBE', x:.16, y:.22 },
+    { kind:'rect', w:150, h:26, color:'#EFC9BF', x:.62, y:.30, angle:-20 },
+    { kind:'rect', w:120, h:22, color:'#14120E', x:.44, y:.62, angle:-8 },
+    { kind:'circle', d:70, color:'#9AA0AC', x:.80, y:.70 },
+    { kind:'rect', w:80, h:16, color:'#1E7A5A', x:.24, y:.74, angle:28 },
+    { kind:'square', d:52, color:'#E89A84', x:.70, y:.16, angle:12 },
+  ];
+
+  const shapes = shapeDefs.map(d => {
+    const el = document.createElement('div');
+    el.className = 'pf-shape';
+    const w = d.kind === 'rect' ? d.w : d.d;
+    const h = d.kind === 'rect' ? d.h : d.d;
+    el.style.width = w + 'px'; el.style.height = h + 'px'; el.style.background = d.color;
+    if (d.kind !== 'rect') el.style.borderRadius = d.kind === 'circle' ? '50%' : '0';
+    el.style.opacity = .92;
+    pf.appendChild(el);
+    return {
+      el, w, h, x: d.x * 400, y: d.y * 420,
+      vx: (Math.random()-.5)*22, vy: (Math.random()-.5)*22,
+      angle: (d.angle||0)*Math.PI/180, va: (Math.random()-.5)*.12,
+      r: Math.max(w,h)/2,
+    };
+  });
+
+  // ---------- the hopper: a little Skyroads car that platforms across the shapes ----------
+  const car = document.createElement('div');
+  car.className = 'creature';
+  car.innerHTML = `
+    <svg width="34" height="22" viewBox="0 0 34 22" fill="none">
+      <path d="M2 14 L7 6 L20 6 L26 13 L32 14 L32 17 L2 17 Z" fill="#14120E"/>
+      <circle cx="9" cy="18" r="3.4" fill="#14120E" stroke="#EDE8DB" stroke-width="1.4"/>
+      <circle cx="25" cy="18" r="3.4" fill="#14120E" stroke="#EDE8DB" stroke-width="1.4"/>
+      <rect x="10" y="8" width="7" height="4" fill="#2438B8"/>
+    </svg>`;
+  pf.appendChild(car);
+  const reach = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  reach.setAttribute('class','creature');
+  reach.style.overflow = 'visible';
+  reach.innerHTML = '<line stroke="#C6371F" stroke-width="1.5" stroke-dasharray="3 4" opacity="0"/>';
+  pf.appendChild(reach);
+  const reachLine = reach.querySelector('line');
+
+  const CAR_W = 34, CAR_H = 22, G = 900, JUMP_RANGE = 190;
+  const shapeTop = (s) => ({ x: s.x, y: s.y - s.h/2 - CAR_H/2 + 2 });
+
+  let hop = { state:'ride', on: shapes[2], t:0, dwell: 1.2 };
+  let cx = 0, cy = 0, cAngle = 0, squash = 0;
+
+  function reachable(from, to) {
+    const p = shapeTop(to);
+    const dx = p.x - cx, dy = p.y - cy;
+    return Math.hypot(dx, dy) < JUMP_RANGE;
+  }
+
+  function launchTo(target) {
+    const p = shapeTop(target);
+    // lead the target a touch by its velocity
+    const px = p.x + target.vx * 0.5, py = p.y + target.vy * 0.5;
+    const dx = px - cx;
+    const T = Math.max(0.55, Math.min(1.0, Math.abs(dx) / 220 + 0.5));
+    hop = { state:'jump', on:null, target, t:0, dur:T,
+      x0:cx, y0:cy,
+      vx0:(px - cx)/T,
+      vy0:((py - cy) - 0.5*G*T*T)/T,
+    };
+  }
+
+  function step(dt, now) {
+    // shapes drift + wall-bounce inside the playfield
+    for (const s of shapes) {
+      s.x += s.vx*dt; s.y += s.vy*dt; s.angle += s.va*dt; s.va *= .995;
+      const sp = Math.hypot(s.vx, s.vy);
+      if (sp < 6) { const a = Math.random()*6.28; s.vx += Math.cos(a)*.4; s.vy += Math.sin(a)*.4; }
+      if (s.x < s.r) { s.x = s.r; s.vx = Math.abs(s.vx); }
+      if (s.x > W()-s.r) { s.x = W()-s.r; s.vx = -Math.abs(s.vx); }
+      if (s.y < s.r) { s.y = s.r; s.vy = Math.abs(s.vy); }
+      if (s.y > H()-s.r) { s.y = H()-s.r; s.vy = -Math.abs(s.vy); }
+      s.el.style.transform = `translate(${s.x - s.w/2}px, ${s.y - s.h/2}px) rotate(${s.angle}rad)`;
+    }
+
+    reachLine.setAttribute('opacity','0');
+
+    if (hop.state === 'ride') {
+      const p = shapeTop(hop.on);
+      cx = p.x; cy = p.y; cAngle = Math.atan2(hop.on.vy, hop.on.vx) * 0.05;
+      hop.t += dt;
+      if (hop.t > hop.dwell) {
+        // choose a reachable neighbour (not the one we're on), nearest-ish
+        const cands = shapes.filter(s => s !== hop.on && reachable(hop.on, s));
+        if (cands.length) {
+          cands.sort((a,b) => Math.hypot(shapeTop(a).x-cx, shapeTop(a).y-cy) - Math.hypot(shapeTop(b).x-cx, shapeTop(b).y-cy));
+          hop.state='crouch'; hop.t=0; hop.target = cands[Math.floor(Math.random()*Math.min(2,cands.length))];
+        } else {
+          hop.state='search'; hop.t=0;
+        }
+      }
+    }
+    else if (hop.state === 'crouch') {
+      const p = shapeTop(hop.on); cx = p.x; cy = p.y;
+      squash = Math.sin(Math.min(1,hop.t/0.18)*3.14) * 0.35;
+      hop.t += dt;
+      if (hop.t > 0.18) { squash = 0; launchTo(hop.target); }
+    }
+    else if (hop.state === 'jump') {
+      hop.t += dt;
+      const t = hop.t;
+      cx = hop.x0 + hop.vx0*t;
+      cy = hop.y0 + hop.vy0*t + 0.5*G*t*t;
+      cAngle = Math.atan2(hop.vy0 + G*t, hop.vx0) * 0.5;
+      if (hop.t >= hop.dur) { hop.state='land'; hop.t=0; hop.on = hop.target; }
+    }
+    else if (hop.state === 'land') {
+      const p = shapeTop(hop.on); cx = p.x; cy = p.y;
+      squash = -Math.sin(Math.min(1,hop.t/0.16)*3.14) * 0.4;
+      cAngle *= 0.7;
+      hop.t += dt;
+      if (hop.t > 0.16) { squash = 0; hop.state='ride'; hop.t=0; hop.dwell = 0.8 + Math.random()*1.4; }
+    }
+    else if (hop.state === 'search') {
+      // stranded: sit on current shape, scan, probe toward nearest, wait for drift or leap
+      const p = shapeTop(hop.on); cx = p.x; cy = p.y;
+      hop.t += dt;
+      cAngle = Math.sin(now/240) * 0.4; // looking around
+      const near = shapes.filter(s => s !== hop.on).sort((a,b) =>
+        Math.hypot(shapeTop(a).x-cx, shapeTop(a).y-cy) - Math.hypot(shapeTop(b).x-cx, shapeTop(b).y-cy))[0];
+      if (near) {
+        const np = shapeTop(near);
+        reachLine.setAttribute('x1', cx); reachLine.setAttribute('y1', cy);
+        reachLine.setAttribute('x2', np.x); reachLine.setAttribute('y2', np.y);
+        reachLine.setAttribute('opacity', String(0.35 + 0.25*Math.sin(now/160)));
+        if (reachable(hop.on, near)) { hop.state='crouch'; hop.t=0; hop.target=near; } // it drifted close — go!
+        else if (hop.t > 2.6) { hop.state='crouch'; hop.t=0; hop.target=near; } // leap of faith
+      }
+    }
+
+    const sc = 1 + squash*0.6, scY = 1 - squash*0.5;
+    car.style.transform = `translate(${cx - CAR_W/2}px, ${cy - CAR_H/2}px) rotate(${cAngle}rad) scale(${sc},${scY})`;
+  }
+
+  let last = performance.now(), running = true;
+  document.addEventListener('visibilitychange', () => { running = !document.hidden; if (running){ last = performance.now(); requestAnimationFrame(loop);} });
+  function loop(now) {
+    if (!running) return;
+    const dt = Math.min((now-last)/1000, .033); last = now;
+    step(dt, now);
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>
