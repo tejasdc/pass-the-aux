@@ -118,33 +118,43 @@
     {c:'#A9C4A9'},{c:'#2C6E5A'},{c:'#4E7A3C',wide:true},{c:'#86AE8F'},
     {c:'#1E5C43'},{c:'#B4C22C'},{c:'#14453A'},{c:'#A9C4A9'},{c:'#8E2222'},
   ];
+  // classify each cell into a color family so beats can address them
+  const FAMILY = {
+    '#A03026':'red','#8E2222':'red',
+    '#D8CE28':'yellow','#B4C22C':'yellow','#8FA824':'yellow',
+    '#86AE8F':'sage','#A9C4A9':'sage','#2C6E5A':'sage',
+    '#14453A':'deep','#1E5C43':'deep','#4E7A3C':'deep',
+  };
   const cells = layout.map((L, i) => {
     const el = document.createElement('div');
     el.className = 'cell' + (L.wide?' wide':'') + (L.tall?' tall':'');
     el.style.background = L.c;
     if (i === 5) el.innerHTML = '<div class="lbl"><span>STAY</span></div>';
     floor.appendChild(el);
-    return { el, base:hex(L.c), col:i % 5, glow:0 };
+    return { el, base:hex(L.c), family:FAMILY[L.c]||'deep', glow:0 };
   });
   function hex(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
   function mix(a,b,t){ return [a[0]+(b[0]-a[0])*t, a[1]+(b[1]-a[1])*t, a[2]+(b[2]-a[2])*t].map(Math.round); }
   const LIT = [246,240,205];
 
-  // ---- beat engine (prod: BPM/energy from ReccoBeats, phase from Spotify progress_ms) ----
+  // ---- beat engine: each beat of the bar lights a different colour family ----
+  // (prod: BPM/energy from ReccoBeats, beat phase locked to Spotify progress_ms)
   let BPM = 126, ENERGY = 0.92;
+  // the "score" — which family fires on each beat of a 4/4 bar (downbeat first)
+  const PATTERN = ['red','sage','yellow','deep'];
   let start = performance.now(), lastBeat = -1;
   function beat(now){
     const t = now - start, bl = 60000/BPM;
     const bi = Math.floor(t/bl);
-    const waveCol = ((t/(bl*2)) % 1) * 6 - 0.5;   // sweep across 5 columns per 2 beats
-    let kick = 0;
-    if (bi !== lastBeat){ lastBeat = bi; kick = (bi%4===0 ? 1.0 : 0.55) * ENERGY; }
+    if (bi !== lastBeat){
+      lastBeat = bi;
+      const fam = PATTERN[bi % PATTERN.length];
+      const strong = (bi % 4 === 0);                 // downbeat hits harder
+      for (const c of cells) if (c.family === fam) c.glow = ENERGY * (strong ? 1 : 0.82);
+    }
     for (const c of cells){
-      const d = Math.abs(c.col - waveCol);
-      const wave = Math.exp(-((d/1.1)**2)) * ENERGY * 0.85;
-      c.glow += (Math.max(wave, kick*0.7) - c.glow)*0.4 + kick*0.35*(0.6+0.4*Math.random());
-      c.glow *= 0.88; c.glow = Math.max(0, Math.min(1, c.glow));
-      const col = mix(c.base, LIT, c.glow*0.8);
+      c.glow *= 0.90;                                 // decay toward rest before the next beat
+      const col = mix(c.base, LIT, Math.max(0,Math.min(1,c.glow))*0.8);
       c.el.style.background = `rgb(${col[0]},${col[1]},${col[2]})`;
     }
     requestAnimationFrame(beat);
