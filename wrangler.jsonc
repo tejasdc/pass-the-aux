@@ -4,6 +4,9 @@
   "main": "worker/src/index.js",
   "compatibility_date": "2026-08-02",
   "compatibility_flags": ["nodejs_compat"],
+  "routes": [
+    { "pattern": "party.tejas.nyc", "custom_domain": true }
+  ],
   "build": {
     "command": "npm --prefix client ci && npm --prefix client run build",
     "watch_dir": ["worker/src", "client/src", "client/index.html", "client/vite.config.js"]
