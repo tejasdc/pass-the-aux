@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pass the Aux — Suprematist</title>
+<title>Pass the Aux — Suprematist (interactive)</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -18,74 +18,65 @@
     --red: #C6371F;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; }
   body {
     background: var(--canvas);
     color: var(--ink);
     font-family: 'Archivo', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
+    overflow: hidden;
     position: relative;
   }
-  /* canvas grain */
   body::after {
-    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .35;
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: .35; z-index: 5;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
   }
-  /* floating suprematist furniture */
-  .shape { position: fixed; pointer-events: none; }
-  .pink-beam { width: 620px; height: 74px; background: var(--pink); transform: rotate(38deg); top: 12%; left: -180px; }
-  .slate-oval { width: 340px; height: 250px; background: var(--slate); border-radius: 50%; bottom: -90px; right: -110px; opacity: .9; }
-  .ghost-circle { width: 180px; height: 180px; background: #CFCBBE; border-radius: 50%; top: 8%; right: 14%; }
-  .green-stripes { top: 58px; left: 26px; transform: rotate(-32deg); }
-  .green-stripes i { display: block; background: var(--green); height: 9px; margin-bottom: 9px; }
-  .green-stripes i:nth-child(1) { width: 110px; }
-  .green-stripes i:nth-child(2) { width: 150px; }
-  .green-stripes i:nth-child(3) { width: 74px; background: var(--cobalt); height: 6px; }
-  .red-tick { width: 34px; height: 7px; background: var(--red); transform: rotate(-55deg); top: 46%; left: 8%; }
 
-  .page { position: relative; z-index: 2; max-width: 420px; margin: 0 auto; padding: 28px 26px 60px; }
+  /* physics bodies — ambient, but grabbable as a fidget toy while you wait */
+  .body-shape { position: fixed; left: 0; top: 0; will-change: transform; z-index: 1; cursor: grab; touch-action: none; }
+  .body-shape:active { cursor: grabbing; }
+  .b-pinkbeam { width: 340px; height: 58px; background: var(--pink); }
+  .b-greens { width: 150px; height: 60px; }
+  .b-greens i { display: block; background: var(--green); height: 10px; margin-bottom: 10px; }
+  .b-greens i:nth-child(1) { width: 100px; }
+  .b-greens i:nth-child(2) { width: 150px; }
+  .b-greens i:nth-child(3) { width: 70px; }
+  .b-cobalt { width: 74px; height: 12px; background: var(--cobalt); }
+  .b-redtick { width: 48px; height: 11px; background: var(--red); }
+  .b-ghost { width: 150px; height: 150px; background: #CFCBBE; border-radius: 50%; }
+  .b-oval { width: 250px; height: 184px; background: var(--slate); border-radius: 50%; }
+  .b-blackbar { width: 210px; height: 30px; background: var(--ink); }
+  .b-square { width: 96px; height: 96px; background: var(--salmon); }
+
+  .page { position: relative; z-index: 2; max-width: 420px; margin: 0 auto; padding: 28px 26px 40px; height: 100%; display: flex; flex-direction: column; pointer-events: none; }
+  .page input, .page button { pointer-events: auto; }
 
   .wordmark { font-family: 'Archivo Black'; font-size: 15px; letter-spacing: .34em; text-transform: uppercase; }
   .wordmark small { display: block; font-family: 'Archivo'; font-weight: 500; font-size: 10px; letter-spacing: .22em; margin-top: 5px; color: #6F6A5C; }
+  .hint { font-size: 9px; letter-spacing: .2em; text-transform: uppercase; color: #9B9585; margin-top: 10px; }
 
-  .stage { margin-top: 54px; position: relative; height: 300px; }
-  .art {
-    width: 208px; height: 208px; background: var(--salmon);
-    transform: rotate(-8deg); position: absolute; left: 6px; top: 18px;
-    box-shadow: 14px 18px 0 rgba(20,18,14,.08);
-    display: flex; align-items: flex-end; padding: 14px;
-  }
-  .art span { font-family: 'Archivo Black'; font-size: 11px; letter-spacing: .18em; color: rgba(20,18,14,.55); text-transform: uppercase; }
-  .black-bar {
-    position: absolute; height: 34px; background: var(--ink);
-    right: -26px; top: 150px; width: 250px; transform: rotate(-8deg);
-  }
-  .black-bar b {
-    position: absolute; inset: 0; width: 62%; overflow: hidden;
-    border-right: 6px solid var(--canvas);
-  }
-  .times { position: absolute; right: 0; top: 196px; font-size: 11px; letter-spacing: .12em; color: #6F6A5C; transform: rotate(-8deg); }
-
-  .now { margin-top: 8px; }
+  .now { margin-top: auto; }
   .kicker { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--red); font-weight: 600; }
   h1 { font-family: 'Archivo Black'; font-size: 34px; line-height: 1.02; text-transform: uppercase; margin-top: 8px; }
   .artist { font-size: 14px; font-weight: 500; margin-top: 6px; letter-spacing: .06em; }
+  .progress { margin-top: 14px; height: 10px; background: rgba(20,18,14,.12); position: relative; }
+  .progress b { position: absolute; inset: 0; width: 47%; background: var(--ink); }
+  .times { display: flex; justify-content: space-between; font-size: 11px; letter-spacing: .12em; color: #6F6A5C; margin-top: 6px; }
 
-  .queue { margin-top: 44px; }
+  .queue { margin-top: 30px; }
   .queue-head { display: flex; justify-content: space-between; align-items: baseline; }
   h2 { font-family: 'Archivo Black'; font-size: 13px; letter-spacing: .28em; text-transform: uppercase; }
   .count { font-size: 11px; letter-spacing: .14em; color: #6F6A5C; }
-  .row { display: flex; align-items: center; gap: 16px; padding: 15px 0; border-bottom: 1.5px solid rgba(20,18,14,.14); }
+  .row { display: flex; align-items: center; gap: 16px; padding: 13px 0; border-bottom: 1.5px solid rgba(20,18,14,.14); }
   .tick { width: 26px; height: 8px; flex: none; }
   .row:nth-child(2) .tick { background: var(--green); transform: rotate(-32deg); }
   .row:nth-child(3) .tick { background: var(--cobalt); transform: rotate(20deg); }
   .row:nth-child(4) .tick { background: var(--salmon); transform: rotate(-10deg); }
   .row div { flex: 1; }
   .t { font-weight: 600; font-size: 15px; }
-  .a { font-size: 12px; color: #6F6A5C; margin-top: 2px; letter-spacing: .04em; }
+  .a { font-size: 12px; color: #6F6A5C; margin-top: 2px; }
   .by { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: #6F6A5C; }
 
-  .search { margin-top: 46px; display: flex; gap: 0; }
+  .search { margin-top: 30px; display: flex; }
   .search input {
     flex: 1; background: transparent; border: none; border-bottom: 3px solid var(--ink);
     font-family: 'Archivo'; font-size: 16px; padding: 12px 2px; outline: none;
@@ -94,32 +85,21 @@
   .search button {
     width: 54px; height: 54px; background: var(--ink); color: var(--canvas);
     border: none; font-family: 'Archivo Black'; font-size: 18px; cursor: pointer;
-    transform: translateY(2px);
   }
-  .vibe { margin-top: 18px; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: #6F6A5C; }
+  .vibe { margin-top: 14px; font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: #6F6A5C; }
   .vibe b { color: var(--green); }
 </style>
 </head>
 <body>
-  <div class="shape pink-beam"></div>
-  <div class="shape slate-oval"></div>
-  <div class="shape ghost-circle"></div>
-  <div class="shape green-stripes"><i></i><i></i><i></i></div>
-  <div class="shape red-tick"></div>
-
   <div class="page">
     <header class="wordmark">Pass the Aux<small>the queue is open</small></header>
-
-    <section class="stage">
-      <div class="art"><span>Queen</span></div>
-      <div class="black-bar"><b></b></div>
-      <div class="times">2:47 — 5:55</div>
-    </section>
 
     <section class="now">
       <div class="kicker">Now Playing</div>
       <h1>Bohemian<br>Rhapsody</h1>
       <div class="artist">Queen — A Night at the Opera</div>
+      <div class="progress"><b></b></div>
+      <div class="times"><span>2:47</span><span>5:55</span></div>
     </section>
 
     <section class="queue">
@@ -135,5 +115,143 @@
     </div>
     <div class="vibe">Vibe check <b>· passing</b> — 10 adds/hour</div>
   </div>
+
+<script>
+(() => {
+  // ---- weightless suprematist physics: circle-cluster bodies, elastic-ish collisions,
+  // ---- wall bounce, drag-to-fling. No gravity: Malevich shapes float.
+  const DAMP = 0.998, MIN_DRIFT = 8, MAX_SPEED = 380, RESTITUTION = 0.92;
+  const W = () => innerWidth, H = () => innerHeight;
+
+  const defs = [
+    { cls: 'b-pinkbeam', w: 340, h: 58,  angle: 38,  x: .18, y: .16, circles: 4 },
+    { cls: 'b-greens',   w: 150, h: 60,  angle: -32, x: .14, y: .34, circles: 2 },
+    { cls: 'b-cobalt',   w: 74,  h: 12,  angle: -28, x: .30, y: .30, circles: 2 },
+    { cls: 'b-redtick',  w: 48,  h: 11,  angle: -55, x: .10, y: .55, circles: 1 },
+    { cls: 'b-ghost',    w: 150, h: 150, angle: 0,   x: .70, y: .16, circles: 1 },
+    { cls: 'b-oval',     w: 250, h: 184, angle: 0,   x: .82, y: .82, circles: 2 },
+    { cls: 'b-blackbar', w: 210, h: 30,  angle: -8,  x: .72, y: .45, circles: 3 },
+    { cls: 'b-square',   w: 96,  h: 96,  angle: 12,  x: .55, y: .70, circles: 1 },
+  ];
+  const html = { 'b-greens': '<i></i><i></i><i></i>' };
+
+  const bodies = defs.map(d => {
+    const el = document.createElement('div');
+    el.className = 'body-shape ' + d.cls;
+    if (html[d.cls]) el.innerHTML = html[d.cls];
+    document.body.appendChild(el);
+    const r = Math.min(d.w, d.h) / 2 + 4;
+    const span = Math.max(d.w, d.h) - 2 * r;
+    const n = d.circles;
+    const circles = Array.from({ length: n }, (_, i) => ({
+      o: n === 1 ? 0 : -span / 2 + (span * i) / (n - 1), r
+    }));
+    return {
+      el, w: d.w, h: d.h,
+      x: d.x * W(), y: d.y * H(),
+      vx: (Math.random() - .5) * 44, vy: (Math.random() - .5) * 44,
+      angle: d.angle * Math.PI / 180, va: (Math.random() - .5) * .3,
+      mass: (d.w * d.h) / 4000 + 1, circles,
+      horizontalMajor: d.w >= d.h, grabbed: null,
+    };
+  });
+
+  const worldCircles = (b) => b.circles.map(c => {
+    const dx = b.horizontalMajor ? Math.cos(b.angle) : -Math.sin(b.angle);
+    const dy = b.horizontalMajor ? Math.sin(b.angle) : Math.cos(b.angle);
+    return { x: b.x + dx * c.o, y: b.y + dy * c.o, r: c.r };
+  });
+
+  function step(dt) {
+    for (const b of bodies) {
+      if (b.grabbed) continue;
+      b.x += b.vx * dt; b.y += b.vy * dt; b.angle += b.va * dt;
+      b.vx *= DAMP; b.vy *= DAMP; b.va *= 0.995;
+      // keep the composition alive: gentle drift floor
+      const sp = Math.hypot(b.vx, b.vy);
+      if (sp < MIN_DRIFT) { const a = Math.random() * Math.PI * 2; b.vx += Math.cos(a) * .6; b.vy += Math.sin(a) * .6; }
+      if (sp > MAX_SPEED) { b.vx *= MAX_SPEED / sp; b.vy *= MAX_SPEED / sp; }
+      // walls (use widest circle reach)
+      const reach = Math.max(...b.circles.map(c => Math.abs(c.o) + c.r));
+      if (b.x < reach)      { b.x = reach;      b.vx = Math.abs(b.vx) * RESTITUTION; b.va += .12 * Math.sign(b.vy || 1); }
+      if (b.x > W() - reach) { b.x = W() - reach; b.vx = -Math.abs(b.vx) * RESTITUTION; b.va -= .12 * Math.sign(b.vy || 1); }
+      if (b.y < reach)      { b.y = reach;      b.vy = Math.abs(b.vy) * RESTITUTION; }
+      if (b.y > H() - reach) { b.y = H() - reach; b.vy = -Math.abs(b.vy) * RESTITUTION; }
+    }
+    // pairwise collisions
+    for (let i = 0; i < bodies.length; i++) for (let j = i + 1; j < bodies.length; j++) {
+      const A = bodies[i], B = bodies[j];
+      for (const ca of worldCircles(A)) for (const cb of worldCircles(B)) {
+        const dx = cb.x - ca.x, dy = cb.y - ca.y;
+        const dist = Math.hypot(dx, dy), min = ca.r + cb.r;
+        if (dist > 0 && dist < min) {
+          const nx = dx / dist, ny = dy / dist, overlap = min - dist;
+          const total = A.mass + B.mass;
+          if (!A.grabbed) { A.x -= nx * overlap * (B.mass / total); A.y -= ny * overlap * (B.mass / total); }
+          if (!B.grabbed) { B.x += nx * overlap * (A.mass / total); B.y += ny * overlap * (A.mass / total); }
+          const rvx = B.vx - A.vx, rvy = B.vy - A.vy;
+          const vn = rvx * nx + rvy * ny;
+          if (vn < 0) {
+            const imp = -(1 + RESTITUTION) * vn / (1 / A.mass + 1 / B.mass);
+            if (!A.grabbed) { A.vx -= imp * nx / A.mass; A.vy -= imp * ny / A.mass; A.va += (Math.random() - .5) * .5; }
+            if (!B.grabbed) { B.vx += imp * nx / B.mass; B.vy += imp * ny / B.mass; B.va += (Math.random() - .5) * .5; }
+          }
+        }
+      }
+    }
+    for (const b of bodies) {
+      b.el.style.transform = `translate(${b.x - b.w / 2}px, ${b.y - b.h / 2}px) rotate(${b.angle}rad)`;
+    }
+  }
+
+  // taps anywhere send a soft ripple through nearby shapes (passive — never
+  // blocks the queue UI); grabbing a shape directly turns it into a fidget toy.
+  document.addEventListener('pointerdown', (e) => {
+    for (const b of bodies) {
+      if (b.grabbed) continue;
+      const dx = b.x - e.clientX, dy = b.y - e.clientY;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 340 && dist > 1) {
+        const push = 140 * (1 - dist / 340) / Math.sqrt(b.mass);
+        b.vx += (dx / dist) * push; b.vy += (dy / dist) * push;
+        b.va += (Math.random() - .5) * .4;
+      }
+    }
+  }, { passive: true });
+
+  let active = null;
+  for (const b of bodies) {
+    b.el.addEventListener('pointerdown', (e) => {
+      active = { b, lx: e.clientX, ly: e.clientY, lt: performance.now(), vx: 0, vy: 0 };
+      b.grabbed = active;
+      b.el.setPointerCapture(e.pointerId);
+      e.stopPropagation();
+    });
+  }
+  document.addEventListener('pointermove', (e) => {
+    if (!active) return;
+    const now = performance.now(), dt = Math.max((now - active.lt) / 1000, 1e-3);
+    active.vx = (e.clientX - active.lx) / dt; active.vy = (e.clientY - active.ly) / dt;
+    active.b.x = e.clientX; active.b.y = e.clientY;
+    active.lx = e.clientX; active.ly = e.clientY; active.lt = now;
+  });
+  const release = () => {
+    if (!active) return;
+    const cap = 620;
+    active.b.vx = Math.max(-cap, Math.min(cap, active.vx * .85));
+    active.b.vy = Math.max(-cap, Math.min(cap, active.vy * .85));
+    active.b.grabbed = null; active = null;
+  };
+  document.addEventListener('pointerup', release);
+  document.addEventListener('pointercancel', release);
+
+  let last = performance.now();
+  (function loop(now) {
+    const dt = Math.min((now - last) / 1000, .033); last = now;
+    step(dt);
+    requestAnimationFrame(loop);
+  })(last);
+})();
+</script>
 </body>
 </html>

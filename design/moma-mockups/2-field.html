@@ -87,6 +87,17 @@
   }
   .foot { margin-top: 16px; font-size: 9px; letter-spacing: .26em; color: rgba(16,32,30,.55); }
   .foot b { color: var(--paper); font-weight: 400; }
+
+  .incision {
+    position: fixed; height: 1px; background: var(--seam);
+    pointer-events: none; z-index: 1;
+    animation: etch 2.8s ease-out forwards;
+  }
+  @keyframes etch {
+    0% { opacity: 0; transform: scaleX(0); }
+    12% { opacity: .8; transform: scaleX(1); }
+    100% { opacity: 0; transform: scaleX(1); }
+  }
 </style>
 </head>
 <body>
@@ -121,5 +132,32 @@
     </div>
     <div class="foot">vibe check passing · 10 adds / hour</div>
   </div>
+
+<script>
+  // touches etch brief hairline incisions into the field — Villalba's cuts,
+  // appearing where you rest your thumb, then healing over. Purely passive.
+  document.addEventListener('pointerdown', (e) => {
+    if (e.target.closest('input, button')) return;
+    const cut = document.createElement('div');
+    cut.className = 'incision';
+    const len = 40 + Math.random() * 90;
+    cut.style.width = len + 'px';
+    cut.style.left = (e.clientX - len / 2) + 'px';
+    cut.style.top = e.clientY + 'px';
+    cut.style.transformOrigin = Math.random() < .5 ? 'left' : 'right';
+    document.body.appendChild(cut);
+    setTimeout(() => cut.remove(), 3000);
+  }, { passive: true });
+
+  // the wedge creeps — the song advancing in real time
+  const wedge = document.querySelector('.wedge');
+  const tick = document.querySelector('.wedge-tick');
+  let progress = .47;
+  setInterval(() => {
+    progress = (progress + .0006) % 1;
+    wedge.style.height = (progress * 100) + 'vh';
+    tick.style.top = `calc(${progress * 100}vh + 10px)`;
+  }, 1000);
+</script>
 </body>
 </html>

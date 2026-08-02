@@ -108,7 +108,7 @@
 </style>
 </head>
 <body>
-  <div class="page">
+  <div class="page" id="page">
     <span class="wordmark">PASS THE AUX</span>
     <div class="sub">Queue open · vibe check on</div>
 
@@ -142,5 +142,22 @@
     </div>
     <div class="vibe">Every pick passes the vibe check</div>
   </div>
+
+<script>
+  // the hung-canvas effect: the faceted assembly leans gently toward your
+  // pointer, like the physical piece catching light. Settles when you leave.
+  const assembly = document.querySelector('.assembly');
+  let targetX = 0, targetY = 0, curX = 0, curY = 0;
+  document.addEventListener('pointermove', (e) => {
+    targetX = (e.clientX / innerWidth - .5) * 3;
+    targetY = (e.clientY / innerHeight - .5) * -2.4;
+  }, { passive: true });
+  document.addEventListener('pointerleave', () => { targetX = 0; targetY = 0; });
+  (function sway() {
+    curX += (targetX - curX) * .06; curY += (targetY - curY) * .06;
+    assembly.style.transform = `rotate(-2deg) perspective(900px) rotateY(${curX}deg) rotateX(${curY}deg)`;
+    requestAnimationFrame(sway);
+  })();
+</script>
 </body>
 </html>

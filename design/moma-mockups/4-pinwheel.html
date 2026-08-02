@@ -31,9 +31,9 @@
   .live { font-size: 10px; letter-spacing: .22em; color: var(--red); font-weight: 500; }
 
   /* pinwheel: rotational strokes = the record spinning */
-  .wheel-wrap { margin: 42px auto 0; width: 280px; height: 280px; position: relative; }
-  .wheel { position: absolute; inset: 0; animation: spin 24s linear infinite; }
-  @keyframes spin { to { transform: rotate(360deg); } }
+  .wheel-wrap { margin: 42px auto 0; width: 280px; height: 280px; position: relative; cursor: grab; touch-action: none; }
+  .wheel-wrap:active { cursor: grabbing; }
+  .wheel { position: absolute; inset: 0; will-change: transform; }
   .stroke {
     position: absolute; left: 50%; top: 50%;
     height: 9px; background: var(--ink); transform-origin: 0 50%;
@@ -126,6 +126,44 @@
       wheel.appendChild(s);
     }
   }
+
+  // the wheel is a record: idles at ~33rpm-ish lazy spin, but you can grab and
+  // scratch it — inertia carries, then it eases back to the idle spin.
+  const wrap = document.querySelector('.wheel-wrap');
+  const BASE = Math.PI * 2 / 24; // rad/s idle
+  let angle = 0, speed = BASE, dragging = null;
+
+  const pointerAngle = (e) => {
+    const r = wrap.getBoundingClientRect();
+    return Math.atan2(e.clientY - (r.top + r.height / 2), e.clientX - (r.left + r.width / 2));
+  };
+  wrap.addEventListener('pointerdown', (e) => {
+    dragging = { a: pointerAngle(e), t: performance.now(), v: 0 };
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener('pointermove', (e) => {
+    if (!dragging) return;
+    const a = pointerAngle(e), now = performance.now();
+    let d = a - dragging.a;
+    if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI;
+    angle += d;
+    dragging.v = d / Math.max((now - dragging.t) / 1000, 1e-3);
+    dragging.a = a; dragging.t = now;
+  });
+  const drop = () => { if (dragging) { speed = Math.max(-14, Math.min(14, dragging.v)); dragging = null; } };
+  wrap.addEventListener('pointerup', drop);
+  wrap.addEventListener('pointercancel', drop);
+
+  let last = performance.now();
+  (function loop(now) {
+    const dt = Math.min((now - last) / 1000, .05); last = now;
+    if (!dragging) {
+      angle += speed * dt;
+      speed += (BASE - speed) * Math.min(1, dt * 1.4); // ease back to idle
+    }
+    wheel.style.transform = `rotate(${angle}rad)`;
+    requestAnimationFrame(loop);
+  })(last);
 </script>
 </body>
 </html>
