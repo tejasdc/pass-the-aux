@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Pass the Aux — Facet Visualizer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Spline+Sans:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --line:#0C100C; --wall:#0C0E0B; --wall2:#14181300; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#0C0E0B; font-family:'Spline Sans',sans-serif; color:#EDE8DB; min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+  .app { max-width:460px; margin:0 auto; }
+
+  /* immersive full-bleed visualizer stage */
+  .stage { position:relative; height:540px; overflow:hidden; background:#0C100C; }
+  #field { position:absolute; inset:0; width:100%; height:100%; transform-origin:50% 46%; will-change:transform; }
+  #scope { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+  .stage-shade { position:absolute; left:0; right:0; bottom:0; height:200px; z-index:3; pointer-events:none;
+    background:linear-gradient(to bottom, transparent, #0C0E0B 88%); }
+
+  .chrome { position:absolute; inset:0; z-index:4; padding:22px 24px; display:flex; flex-direction:column; pointer-events:none; }
+  .wordmark { font-family:'Bricolage Grotesque'; font-weight:800; font-size:16px; letter-spacing:.02em;
+    display:inline-block; background:var(--line); color:#EDE8DB; padding:6px 11px 7px; align-self:flex-start; }
+  .bpm { position:absolute; top:22px; right:24px; font-size:10px; letter-spacing:.16em; text-transform:uppercase; text-align:right; color:#B9C0AE; }
+  .bpm b { font-family:'Bricolage Grotesque'; font-weight:800; font-size:15px; color:#EDE8DB; }
+  .np { margin-top:auto; text-shadow:0 2px 20px rgba(0,0,0,.7); }
+  .np-k { font-size:9px; letter-spacing:.34em; text-transform:uppercase; color:#D8CE28; font-weight:600; }
+  .np-t { font-family:'Bricolage Grotesque'; font-weight:800; font-size:44px; line-height:.9; margin-top:8px; }
+  .np-a { font-weight:500; font-size:15px; margin-top:8px; color:#E7E1D3; }
+  .np-bar { margin-top:14px; height:4px; background:rgba(255,255,255,.18); position:relative; }
+  .np-bar b { position:absolute; inset:0; width:19%; background:#D8CE28; }
+  .np-times { display:flex; justify-content:space-between; font-size:11px; color:#B9C0AE; margin-top:6px; }
+
+  .queue { background:#0C0E0B; padding:16px 24px 8px; position:relative; z-index:5; }
+  h2 { font-family:'Bricolage Grotesque'; font-weight:700; font-size:13px; letter-spacing:.2em; text-transform:uppercase; margin-bottom:8px; }
+  .row { display:flex; align-items:center; gap:14px; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.08); }
+  .row-art { width:44px; height:44px; flex:none; object-fit:cover; background:#333; }
+  .row-meta { flex:1; min-width:0; }
+  .t { font-weight:500; font-size:15px; }
+  .a { font-size:12px; color:#8C9280; margin-top:2px; }
+  .chip { font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase; border:2px solid #D8CE28; color:#D8CE28; padding:3px 7px; }
+  .search { padding:12px 24px 22px; display:flex; }
+  .search input { flex:1; background:#151812; border:2px solid #2A2E24; color:#EDE8DB; font-family:'Spline Sans'; font-size:15px; padding:13px; outline:none; }
+  .search button { border:2px solid #D8CE28; border-left:none; background:#D8CE28; color:#0C100C; font-family:'Bricolage Grotesque'; font-weight:800; padding:0 18px; text-transform:uppercase; }
+</style>
+</head>
+<body>
+  <div class="app">
+    <section class="stage">
+      <svg id="field" viewBox="0 0 400 540" preserveAspectRatio="xMidYMid slice"></svg>
+      <svg id="scope" viewBox="0 0 400 540" preserveAspectRatio="none">
+        <polyline id="scopeGlow" fill="none" stroke="#D8CE28" stroke-width="7" stroke-opacity="0.18" stroke-linecap="round"/>
+        <polyline id="scopeLine" fill="none" stroke="#F4EFC8" stroke-width="2.4" stroke-linecap="round"/>
+      </svg>
+      <div class="stage-shade"></div>
+      <div class="chrome">
+        <span class="wordmark">PASS THE AUX</span>
+        <div class="bpm"><b id="bpmv">126</b> BPM<br>high energy</div>
+        <div class="np">
+          <div class="np-k">Now Playing</div>
+          <div class="np-t">Stay</div>
+          <div class="np-a">FISHER — Stay</div>
+          <div class="np-bar"><b></b></div>
+          <div class="np-times"><span>0:32</span><span>2:45</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="queue">
+      <h2>Up next — 20</h2>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b2732e8ed79e177ff6011076f5f0"><div class="row-meta"><div class="t">If You Need Me</div><div class="a">Caius, iamalex, Hazy Year</div></div><span class="chip">Maya</span></div>
+      <div class="row"><img class="row-art" src="https://i.scdn.co/image/ab67616d0000b273bd26ede1ae69327010d49946"><div class="row-meta"><div class="t">What A Life</div><div class="a">John Summit, Guz</div></div><span class="chip">Sam</span></div>
+    </section>
+    <div class="search"><input placeholder="Search a song…"><button>Queue</button></div>
+  </div>
+
+<script>
+  // ---- immersive faceted plasma field (crisp tiles, facet palette, morphing) ----
+  const field = document.getElementById('field');
+  const NW = 400, NH = 540, COLS = 5, ROWS = 6;
+  function rnd(a,b){ return a+Math.random()*(b-a); }
+  const pts=[];
+  for (let j=0;j<=ROWS;j++){ pts[j]=[]; for (let i=0;i<=COLS;i++){
+    const jx=(i===0||i===COLS)?0:rnd(-14,14), jy=(j===0||j===ROWS)?0:rnd(-16,16);
+    pts[j][i]=[i/COLS*NW+jx, j/ROWS*NH+jy]; } }
+  const FAM = { red:['#8E2222','#A03026'], yellow:['#D8CE28','#B4C22C','#8FA824'],
+                sage:['#86AE8F','#A9C4A9','#2C6E5A'], deep:['#14453A','#1E5C43','#4E7A3C'] };
+  const FAMS = ['red','sage','yellow','deep'];
+  const tiles=[];
+  for (let j=0;j<ROWS;j++) for (let i=0;i<COLS;i++){
+    const fam = FAMS[(i+j) % 4];
+    const opts = FAM[fam]; const c = opts[Math.floor(Math.random()*opts.length)];
+    const poly = document.createElementNS('http://www.w3.org/2000/svg','polygon');
+    const p=[pts[j][i],pts[j][i+1],pts[j+1][i+1],pts[j+1][i]];
+    poly.setAttribute('points', p.map(q=>q.join(',')).join(' '));
+    poly.setAttribute('stroke','#0C100C'); poly.setAttribute('stroke-width','2.5'); poly.setAttribute('stroke-linejoin','round');
+    poly.setAttribute('fill', c); field.appendChild(poly);
+    tiles.push({ el:poly, base:hex(c), family:fam, cx:(p[0][0]+p[2][0])/2, cy:(p[0][1]+p[2][1])/2, glow:0 });
+  }
+  function hex(h){ const n=parseInt(h.slice(1),16); return [n>>16&255,n>>8&255,n&255]; }
+  function mix(a,b,t){ return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,a[2]+(b[2]-a[2])*t].map(Math.round); }
+  const LIT=[246,240,205];
+
+  // ---- oscilloscope (AVS superscope), synthesized + beat-pumped ----
+  const scopeLine=document.getElementById('scopeLine'), scopeGlow=document.getElementById('scopeGlow');
+  const SN=90;
+
+  // ---- engine ----
+  let BPM=126, ENERGY=0.92;
+  const PATTERN=['red','sage','yellow','deep'];
+  let start=performance.now(), lastBeat=-1, kick=0, punch=1;
+
+  function frame(now){
+    const t=now-start, bl=60000/BPM, bi=Math.floor(t/bl);
+    if (bi!==lastBeat){ lastBeat=bi; const strong=bi%4===0;
+      const fam=PATTERN[bi%4]; for (const tl of tiles) if (tl.family===fam) tl.glow=ENERGY*(strong?1:0.8);
+      kick=ENERGY*(strong?1:0.6); punch=1+(strong?0.05:0.025)*ENERGY;
+    }
+    kick*=0.9; punch+=(1-punch)*0.12;
+    field.style.transform=`scale(${punch})`;
+
+    // plasma shimmer + colour-per-beat on the crisp tiles
+    for (const tl of tiles){
+      const plasma=0.5+0.5*Math.sin(tl.cx*0.02+tl.cy*0.016+t*0.004);
+      tl.glow*=0.9;
+      const g=Math.min(1, tl.glow + plasma*0.14);
+      const c=mix(tl.base, LIT, g*0.8);
+      tl.el.setAttribute('fill', `rgb(${c[0]},${c[1]},${c[2]})`);
+    }
+
+    // oscilloscope line — amplitude pumped by the beat
+    const amp = 40 + kick*120*ENERGY;
+    let d1='', mid=250;
+    for (let i=0;i<=SN;i++){
+      const x=i/SN*NW;
+      const y=mid + amp*(0.55*Math.sin(x*0.05+t*0.007) + 0.3*Math.sin(x*0.11-t*0.013) + 0.25*Math.sin(x*0.021+t*0.005));
+      d1 += (i?' ':'') + x.toFixed(1) + ',' + y.toFixed(1);
+    }
+    scopeLine.setAttribute('points', d1); scopeGlow.setAttribute('points', d1);
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+</script>
+</body>
+</html>
