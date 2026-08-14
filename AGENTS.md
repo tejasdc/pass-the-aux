@@ -7,7 +7,7 @@ WiFi — just the QR.
 
 **Current status & task log → [STATUS.md](STATUS.md)**
 
-**Live: https://party.tejas.nyc/** · host page: https://party.tejas.nyc/host
+**Live: https://aux.tejas.nyc/** (also https://party.tejas.nyc/) · host page: https://aux.tejas.nyc/host
 **Card on portfolio:** https://tejas.nyc/projects (external entry, links out)
 
 ## Architecture
