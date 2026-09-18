@@ -133,12 +133,7 @@ export function getThemeById(themeId) {
   return themeById.get(themeId) || themeById.get(DEFAULT_THEME_ID);
 }
 
-export function getRandomThemeId() {
-  return THEMES[Math.floor(Math.random() * THEMES.length)]?.id || DEFAULT_THEME_ID;
-}
-
-export function getNextThemeId(themeId) {
-  const index = THEMES.findIndex((theme) => theme.id === themeId);
-  const nextIndex = index >= 0 ? (index + 1) % THEMES.length : 0;
-  return THEMES[nextIndex]?.id || DEFAULT_THEME_ID;
+export function getRandomThemeId(excludeThemeId) {
+  const candidates = THEMES.filter((theme) => theme.id !== excludeThemeId);
+  return candidates[Math.floor(Math.random() * candidates.length)]?.id || DEFAULT_THEME_ID;
 }

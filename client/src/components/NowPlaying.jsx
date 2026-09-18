@@ -69,8 +69,10 @@ function NowPlaying({ track, isLoading, activeTheme }) {
       <div className="track-info">
         <h2 className="track-title">{trackName}</h2>
         <p className="track-artist">{artistName}</p>
-        <p className="track-album">{albumName}</p>
-        {audioFeatures?.bpm && audioFeatures.energyLevel && (
+        {albumName.toLowerCase() !== trackName.toLowerCase() && (
+          <p className="track-album">{albumName}</p>
+        )}
+        {audioFeatures?.bpm && audioFeatures.energyLevel && !audioFeatures.estimated && (
           <div className="track-audio-badge">
             {audioFeatures.bpm} BPM <span aria-hidden="true">&middot;</span> {audioFeatures.energyLevel.toUpperCase()} ENERGY
           </div>

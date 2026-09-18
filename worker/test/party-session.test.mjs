@@ -333,6 +333,77 @@ async function testNowPlayingIncludesCachedAudioFeatures() {
   }
 }
 
+async function testNowPlayingKeepsABeatWhenFeaturesAreMissing() {
+  const env = createEnv();
+  await env.PARTY_QUEUE_KV.put("host:tokens", JSON.stringify({
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    expiresAt: Date.now() + 24 * 3600 * 1000,
+  }));
+  await env.PARTY_QUEUE_KV.put("party:session", JSON.stringify({
+    live: true,
+    hostUserId: "spotify-host",
+    startedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + 24 * 3600 * 1000).toISOString(),
+    durationSeconds: 8 * 60 * 60,
+  }));
+
+  const originalFetch = globalThis.fetch;
+  let reccoFetches = 0;
+  let reccoKnowsTrack = false;
+
+  globalThis.fetch = async (url) => {
+    const requestUrl = String(url);
+
+    if (requestUrl === "https://api.spotify.com/v1/me/player/currently-playing") {
+      return Response.json({
+        is_playing: true,
+        progress_ms: 1000,
+        item: {
+          id: "track-new",
+          name: "Fresh Single",
+          artists: [{ id: "artist-2", name: "New Act" }],
+          album: { id: "album-2", name: "Fresh Single", images: [] },
+          duration_ms: 200000,
+          uri: "spotify:track:track-new",
+        },
+      });
+    }
+
+    if (requestUrl === "https://api.reccobeats.com/v1/audio-features?ids=track-new") {
+      reccoFetches += 1;
+      return Response.json({
+        content: reccoKnowsTrack ? [{ energy: 0.4, tempo: 98 }] : [],
+      });
+    }
+
+    throw new Error(`Unexpected fetch: ${requestUrl}`);
+  };
+
+  try {
+    const missing = await responseJson(await call(env, "/api/now-playing"));
+    assert.deepEqual(missing.track.audioFeatures, {
+      bpm: 120,
+      tempo: 120,
+      energy: 0.6,
+      energyLevel: "medium",
+      estimated: true,
+    });
+
+    reccoKnowsTrack = true;
+    await call(env, "/api/now-playing");
+    assert.equal(reccoFetches, 1, "a recent miss is served from cache");
+
+    fakeNow += 6 * 60 * 60 * 1000 + 1000;
+    const found = await responseJson(await call(env, "/api/now-playing"));
+    assert.equal(reccoFetches, 2, "an expired miss is looked up again");
+    assert.equal(found.track.audioFeatures.bpm, 98);
+    assert.equal(found.track.audioFeatures.estimated, undefined);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
 let fakeNow = Date.UTC(2026, 1, 14, 20, 0, 0);
 const realDateNow = Date.now;
 Date.now = () => fakeNow;
@@ -344,6 +415,7 @@ try {
   await testEndAndLogoutRequireHostSession();
   await testPartyLifecycle();
   await testNowPlayingIncludesCachedAudioFeatures();
+  await testNowPlayingKeepsABeatWhenFeaturesAreMissing();
   console.log("party-session worker harness passed");
 } finally {
   Date.now = realDateNow;

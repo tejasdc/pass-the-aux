@@ -180,7 +180,8 @@ function CathodeVisualizer({ track }) {
     };
   }, [motionState, bpm, energy, progressMs]);
 
-  const chipLabel = hasBeat && bpm > 0 ? `LIVE · ${Math.round(bpm)} BPM` : 'STANDBY · NO SIGNAL';
+  const tempoLabel = track?.audioFeatures?.estimated ? 'HOUSE BEAT' : `${Math.round(bpm)} BPM`;
+  const chipLabel = hasBeat && bpm > 0 ? `LIVE · ${tempoLabel}` : 'STANDBY · NO SIGNAL';
 
   return (
     <div

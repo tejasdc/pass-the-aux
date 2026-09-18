@@ -17,7 +17,17 @@ WiFi — just the QR.
 - Config: `wrangler.jsonc` — custom domain route, KV binding `PARTY_QUEUE_KV`,
   build command runs the client build. `wrangler deploy` is the whole deploy.
 - KV keys: `host:tokens`, `host:spotify-user-id` (bound host), `party:session`,
-  `party:vibe`, `oauth:state:*`, `rate-limit:*`, `host:auth-grant:*` (legacy).
+  `party:vibe`, `oauth:state:*`, `rate-limit:*`, `host:auth-grant:*` (legacy),
+  `audio-features:v2:*` (ReccoBeats tempo/energy per track: hits cached
+  forever, misses expire after 6h, errors after 5min; `audio-features:<id>`
+  v1 entries are abandoned, not read).
+- Visualizers are driven by each track's tempo/energy plus the playhead, not by
+  hearing audio. When ReccoBeats has no data, `/api/now-playing` sends a steady
+  120 BPM beat flagged `estimated: true`, so visuals never freeze; the client
+  hides BPM claims for estimated beats. The vibe check lets songs through when
+  it has no data for them (fail-open).
+- Each page load gets a random theme; the header shuffle button picks another
+  random theme for that visit only (nothing is stored).
 - Secrets (via `npx wrangler secret put`): `SPOTIFY_CLIENT_ID`,
   `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`
   (= `https://party.tejas.nyc/api/auth/callback`).

@@ -187,7 +187,7 @@ a {
   padding: 22px 24px 10px;
   display: grid;
   grid-template-columns: 48px 1fr 48px;
-  align-items: start;
+  align-items: center;
   gap: 10px;
 }
 
@@ -258,7 +258,6 @@ a {
 .search-close:focus-visible,
 .search-input:focus-visible,
 .host-link:focus-visible,
-.theme-switcher:focus-visible,
 .provenance a:focus-visible {
   outline: 3px solid var(--cobalt);
   outline-offset: 3px;
@@ -268,65 +267,6 @@ a {
 .host-back svg {
   width: 21px;
   height: 21px;
-}
-
-.theme-switcher {
-  width: 48px;
-  height: 48px;
-  border: 2px solid var(--ink);
-  border-radius: 0;
-  background: var(--pink);
-  color: var(--ink);
-  display: inline-grid;
-  grid-template-columns: 14px minmax(0, 1fr);
-  align-items: center;
-  gap: 5px;
-  padding: 5px;
-  cursor: pointer;
-  text-align: left;
-  transition: transform 180ms ease, background 180ms ease, color 180ms ease;
-}
-
-.theme-switcher:hover {
-  transform: translateY(-2px) rotate(2deg);
-  background: var(--green);
-  color: var(--canvas);
-}
-
-.theme-switcher-mark {
-  width: 12px;
-  height: 28px;
-  background: var(--red);
-  transform: rotate(24deg);
-  box-shadow: 8px -4px 0 var(--cobalt);
-}
-
-.theme-switcher-copy {
-  min-width: 0;
-  display: grid;
-  gap: 2px;
-}
-
-.theme-switcher-copy span,
-.theme-switcher-copy small {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.theme-switcher-copy span {
-  font-size: 0.48rem;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  line-height: 1;
-  text-transform: uppercase;
-}
-
-.theme-switcher-copy small {
-  color: currentColor;
-  font-size: 0.46rem;
-  font-weight: 800;
-  line-height: 1;
 }
 
 /* Now playing */
@@ -1006,7 +946,6 @@ a {
   letter-spacing: 0.1em;
 }
 
-.theme-facet .theme-switcher,
 .theme-facet .search-btn,
 .theme-facet .host-back,
 .theme-facet .add-btn,
@@ -1195,7 +1134,7 @@ a {
 
 .theme-field .header {
   min-height: 96px;
-  align-items: start;
+  align-items: center;
 }
 
 .theme-field .wordmark,
@@ -1244,12 +1183,12 @@ a {
 
 .theme-field .track-audio-badge,
 .theme-field .search-btn,
-.theme-field .theme-switcher,
 .theme-field .host-back,
 .theme-field .add-btn,
 .theme-field .search-close {
   border-width: 1px;
   background: transparent;
+  color: var(--ink);
   box-shadow: none;
 }
 
@@ -1898,7 +1837,6 @@ a {
   }
 }
 
-.theme-afterglow .theme-switcher,
 .theme-afterglow .search-btn,
 .theme-afterglow .host-back,
 .theme-afterglow .add-btn,
@@ -1909,11 +1847,6 @@ a {
   color: var(--ink);
   border-radius: 2px;
   box-shadow: none;
-}
-
-.theme-afterglow .theme-switcher-mark {
-  background: var(--red);
-  box-shadow: 8px -4px 0 var(--cobalt);
 }
 
 .theme-afterglow .now-playing,
@@ -2192,7 +2125,6 @@ a {
   text-transform: uppercase;
 }
 
-.theme-cathode .theme-switcher,
 .theme-cathode .search-btn,
 .theme-cathode .host-back,
 .theme-cathode .add-btn,
@@ -2203,11 +2135,6 @@ a {
   color: var(--ink);
   border-radius: 0;
   box-shadow: 0 0 10px rgba(127, 255, 156, 0.08) inset;
-}
-
-.theme-cathode .theme-switcher-mark {
-  background: var(--ink);
-  box-shadow: 8px -4px 0 var(--salmon);
 }
 
 .theme-cathode .content {
@@ -2412,7 +2339,6 @@ a {
   text-transform: lowercase;
 }
 
-.theme-vellum .theme-switcher,
 .theme-vellum .search-btn,
 .theme-vellum .host-back,
 .theme-vellum .add-btn,
@@ -2424,11 +2350,6 @@ a {
   color: var(--ink);
   border-radius: 2px;
   box-shadow: 2px 2px 0 rgba(60, 30, 10, 0.16);
-}
-
-.theme-vellum .theme-switcher-mark {
-  background: var(--red);
-  box-shadow: 8px -4px 0 var(--cobalt);
 }
 
 .theme-vellum .now-playing,
@@ -2705,7 +2626,6 @@ a {
   text-transform: uppercase;
 }
 
-.theme-holo .theme-switcher,
 .theme-holo .search-btn,
 .theme-holo .host-back,
 .theme-holo .add-btn,
@@ -2716,11 +2636,6 @@ a {
   background: #ff5a1f;
   color: #0a0d18;
   box-shadow: none;
-}
-
-.theme-holo .theme-switcher-mark {
-  background: #0a0d18;
-  box-shadow: 8px -4px 0 #22e3c4;
 }
 
 .theme-holo .content {
@@ -2947,7 +2862,7 @@ a {
 .header {
   position: relative;
   z-index: var(--layer-header);
-  grid-template-columns: minmax(98px, 112px) minmax(0, 1fr) 48px;
+  grid-template-columns: 48px minmax(0, 1fr) 48px;
   pointer-events: auto;
 }
 
@@ -2988,42 +2903,6 @@ a {
 
 .toast {
   z-index: var(--layer-toast);
-}
-
-.theme-switcher {
-  width: min(112px, 31vw);
-  min-width: 98px;
-  grid-template-columns: 18px minmax(0, 1fr);
-  gap: 8px;
-  padding: 5px 7px;
-  box-shadow: 5px 5px 0 rgba(20, 18, 14, 0.16);
-}
-
-.theme-switcher-mark {
-  width: 14px;
-  height: 30px;
-  position: relative;
-}
-
-.theme-switcher-mark::after {
-  content: '';
-  position: absolute;
-  right: -9px;
-  bottom: 3px;
-  width: 11px;
-  height: 11px;
-  border: 2px solid currentColor;
-  border-left: 0;
-  border-top: 0;
-  transform: rotate(-45deg);
-}
-
-.theme-switcher-copy span {
-  font-size: 0.54rem;
-}
-
-.theme-switcher-copy small {
-  font-size: 0.48rem;
 }
 
 .theme-root .now-playing {
@@ -3138,23 +3017,7 @@ a {
 
 @media (max-width: 380px) {
   .header {
-    grid-template-columns: minmax(88px, 96px) minmax(0, 1fr) 44px;
-  }
-
-  .theme-switcher {
-    width: min(96px, 30vw);
-    min-width: 88px;
-    height: 44px;
-    gap: 6px;
-    padding: 4px 6px;
-  }
-
-  .theme-switcher-copy span {
-    font-size: 0.5rem;
-  }
-
-  .theme-switcher-copy small {
-    font-size: 0.44rem;
+    grid-template-columns: 44px minmax(0, 1fr) 44px;
   }
 
   .theme-root .now-playing {

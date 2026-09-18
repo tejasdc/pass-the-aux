@@ -6,7 +6,15 @@ const HOST_SESSION_PREFIX = "host:session:";
 const HOST_SESSION_COOKIE = "el_host_session";
 const OAUTH_STATE_PREFIX = "oauth:state:";
 const RATE_LIMIT_PREFIX = "rate-limit:";
-const AUDIO_FEATURES_PREFIX = "audio-features:";
+// v2 abandons v1 entries, which cached lookup misses forever.
+const AUDIO_FEATURES_PREFIX = "audio-features:v2:";
+// ReccoBeats adds tracks over time and can fail transiently, so a miss is only
+// remembered briefly; found features are stable and cached indefinitely.
+const AUDIO_FEATURES_NOT_FOUND_TTL_SECONDS = 6 * 60 * 60;
+const AUDIO_FEATURES_ERROR_TTL_SECONDS = 5 * 60;
+// Visualizers keep moving on a steady party tempo when a track's tempo is
+// unknown; `estimated` tells the client not to present it as the song's BPM.
+const ESTIMATED_BEAT = { bpm: 120, tempo: 120, energy: 0.6, energyLevel: "medium", estimated: true };
 
 const PARTY_SESSION_TTL_SECONDS = 8 * 60 * 60;
 const PARTY_SESSION_TTL_MS = PARTY_SESSION_TTL_SECONDS * 1000;
@@ -424,7 +432,7 @@ async function handleNowPlaying(env) {
       playing: data.is_playing,
       track: formatTrack(data.item, {
         progress_ms: data.progress_ms,
-        audioFeatures: formatPublicAudioFeatures(audioFeatures),
+        audioFeatures: formatPublicAudioFeatures(audioFeatures) || ESTIMATED_BEAT,
       }),
     });
   } catch (err) {
@@ -968,7 +976,7 @@ async function getAudioFeatures(env, trackId) {
 
     if (!response.ok) {
       console.error(`ReccoBeats API error for ${trackId}: ${response.status}`);
-      await cacheMissingAudioFeatures(env, cacheKey);
+      await cacheMissingAudioFeatures(env, cacheKey, AUDIO_FEATURES_ERROR_TTL_SECONDS);
       return null;
     }
 
@@ -976,7 +984,7 @@ async function getAudioFeatures(env, trackId) {
 
     if (!data.content || data.content.length === 0) {
       console.log(`Track ${trackId} not found in ReccoBeats database`);
-      await cacheMissingAudioFeatures(env, cacheKey);
+      await cacheMissingAudioFeatures(env, cacheKey, AUDIO_FEATURES_NOT_FOUND_TTL_SECONDS);
       return null;
     }
 
@@ -1006,17 +1014,17 @@ async function getAudioFeatures(env, trackId) {
     return normalized;
   } catch (err) {
     console.error("Error fetching audio features from ReccoBeats:", err.message);
-    await cacheMissingAudioFeatures(env, cacheKey);
+    await cacheMissingAudioFeatures(env, cacheKey, AUDIO_FEATURES_ERROR_TTL_SECONDS);
     return null;
   }
 }
 
-async function cacheMissingAudioFeatures(env, cacheKey) {
+async function cacheMissingAudioFeatures(env, cacheKey, ttlSeconds) {
   await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify({
     available: false,
     source: "reccobeats",
     cachedAt: new Date().toISOString(),
-  }));
+  }), { expirationTtl: ttlSeconds });
 }
 
 async function getCurrentlyPlayingTrackId(env) {

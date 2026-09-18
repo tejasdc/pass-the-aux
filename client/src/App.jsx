@@ -17,7 +17,7 @@ function App() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [toast, setToast] = useState({ message: '', isVisible: false, isError: false });
   const [partyStatus, setPartyStatus] = useState({ live: false, isLoading: true });
-  const { activeTheme, cycleTheme } = useThemeSelection();
+  const { activeTheme, shuffleTheme } = useThemeSelection();
   const ActiveBackground = activeTheme.Background;
 
   const isGuestExperienceLive = partyStatus.live && !isHostRoute;
@@ -113,10 +113,9 @@ function App() {
 
       <div className="app">
         <header className="header">
-          <ThemeSwitcher activeTheme={activeTheme} onCycle={cycleTheme} />
+          <ThemeSwitcher activeTheme={activeTheme} onShuffle={shuffleTheme} />
           <a className="wordmark" href="/" aria-label={`${PRODUCT_NAME} home`}>
             {PRODUCT_NAME}
-            <span>{partyStatus.live ? 'the queue is open' : 'gallery closed'}</span>
           </a>
           <button className="search-btn" type="button" onClick={handleOpenSearch} aria-label="Search songs">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -185,6 +184,8 @@ function ProvenanceFooter({ activeTheme }) {
       <a href={activeTheme.href} target="_blank" rel="noreferrer">
         {activeTheme.reference}
       </a>
+      {' · '}Made by{' '}
+      <a href="https://tejas.nyc" target="_blank" rel="noreferrer">tejas.nyc</a>
     </footer>
   );
 }

@@ -10,6 +10,18 @@ _Last updated 2026-09-18._
 
 ### DONE
 
+- **Pre-party fixes 2026-09-18.** Visualizers froze ("standby, no signal") on
+  every theme because tempo lookups that came back empty were cached as
+  "no data" forever (e.g. "Time To Smoke" was stuck though ReccoBeats has it),
+  and tracks ReccoBeats lacks had no beat at all. Misses now expire and an
+  estimated 120 BPM beat keeps visuals moving. Removed the repeated "the queue
+  is open" tagline and the album line when it repeats the song title. Footer
+  now credits "Made by tejas.nyc". Themes are random on every visit; the big
+  "THEME n/11" box became a small shuffle button matching search. Field
+  theme's header icons were invisible (teal on teal), now fixed. Verified on
+  the built client at iPhone size: 11/11 themes animate, no console errors.
+  Open question for Tejas: songs missing from ReccoBeats pass the vibe check.
+
 - **Printable party sign 2026-09-18** for the 2026-09-19 party:
   `design/party-sign/` (`pass-the-aux-sign.pdf` Letter, `.png` 2448x3168).
   QR decodes to `https://aux.tejas.nyc/` (verified with jsQR on the PNG). Edit
