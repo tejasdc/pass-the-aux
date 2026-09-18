@@ -3061,3 +3061,32 @@ a {
   letter-spacing: 0;
   text-transform: none;
 }
+
+/* Album art leads the now-playing card on every theme: a wider art column and
+   a capped title size. Doubled class beats each theme's own title/art rules. */
+.theme-root.theme-root .now-playing {
+  grid-template-columns: minmax(0, 54%) minmax(0, 1fr);
+  align-items: center;
+}
+
+.theme-root.theme-root .album-plane {
+  width: 100%;
+  max-width: none;
+  justify-self: stretch;
+}
+
+.theme-root.theme-root .track-title {
+  font-size: clamp(1.05rem, 5.2vw, 1.6rem);
+  line-height: 1.08;
+}
+
+@media (min-width: 760px) {
+  .theme-root.theme-root .now-playing {
+    grid-template-columns: minmax(260px, 42%) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  .theme-root.theme-root .track-title {
+    font-size: clamp(1.3rem, 2.4vw, 2rem);
+  }
+}
