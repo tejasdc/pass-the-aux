@@ -24,9 +24,9 @@ WiFi — just the QR.
 - Visualizers are driven by each track's tempo/energy plus the playhead, not by
   hearing audio. When ReccoBeats has no data, `/api/now-playing` sends a steady
   120 BPM beat flagged `estimated: true`, so visuals never freeze; the client
-  hides BPM claims for estimated beats. The vibe check lets songs through when
+  shows "BPM & ENERGY UNKNOWN" instead of a number for estimated beats. The vibe check lets songs through when
   it has no data for them (fail-open).
-- Each page load gets a random theme; the header shuffle button picks another
+- Each page load gets a random theme, named under the wordmark; the header shuffle button picks another
   random theme for that visit only (nothing is stored).
 - Secrets (via `npx wrangler secret put`): `SPOTIFY_CLIENT_ID`,
   `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`

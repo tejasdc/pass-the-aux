@@ -116,6 +116,7 @@ function App() {
           <ThemeSwitcher activeTheme={activeTheme} onShuffle={shuffleTheme} />
           <a className="wordmark" href="/" aria-label={`${PRODUCT_NAME} home`}>
             {PRODUCT_NAME}
+            <span>{activeTheme.name} theme</span>
           </a>
           <button className="search-btn" type="button" onClick={handleOpenSearch} aria-label="Search songs">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">

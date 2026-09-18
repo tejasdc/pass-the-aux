@@ -72,9 +72,15 @@ function NowPlaying({ track, isLoading, activeTheme }) {
         {albumName.toLowerCase() !== trackName.toLowerCase() && (
           <p className="track-album">{albumName}</p>
         )}
-        {audioFeatures?.bpm && audioFeatures.energyLevel && !audioFeatures.estimated && (
+        {audioFeatures?.bpm && audioFeatures.energyLevel && (
           <div className="track-audio-badge">
-            {audioFeatures.bpm} BPM <span aria-hidden="true">&middot;</span> {audioFeatures.energyLevel.toUpperCase()} ENERGY
+            {audioFeatures.estimated ? (
+              'BPM & ENERGY UNKNOWN'
+            ) : (
+              <>
+                {audioFeatures.bpm} BPM <span aria-hidden="true">&middot;</span> {audioFeatures.energyLevel.toUpperCase()} ENERGY
+              </>
+            )}
           </div>
         )}
       </div>
