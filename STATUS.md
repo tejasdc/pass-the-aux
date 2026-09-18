@@ -10,7 +10,7 @@ _Last updated 2026-09-18._
 
 ### DONE
 
-- **Field / Flow / Afterglow redesign, local branch only, 2026-09-18.** Field
+- **Field / Flow / Afterglow redesign by GPT-6 Astra, DEPLOYED 2026-09-18 (version `27e821b6`).** Field
   now opens a monumental ivory cut between teal planes; Flow draws dense ink
   currents with a vermilion ribbon; Afterglow has a defined chromatic aperture
   and lens flare. Beat attack scales with energy, with existing estimated beats
@@ -18,7 +18,7 @@ _Last updated 2026-09-18._
   secondary-text contrast in these themes. Production-build Chromium checks
   cover known/estimated tracks, search and queueing, 360/430px phones, desktop,
   motion pause/resume, and a CPU-throttled smoke check. Worker harness and
-  client build pass. Evidence: `tmp/reviews/astra-themes.md`. Not deployed.
+  client build pass. Evidence: worktree `.wt/astra-themes/tmp/reviews/astra-themes.md`.
 
 - **Pre-party fixes 2026-09-18.** Visualizers froze ("standby, no signal") on
   every theme because tempo lookups that came back empty were cached as
