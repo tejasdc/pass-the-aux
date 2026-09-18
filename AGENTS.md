@@ -35,6 +35,11 @@ WiFi — just the QR.
   chromatic aperture animates only transforms/opacity; Flow draws 44 analytic currents at at most 30fps with
   device pixel ratio capped at 2. Preserve their static reduced-motion image
   and the shared hidden-tab/reduced-motion gate when changing them.
+- Suprematist's isolated visualizer splits a black square on each beat, with
+  energy-scaled separation and an eight-beat tilt. It resynchronizes to each
+  playhead sample and pauses with playback and the shared motion gate. Keep
+  its reduced-motion still and container-relative sizing; page-level draggable
+  shapes are independently owned by `AnimatedBackground`.
 - Secrets (via `npx wrangler secret put`): `SPOTIFY_CLIENT_ID`,
   `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`
   (= `https://party.tejas.nyc/api/auth/callback`).

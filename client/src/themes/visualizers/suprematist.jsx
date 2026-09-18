@@ -1,37 +1,42 @@
+import { useEffect, useRef } from 'react';
 import { useBeatStyle, useMotionPaused } from '../ThemeBackgrounds';
 import './suprematist.css';
 
-// Suprematist Painting, 1916-17 — a kinetic Malevich composition.
-// Seven flat planes drift, slowly rotate, and pulse scale on the beat,
-// recomposing into off-kilter constructivist balance across each bar.
-// Nested orbit/body wrappers let drift (parent transform) and beat pulse
-// (child transform) compose without stepping on each other.
-const PLANES = [
-  'quad',       // 1. black quadrilateral — anchor mass, lower-left
-  'pinkbeam',   // 2. long pink beam — diagonal sweep across the void
-  'cobalt',     // 3. cobalt bar — counterweight below the beam
-  'salmon',     // 4. salmon square — off-axis, slow constant rotation
-  'green',      // 5. green disc — upper-right, sharp beat pulse
-  'slate',      // 6. slate ovoid — soft right-edge balance
-  'red',        // 7. red tick — hairline accent that flashes on the beat
-];
-
 function SuprematistVisualizer({ track }) {
-  const isPaused = useMotionPaused();
+  const paused = useMotionPaused();
   const { hasBeat, style } = useBeatStyle(track);
-  const motionState = hasBeat && !isPaused ? 'running' : 'paused';
+  const root = useRef(null);
+  const sample = useRef({ progress: 0, at: 0 });
+  const active = hasBeat && !paused && track?.is_playing !== false;
+
+  useEffect(() => {
+    sample.current = { progress: Number(track?.progress_ms) || 0, at: performance.now() };
+  }, [track]);
+
+  useEffect(() => {
+    if (!active) return;
+    // Seek to the playhead after each poll or visibility resume. Updating only
+    // a negative CSS delay would also retain the previous elapsed time.
+    const time = sample.current.progress + performance.now() - sample.current.at;
+    for (const animation of root.current.getAnimations({ subtree: true })) {
+      animation.currentTime = time;
+    }
+  }, [track, active]);
 
   return (
-    <div
-      className="suprematist-visualizer"
-      style={{ ...style, '--theme-motion-state': motionState }}
-      aria-hidden="true"
-    >
-      {PLANES.map((kind) => (
-        <div key={kind} className={`sv-orbit sv-orbit-${kind}`}>
-          <div className={`sv-body sv-body-${kind}`} />
+    <div ref={root} className="suprematist-visualizer" aria-hidden="true"
+      style={{ ...style, '--theme-motion-state': active ? 'running' : 'paused' }}>
+      <div className="sv-composition">
+        <div className="sv-balance">
+          <div className="sv-plane sv-plane-nw" />
+          <div className="sv-plane sv-plane-ne" />
+          <div className="sv-plane sv-plane-sw" />
+          <div className="sv-plane sv-plane-se" />
+          <div className="sv-vermilion" />
+          <div className="sv-cobalt" />
+          <div className="sv-satellite" />
         </div>
-      ))}
+      </div>
     </div>
   );
 }

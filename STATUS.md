@@ -10,6 +10,14 @@ _Last updated 2026-09-18._
 
 ### DONE
 
+- **Suprematist split-square redesign, LOCAL ONLY 2026-09-18.** Four black
+  planes open on the beat around a vermilion stroke, with a cobalt counterstroke
+  and salmon satellite. Selected from three sketches for a clear silhouette
+  and visible beat gesture on phones. Only the isolated Suprematist visualizer
+  changes; surrounding draggable shapes and shared layout remain intact.
+  Studies: `design/suprematist-studies.html`. Verification and screenshots:
+  `.wt/astra-suprematist/tmp/reviews/astra-suprematist.md`. Not pushed or deployed.
+
 - **Field pressure-print redesign by GPT-6 Astra, DEPLOYED 2026-09-18 (version `1e307af3`).** Replaces the rejected opening
   teal planes with eleven bowed ink incisions and one pale accent. Tempo drives
   the strike, energy sets its spread, and the playhead synchronizes the strike
