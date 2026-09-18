@@ -6,9 +6,20 @@ todo. Newest entries first.
 
 ## Status log
 
-_Last updated 2026-08-02._
+_Last updated 2026-09-18._
 
 ### DONE
+
+- **Printable party sign 2026-09-18** for the 2026-09-19 party:
+  `design/party-sign/` (`pass-the-aux-sign.pdf` Letter, `.png` 2448x3168).
+  QR decodes to `https://aux.tejas.nyc/` (verified with jsQR on the PNG). Edit
+  `sign.html` and re-run `render.js` to change it. Pre-party check: live site
+  200, guest routes gated 403 with no party, Spotify login redirect accepted
+  for aux.tejas.nyc, worker tests pass. Spotify's Feb 2026 dev-mode changes
+  (search max 10, removed catalog endpoints) don't touch the guest flow
+  (search limit is 10; queue, currently-playing, /me still exist). A real
+  search+queue run still needs the host's Spotify login, so it was not
+  exercised by the agent.
 
 - **Unique per-theme visualizers DEPLOYED + visually verified 2026-08-02
   (version `81812ce8`).** Every theme's visualizer was the same shared
