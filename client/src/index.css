@@ -186,7 +186,7 @@ a {
   min-height: 84px;
   padding: 22px 24px 10px;
   display: grid;
-  grid-template-columns: 48px 1fr 48px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
 }
@@ -2771,7 +2771,7 @@ a {
 @media (max-width: 380px) {
   .header {
     padding-inline: 16px;
-    grid-template-columns: 44px 1fr 44px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .content,
@@ -2862,7 +2862,7 @@ a {
 .header {
   position: relative;
   z-index: var(--layer-header);
-  grid-template-columns: 48px minmax(0, 1fr) 48px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   pointer-events: auto;
 }
 
@@ -3017,10 +3017,40 @@ a {
 
 @media (max-width: 380px) {
   .header {
-    grid-template-columns: 44px minmax(0, 1fr) 44px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .theme-root .now-playing {
     grid-template-columns: 96px minmax(0, 1fr);
   }
+}
+
+/* Theme control: palette icon over the theme name, so it reads as "change the
+   look" rather than a music shuffle. Sizes are px so every theme renders it alike. */
+.header > :last-child {
+  justify-self: end;
+}
+
+.header .theme-shuffle {
+  width: auto;
+  min-width: 48px;
+  flex-direction: column;
+  gap: 4px;
+  padding: 0 8px;
+}
+
+.header .theme-shuffle svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.header .theme-shuffle .theme-shuffle-name {
+  white-space: nowrap;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
 }

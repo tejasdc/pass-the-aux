@@ -26,7 +26,7 @@ WiFi — just the QR.
   120 BPM beat flagged `estimated: true`, so visuals never freeze; the client
   shows "BPM & ENERGY UNKNOWN" instead of a number for estimated beats. The vibe check lets songs through when
   it has no data for them (fail-open).
-- Each page load gets a random theme, named under the wordmark; the header shuffle button picks another
+- Each page load gets a random theme; the header theme button (palette icon + theme name, deliberately not shuffle arrows so guests do not read it as shuffling songs) picks another
   random theme for that visit only (nothing is stored).
 - Secrets (via `npx wrangler secret put`): `SPOTIFY_CLIENT_ID`,
   `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`
