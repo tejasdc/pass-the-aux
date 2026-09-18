@@ -1,0 +1,20 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Field — three motion studies</title>
+<style>
+body{margin:0;padding:40px;background:#ede8d6;color:#10201e;font:16px/1.5 monospace}h1{font-size:26px;font-weight:500}main{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}svg{width:100%;background:#4e9e92}h2{font-size:18px}p{max-width:40ch}small{display:block;margin:24px 0}
+</style>
+<h1>Field / pressure, repetition, rhythm</h1>
+<small>Three sketches for a phone propped up at a house party. Existing palette; no new type or controls.</small>
+<main>
+<section><svg viewBox="0 0 360 300" id="contour"></svg><h2>Contour tide</h2><p>Open contours swell outward on each beat. Quiet and spacious; risks reading as radar or a generic ripple.</p></section>
+<section><svg viewBox="0 0 360 300" id="incisions"></svg><h2>Pressure print</h2><p>A sheaf of bowed incisions compresses and releases. One pale cut carries the eye. A strong silhouette with visible rhythmic tension.</p></section>
+<section><svg viewBox="0 0 360 300" id="impressions"></svg><h2>Offset impressions</h2><p>Three unequal solid impressions slip out of register on the beat. Legible at distance, but close to the rejected moving planes.</p></section>
+</main>
+<script>
+const ns='http://www.w3.org/2000/svg';
+function path(id,d,fill,extra={}){const p=document.createElementNS(ns,'path');Object.entries({d,fill,...extra}).forEach(([k,v])=>p.setAttribute(k,v));document.getElementById(id).append(p)}
+for(let i=0;i<7;i++){const r=36+i*22;path('contour',`M ${170+r} 280 A ${r} ${r*1.2} 0 1 0 ${170-r} 280`,'none',{stroke:i===3?'#e9dfa0':'#10201e','stroke-width':i===3?9:5})}
+for(let i=0;i<11;i++){const t=i/10,x=47+t*248,y=66-34*Math.sin(t*Math.PI),h=150+68*Math.sin(t*Math.PI),bend=24+28*Math.sin(t*Math.PI);path('incisions',`M ${x} ${y} C ${x+bend} ${y+h*.25},${x+bend} ${y+h*.72},${x-12} ${y+h} C ${x+bend-24} ${y+h*.7},${x+bend-22} ${y+h*.25},${x} ${y}`,i===7?'#e9dfa0':'#10201e')}
+path('impressions','M 40 55 L 222 32 L 243 140 L 61 164 Z','#10201e');path('impressions','M 130 118 L 306 95 L 289 263 L 113 251 Z','#e9dfa0');path('impressions','M 74 180 L 210 157 L 228 247 L 92 270 Z','#257d70');
+</script>

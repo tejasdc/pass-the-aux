@@ -29,8 +29,10 @@ WiFi — just the QR.
 - Each page load gets a random theme; the header theme button (palette icon + theme name, deliberately not shuffle arrows so guests do not read it as shuffling songs) picks another
   random theme for that visit only (nothing is stored).
 - Field, Flow, and Afterglow keep their visualizer code isolated in their own
-  JSX/CSS pairs. Field's cut and Afterglow's chromatic aperture animate only
-  transforms/opacity; Flow draws 44 analytic currents at at most 30fps with
+  JSX/CSS pairs. Field's pressure print uses eleven fixed bowed incisions,
+  with transform-only beat strikes and an eight-beat sway; its animations
+  resynchronize to each playhead sample and pause with playback. Afterglow's
+  chromatic aperture animates only transforms/opacity; Flow draws 44 analytic currents at at most 30fps with
   device pixel ratio capped at 2. Preserve their static reduced-motion image
   and the shared hidden-tab/reduced-motion gate when changing them.
 - Secrets (via `npx wrangler secret put`): `SPOTIFY_CLIENT_ID`,

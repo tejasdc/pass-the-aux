@@ -8,6 +8,16 @@ todo. Newest entries first.
 
 _Last updated 2026-09-18._
 
+### LOCAL — awaiting owner review, not deployed
+
+- **Field pressure-print redesign, 2026-09-18.** Replaces the rejected opening
+  teal planes with eleven bowed ink incisions and one pale accent. Tempo drives
+  the strike, energy sets its spread, and the playhead synchronizes the strike
+  and eight-beat sway. Keeps the existing palette, typography, panel dimensions,
+  album art, surrounding UI and other themes. Candidate sketches:
+  `design/field-pressure-study.html`. Verification and screenshots:
+  `tmp/reviews/astra-field.md`. This branch is intentionally not pushed or deployed.
+
 ### DONE
 
 - **Field / Flow / Afterglow redesign by GPT-6 Astra, DEPLOYED 2026-09-18 (version `27e821b6`).** Field

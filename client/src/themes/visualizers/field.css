@@ -1,41 +1,65 @@
-/* Monumental color fields: negative space opens on the beat. Only transforms
-   animate; the wedge's length remains the song progress. */
+/* Pressure print: flat pigment and bowed incisions, never an audio spectrum.
+   All continuous motion uses transforms on fixed, bounded geometry. */
 .visualizer-stage[data-visualizer-theme="field"] {
   min-height: clamp(240px, 66vw, 340px);
   border: 0;
-  background: #102b29;
+  background: #4e9e92;
   box-shadow: none;
 }
-.field-visualizer { position: absolute; inset: 0; overflow: hidden; background: #123e38; }
-.field-visualizer * { position: absolute; pointer-events: none; }
-.field-viz-cut { inset: 0 32% 0 38%; background: #eee3ac; transform: skewY(-16deg); }
-.field-viz-plane {
-  inset: -15% 0;
-  animation: field-open var(--beat-ms, 500ms) cubic-bezier(.16, 1, .3, 1) infinite;
-  animation-delay: var(--beat-offset, 0ms);
+.field-visualizer {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: #4e9e92;
+}
+.field-viz-print, .field-viz-incision, .field-viz-incision svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.field-viz-print {
+  width: 90%;
+  transform: rotate(-5deg);
+  animation: field-print-sway var(--viz-slow-ms, 4000ms) ease-in-out infinite;
   animation-play-state: var(--theme-motion-state, paused);
 }
-.field-viz-plane--left {
-  right: 48%; background: #72c4ac;
-  clip-path: polygon(0 0, 100% 0, 81% 100%, 0 100%);
-  --field-direction: -1;
+.field-viz-incision {
+  fill: #10201e;
+  transform: scaleX(.9);
+  animation: field-print-strike var(--beat-ms, 500ms) cubic-bezier(.16, 1, .3, 1) infinite;
+  animation-play-state: var(--theme-motion-state, paused);
 }
-.field-viz-plane--right {
-  left: 49%; background: #257d70;
-  clip-path: polygon(19% 0, 100% 0, 100% 100%, 0 100%);
-  --field-direction: 1;
+.field-viz-incision--light { fill: #e9dfa0; }
+.field-viz-progress {
+  position: absolute;
+  right: 7%;
+  top: 20%;
+  width: 2px;
+  height: 63%;
+  background: #10201e;
+  opacity: .7;
 }
-.field-viz-wedge {
-  top: 0; left: 49%; width: 15%;
-  height: calc(24% + var(--track-progress, 0) * 66%);
-  background: #102b29;
-  clip-path: polygon(0 0, 100% 0, 0 100%);
+.field-viz-progress > div {
+  position: absolute;
+  top: calc(var(--track-progress, 0) * 100%);
+  right: -3px;
+  width: 11px;
+  height: 14px;
+  background: #e9dfa0;
+  clip-path: polygon(0 0, 100% 0, 100% 100%);
 }
-.field-viz-register { left: 9%; bottom: 13%; width: 24%; height: 3px; background: #123e38; }
-@keyframes field-open {
-  0% { transform: translateX(calc(var(--field-direction) * (6px + var(--track-energy, .5) * 24px))); }
-  75%, 100% { transform: translateX(0); }
+@keyframes field-print-strike {
+  0% {
+    transform: translateX(calc(var(--cut-spread) * (.4 + var(--track-energy, .5))))
+      scaleX(calc(1 + var(--track-energy, .5) * .12));
+  }
+  75%, 100% { transform: translateX(0) scaleX(.82); }
+}
+@keyframes field-print-sway {
+  0%, 100% { transform: rotate(-7deg) translateY(1%); }
+  50% { transform: rotate(7deg) translateY(-2%); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .field-viz-plane { animation: none; }
+  .field-viz-print, .field-viz-incision { animation: none; }
 }
