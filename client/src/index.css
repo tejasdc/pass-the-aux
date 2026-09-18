@@ -1060,7 +1060,7 @@ a {
   --canvas: #4e9e92;
   --canvas-deep: #43948a;
   --ink: #10201e;
-  --muted: rgba(16, 32, 30, 0.66);
+  --muted: #193b35;
   --faint: rgba(10, 30, 28, 0.34);
   --pink: #e9dfa0;
   --green: #232430;
@@ -1079,6 +1079,13 @@ a {
   overflow: hidden;
   pointer-events: none;
   background: radial-gradient(140% 110% at 30% 20%, #4e9e92 55%, #43948a 100%);
+}
+
+/* The progress cut now belongs to the visualizer, away from the wordmark. */
+.theme-field .field-wedge,
+.theme-field .field-wedge-tick,
+.theme-field .field-seam {
+  display: none;
 }
 
 .field-background::after {
@@ -1470,7 +1477,7 @@ a {
   --canvas: #ece4d1;
   --canvas-deep: #ddd2bc;
   --ink: #14110d;
-  --muted: #8a7663;
+  --muted: #655242;
   --faint: rgba(20, 17, 13, 0.16);
   --pink: #f0d3c9;
   --green: #3d3327;
@@ -1696,7 +1703,7 @@ a {
   --canvas: #0a0908;
   --canvas-deep: #17110f;
   --ink: #f5f1ea;
-  --muted: #8c8578;
+  --muted: #b4ac9e;
   --faint: rgba(245, 241, 234, 0.11);
   --pink: #241714;
   --green: #4ad5ff;
@@ -1819,7 +1826,7 @@ a {
 .theme-afterglow .progress-time,
 .theme-afterglow .provenance {
   font-family: 'JetBrains Mono', monospace;
-  color: rgba(245, 241, 234, 0.46);
+  color: #b4ac9e;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }

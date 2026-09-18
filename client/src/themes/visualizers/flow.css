@@ -1,42 +1,8 @@
-/*
- * Generative Flow visualizer — Casey Reas / Anders Hoff plotter-ink field.
- * All of the drawing happens on a single <canvas>; the CSS here is just the
- * stage frame, the paper fallback, and the sizing contract.
- */
-
 .visualizer-stage[data-visualizer-theme="flow"] {
-  border: 1px solid var(--ink, #14110d);
+  min-height: clamp(240px, 66vw, 340px);
+  border: 1px solid #242d28;
   background: #ece4d1;
   box-shadow: none;
-  overflow: hidden;
 }
-
-.flow-visualizer,
-.flow-visualizer * {
-  pointer-events: none;
-}
-
-.flow-visualizer {
-  position: absolute;
-  inset: 0;
-  overflow: hidden;
-  /* Warm paper fallback for the one paint before the canvas mounts, and for the
-   * reduced-motion / paused state where the canvas keeps its last frame. */
-  background: #ece4d1;
-  /* Faint plotter registration grid — barely visible under the ink, gives the
-   * "gallery print on graph paper" cue even when motion is paused. */
-  background-image:
-    linear-gradient(90deg, rgba(20, 17, 13, 0.035) 1px, transparent 1px),
-    linear-gradient(0deg, rgba(20, 17, 13, 0.025) 1px, transparent 1px);
-  background-size: 44px 44px;
-}
-
-.flow-viz-canvas {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: block;
-  /* Once the canvas has painted a paper wash it fully covers the grid; the grid
-   * only shows during the first frame or the resize repaint. That is fine. */
-}
+.flow-visualizer { position: absolute; inset: 0; overflow: hidden; background: #ece4d1; }
+.flow-viz-canvas { display: block; width: 100%; height: 100%; pointer-events: none; }

@@ -28,6 +28,11 @@ WiFi — just the QR.
   it has no data for them (fail-open).
 - Each page load gets a random theme; the header theme button (palette icon + theme name, deliberately not shuffle arrows so guests do not read it as shuffling songs) picks another
   random theme for that visit only (nothing is stored).
+- Field, Flow, and Afterglow keep their visualizer code isolated in their own
+  JSX/CSS pairs. Field's cut and Afterglow's chromatic aperture animate only
+  transforms/opacity; Flow draws 44 analytic currents at at most 30fps with
+  device pixel ratio capped at 2. Preserve their static reduced-motion image
+  and the shared hidden-tab/reduced-motion gate when changing them.
 - Secrets (via `npx wrangler secret put`): `SPOTIFY_CLIENT_ID`,
   `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REDIRECT_URI`
   (= `https://party.tejas.nyc/api/auth/callback`).
