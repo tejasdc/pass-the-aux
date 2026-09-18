@@ -10,13 +10,13 @@ _Last updated 2026-09-18._
 
 ### DONE
 
-- **Suprematist split-square redesign, LOCAL ONLY 2026-09-18.** Four black
+- **Suprematist split-square redesign by GPT-6 Astra, DEPLOYED 2026-09-18 (version `6ffe8a40`).** Four black
   planes open on the beat around a vermilion stroke, with a cobalt counterstroke
   and salmon satellite. Selected from three sketches for a clear silhouette
   and visible beat gesture on phones. Only the isolated Suprematist visualizer
   changes; surrounding draggable shapes and shared layout remain intact.
   Studies: `design/suprematist-studies.html`. Verification and screenshots:
-  `.wt/astra-suprematist/tmp/reviews/astra-suprematist.md`. Not pushed or deployed.
+  worktree `.wt/astra-suprematist/tmp/reviews/astra-suprematist.md`.
 
 - **Field pressure-print redesign by GPT-6 Astra, DEPLOYED 2026-09-18 (version `1e307af3`).** Replaces the rejected opening
   teal planes with eleven bowed ink incisions and one pale accent. Tempo drives
@@ -46,7 +46,7 @@ _Last updated 2026-09-18._
   "THEME n/11" box became a small shuffle button matching search. Field
   theme's header icons were invisible (teal on teal), now fixed. Verified on
   the built client at iPhone size: 11/11 themes animate, no console errors.
-  Open question for Tejas: songs missing from ReccoBeats pass the vibe check.
+  Tejas decided 2026-09-18: songs missing from ReccoBeats keep passing the vibe check.
 
 - **Printable party sign 2026-09-18** for the 2026-09-19 party:
   `design/party-sign/` (`pass-the-aux-sign.pdf` Letter, `.png` 2448x3168).
