@@ -12,7 +12,7 @@ const output = path.join(root, 'client/public/flyer');
   const browser = await chromium.launch();
   const evidence = [];
   try {
-    for (const slug of ['suprematist', 'field', 'flow', 'afterglow']) {
+    for (const slug of ['suprematist', 'flow', 'winamp']) {
       const page = await browser.newPage({ viewport: { width: 816, height: 1056 }, deviceScaleFactor: 3.125 });
       await page.goto('file://' + path.join(__dirname, slug, 'index.html'));
       await page.evaluate(() => document.fonts.ready);
@@ -42,8 +42,8 @@ const output = path.join(root, 'client/public/flyer');
       evidence.push({ slug, width: png.width, height: png.height, qr: decoded.data, pdf: '1 page, 612 × 792 pt', layout });
       await page.close();
     }
-    // Small gallery thumbnails avoid downloading four full-resolution print assets.
-    for (const slug of ['pass-the-aux-flyer', 'field', 'flow', 'afterglow']) {
+    // Small gallery thumbnails avoid downloading three full-resolution print assets.
+    for (const slug of ['pass-the-aux-flyer', 'flow', 'winamp']) {
       const page = await browser.newPage({ viewport: { width: 612, height: 792 }, deviceScaleFactor: 1 });
       await page.goto('file://' + path.join(output, slug + '.png'));
       await page.addStyleTag({ content: 'html,body{margin:0!important;padding:0!important;background:white!important}img{display:block!important;width:612px!important;height:792px!important;max-width:none!important;margin:0!important}' });

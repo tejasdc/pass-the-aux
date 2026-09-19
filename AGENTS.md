@@ -98,7 +98,7 @@ npx wrangler secret list                # check secrets
   final-PNG QR decoding. Suprematist is included in this pipeline and writes
   the existing `pass-the-aux-flyer.*` names. `design/party-sign/sign.html`
   links to its canonical source; the old render command delegates to this
-  pipeline and refreshes the legacy sign PDF/PNG too. All four signs use
+  pipeline and refreshes the legacy sign PDF/PNG too. The three signs (Suprematist, Flow, Winamp) use
   casual invitations and a small fallback address, without product copy.
 
 ## Keep this file current

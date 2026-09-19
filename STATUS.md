@@ -10,6 +10,15 @@ _Last updated 2026-09-19._
 
 ### DONE
 
+- **Winamp flyer gallery prepared locally 2026-09-19; not pushed or deployed.**
+  Gallery now contains Suprematist, Flow and Winamp. Field and Afterglow
+  poster sources, original studies and published downloads were removed.
+  Winamp uses classic beveled chrome, lime LED lettering and fire spectrum
+  bars with casual invitations. All three 300-dpi PNG QR codes decode to
+  `https://aux.tejas.nyc/`; PDFs are single-page Letter. Client build and
+  Chromium gallery checks at 360, 768 and 1440px pass. Designer critique,
+  QR results and preview paths: `tmp/reviews/winamp-flyer.md` in this worktree.
+
 - **Themed casual flyers DEPLOYED 2026-09-19.** Tejas: the casual remake lost the theme artwork. Posters now combine the round-1 theme art (Suprematist planes, Field blades, Flow currents, Afterglow ring) with the casual copy (join the jam / queue up a song / scan here). Same filenames at /flyer/. Report: `tmp/reviews/themed-casual.md` in the `themed-casual-flyers` worktree.
 
 - **Casual party flyers DEPLOYED 2026-09-19 (version `313fa5fe`), replacing the formal set at /flyer/ per Tejas ("way too formal and techy").**
