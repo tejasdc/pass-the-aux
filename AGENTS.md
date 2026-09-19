@@ -95,7 +95,11 @@ npx wrangler secret list                # check secrets
   (requires Playwright, pngjs, jsqr, Chromium and pdfinfo) to regenerate the
   Letter PDFs, 300-dpi PNGs and lightweight gallery previews in
   `client/public/flyer/`. The renderer checks page bounds, PDF page count and
-  final-PNG QR decoding. Keep the original Suprematist PDF/PNG intact.
+  final-PNG QR decoding. Suprematist is included in this pipeline and writes
+  the existing `pass-the-aux-flyer.*` names. `design/party-sign/sign.html`
+  links to its canonical source; the old render command delegates to this
+  pipeline and refreshes the legacy sign PDF/PNG too. All four signs use
+  casual invitations and a small fallback address, without product copy.
 
 ## Keep this file current
 

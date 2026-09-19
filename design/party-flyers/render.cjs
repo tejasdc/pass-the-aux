@@ -12,7 +12,7 @@ const output = path.join(root, 'client/public/flyer');
   const browser = await chromium.launch();
   const evidence = [];
   try {
-    for (const slug of ['field', 'flow', 'afterglow']) {
+    for (const slug of ['suprematist', 'field', 'flow', 'afterglow']) {
       const page = await browser.newPage({ viewport: { width: 816, height: 1056 }, deviceScaleFactor: 3.125 });
       await page.goto('file://' + path.join(__dirname, slug, 'index.html'));
       await page.evaluate(() => document.fonts.ready);
@@ -25,14 +25,20 @@ const output = path.join(root, 'client/public/flyer');
         return { outside, width: document.documentElement.scrollWidth, height: document.documentElement.scrollHeight, fonts: [...document.fonts].map(f => ({family:f.family,status:f.status})) };
       });
       if (layout.outside.length || layout.width !== 816 || layout.height !== 1056) throw new Error(JSON.stringify({ slug, layout }));
-      const pngPath = path.join(output, slug + '.png');
+      const filename = slug === 'suprematist' ? 'pass-the-aux-flyer' : slug;
+      const pngPath = path.join(output, filename + '.png');
       await page.screenshot({ path: pngPath });
-      await page.pdf({ path: path.join(output, slug + '.pdf'), format: 'Letter', printBackground: true, preferCSSPageSize: true });
-      const info = execFileSync('pdfinfo', [path.join(output, slug + '.pdf')], { encoding: 'utf8' });
+      await page.pdf({ path: path.join(output, filename + '.pdf'), format: 'Letter', printBackground: true, preferCSSPageSize: true });
+      const info = execFileSync('pdfinfo', [path.join(output, filename + '.pdf')], { encoding: 'utf8' });
       if (!/Pages:\s+1\b/.test(info) || !/Page size:\s+612 x 792 pts/.test(info)) throw new Error(info);
       const png = PNG.sync.read(fs.readFileSync(pngPath));
       const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
       if (decoded?.data !== 'https://aux.tejas.nyc/') throw new Error('QR failed: ' + slug);
+      if (slug === 'suprematist') {
+        for (const extension of ['png', 'pdf']) {
+          fs.copyFileSync(path.join(output, filename + '.' + extension), path.join(root, 'design/party-sign/pass-the-aux-sign.' + extension));
+        }
+      }
       evidence.push({ slug, width: png.width, height: png.height, qr: decoded.data, pdf: '1 page, 612 × 792 pt', layout });
       await page.close();
     }

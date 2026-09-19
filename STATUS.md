@@ -10,6 +10,13 @@ _Last updated 2026-09-19._
 
 ### DONE
 
+- **Casual party flyer replacement, committed locally 2026-09-19; not pushed or deployed.**
+  All four signs now use handwritten invitations, theme colors, large QR codes
+  and minimal copy. Existing gallery filenames are retained. All four final
+  2550×3300 PNGs decode to `https://aux.tejas.nyc/`; PDFs are one US Letter
+  page each. Suprematist now shares the renderer. Verification and preview
+  paths: `tmp/reviews/casual-flyers.md` in the `casual-flyers` worktree.
+
 - **Party flyer gallery DEPLOYED 2026-09-19 at https://aux.tejas.nyc/flyer/ (version `2f711603`).** Original Suprematist flyer redesigned (bolder headline, QR + steps side by side); GPT-6 Astra added
   Field, Flow and Afterglow each have their own HTML source, one-page Letter
   PDF and 2550×3300 PNG. The static flyer gallery now presents these alongside
