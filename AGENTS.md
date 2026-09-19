@@ -89,6 +89,13 @@ npx wrangler secret list                # check secrets
   secret, Spotify dashboard redirect list).
 - Agent work logs live in `tmp/reviews/` (gitignored). Design artifacts in
   `design/` (committed).
+- Party poster sources live in `design/party-flyers/<theme>/index.html`, with
+  bundled licensed fonts and composition sketches alongside them. Run
+  `NODE_PATH=/tmp/signbuild/node_modules node design/party-flyers/render.cjs`
+  (requires Playwright, pngjs, jsqr, Chromium and pdfinfo) to regenerate the
+  Letter PDFs, 300-dpi PNGs and lightweight gallery previews in
+  `client/public/flyer/`. The renderer checks page bounds, PDF page count and
+  final-PNG QR decoding. Keep the original Suprematist PDF/PNG intact.
 
 ## Keep this file current
 

@@ -10,6 +10,15 @@ _Last updated 2026-09-18._
 
 ### DONE
 
+- **Three additional party flyers prepared locally 2026-09-19; NOT deployed.**
+  Field, Flow and Afterglow each have their own HTML source, one-page Letter
+  PDF and 2550×3300 PNG. The static flyer gallery now presents these alongside
+  the original Suprematist design, with print/save links and small previews.
+  Final PNGs decode to `https://aux.tejas.nyc/`; Chromium checks at 360, 430
+  and 1440px and the client build pass. Sketches and repeatable rendering:
+  `design/party-flyers/`. Local report: `tmp/reviews/astra-flyers.md` in the
+  `astra-flyers` worktree. Held on this branch per request; no push or deploy.
+
 - **Suprematist split-square redesign by GPT-6 Astra, DEPLOYED 2026-09-18 (version `6ffe8a40`).** Four black
   planes open on the beat around a vermilion stroke, with a cobalt counterstroke
   and salmon satellite. Selected from three sketches for a clear silhouette

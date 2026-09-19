@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1050" height="560" viewBox="0 0 1050 560">
+<rect width="1050" height="560" fill="#ddd"/>
+<g font-family="Arial" fill="#151515">
+<text x="30" y="30" font-size="18">COMPOSITION STUDIES · Pass the Aux · September 19</text>
+<g transform="translate(30 55)">
+<rect width="300" height="390" fill="#4e9e92"/>
+<text x="20" y="32" font-size="12">PASS THE AUX</text>
+<text x="20" y="86" font-size="43" font-weight="bold">GOOD</text><text x="20" y="130" font-size="43" font-weight="bold">TASTE?</text>
+<path d="M220 60 Q295 130 210 205 M240 55 Q315 130 230 215 M260 60 Q335 135 250 220" fill="none" stroke="#10201e" stroke-width="9"/>
+<rect x="20" y="175" width="140" height="140" fill="white"/><text x="52" y="251" font-size="30">QR</text>
+<text x="180" y="270" font-size="15">Scan to</text><text x="180" y="290" font-size="15">add a song.</text>
+<text x="20" y="350" font-size="28" font-weight="bold">aux.tejas.nyc</text>
+<text x="20" y="373" font-size="10">No app. No login. No Spotify needed.</text>
+<text x="0" y="422" font-size="18">FIELD / pressure print</text><text x="0" y="447" font-size="13">Left anchor; ink incisions counterbalance QR.</text>
+</g>
+<g transform="translate(375 55)">
+<rect width="300" height="390" fill="#ece4d1"/>
+<text x="20" y="32" font-size="12">PASS THE AUX</text>
+<path d="M0 50 Q160 170 300 65 M0 60 Q160 180 300 75 M0 70 Q160 190 300 85 M0 80 Q160 200 300 95" fill="none" stroke="#bb3e25" stroke-width="3"/>
+<text x="20" y="184" font-size="36" font-family="Georgia" font-style="italic">Go with</text><text x="20" y="222" font-size="36" font-family="Georgia" font-style="italic">your flow.</text>
+<text x="20" y="259" font-size="13">Scan. Search.</text><text x="20" y="278" font-size="13">Add your song.</text>
+<rect x="164" y="198" width="118" height="118" fill="white"/><text x="198" y="266" font-size="25">QR</text>
+<text x="20" y="351" font-size="28" font-weight="bold">aux.tejas.nyc</text>
+<text x="20" y="373" font-size="10">No app. No login. No Spotify needed.</text>
+<text x="0" y="422" font-size="18">FLOW / follow the current</text><text x="0" y="447" font-size="13">Landscape of currents; asymmetric invitation.</text>
+</g>
+<g transform="translate(720 55)">
+<rect width="300" height="390" fill="#080809"/>
+<g fill="#fff8e9" text-anchor="middle"><text x="150" y="32" font-size="12">PASS THE AUX</text><text x="150" y="80" font-size="34">ONE MORE</text><text x="150" y="118" font-size="34">BANGER.</text></g>
+<ellipse cx="150" cy="224" rx="127" ry="87" fill="none" stroke="#ff443b" stroke-width="12" transform="rotate(-24 150 224)"/><ellipse cx="150" cy="221" rx="119" ry="81" fill="none" stroke="#62d9ed" stroke-width="4" transform="rotate(-24 150 221)"/>
+<rect x="89" y="160" width="122" height="122" fill="white"/><text x="126" y="231" font-size="25">QR</text>
+<g fill="#fff8e9" text-anchor="middle"><text x="150" y="311" font-size="16">Scan to add a song.</text><text x="150" y="351" font-size="28">aux.tejas.nyc</text><text x="150" y="373" font-size="10">No app. No login. No Spotify needed.</text></g>
+<text x="0" y="422" font-size="18">AFTERGLOW / night signal</text><text x="0" y="447" font-size="13">Centered beacon; clean white QR in the orbit.</text>
+</g></g></svg>
