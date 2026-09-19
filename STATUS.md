@@ -10,15 +10,7 @@ _Last updated 2026-09-19._
 
 ### DONE
 
-- **Themed casual flyers DEPLOYED 2026-09-19.** Tejas: the casual remake lost the theme artwork. Posters now combine the round-1 theme art (Suprematist planes, Field blades, Flow currents, Afterglow ring) with the casual copy (join the jam / queue up a song / scan here). Same filenames at /flyer/.
-
-
-- **Themed casual posters prepared locally 2026-09-19; NOT pushed or deployed.**
-  Restored the original Suprematist planes, Field incisions, Flow currents and
-  Afterglow ring while retaining the casual invitations. All four previews
-  visually critiqued; final PNG QR decoding, Letter PDF/page bounds and client
-  build pass. Report: `tmp/reviews/themed-casual.md` in the
-  `themed-casual-flyers` worktree. The live gallery remains unchanged.
+- **Themed casual flyers DEPLOYED 2026-09-19.** Tejas: the casual remake lost the theme artwork. Posters now combine the round-1 theme art (Suprematist planes, Field blades, Flow currents, Afterglow ring) with the casual copy (join the jam / queue up a song / scan here). Same filenames at /flyer/. Report: `tmp/reviews/themed-casual.md` in the `themed-casual-flyers` worktree.
 
 - **Casual party flyers DEPLOYED 2026-09-19 (version `313fa5fe`), replacing the formal set at /flyer/ per Tejas ("way too formal and techy").**
   All four signs now use handwritten invitations, theme colors, large QR codes
