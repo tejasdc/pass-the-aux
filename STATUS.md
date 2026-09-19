@@ -10,7 +10,7 @@ _Last updated 2026-09-19._
 
 ### DONE
 
-- **Casual party flyer replacement, committed locally 2026-09-19; not pushed or deployed.**
+- **Casual party flyers DEPLOYED 2026-09-19 (version `313fa5fe`), replacing the formal set at /flyer/ per Tejas ("way too formal and techy").**
   All four signs now use handwritten invitations, theme colors, large QR codes
   and minimal copy. Existing gallery filenames are retained. All four final
   2550×3300 PNGs decode to `https://aux.tejas.nyc/`; PDFs are one US Letter
