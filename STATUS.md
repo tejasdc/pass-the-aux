@@ -10,6 +10,13 @@ _Last updated 2026-09-19._
 
 ### DONE
 
+- **Themed casual posters prepared locally 2026-09-19; NOT pushed or deployed.**
+  Restored the original Suprematist planes, Field incisions, Flow currents and
+  Afterglow ring while retaining the casual invitations. All four previews
+  visually critiqued; final PNG QR decoding, Letter PDF/page bounds and client
+  build pass. Report: `tmp/reviews/themed-casual.md` in the
+  `themed-casual-flyers` worktree. The live gallery remains unchanged.
+
 - **Casual party flyers DEPLOYED 2026-09-19 (version `313fa5fe`), replacing the formal set at /flyer/ per Tejas ("way too formal and techy").**
   All four signs now use handwritten invitations, theme colors, large QR codes
   and minimal copy. Existing gallery filenames are retained. All four final

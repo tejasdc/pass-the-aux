@@ -5,12 +5,14 @@ to contribute music. Large headlines invite them closer; high-contrast QR
 codes and a small fallback address provide the action. All essential content is
 inset from the sheet edge for ordinary home printing.
 
-`sketches.svg` preserves historical studies for the superseded formal designs.
-The current signs are casual house-party notes: Suprematist uses black marker
-lettering with red and blue doodles; Field uses teal paper and a loose yellow
-frame; Flow uses an off-center handwritten note and rust squiggles; Afterglow
-uses peach lettering and cyan stars on dark paper. Copy is limited to “join
-the jam”, “queue up a song”, “scan here” and the fallback address.
+`sketches.svg` preserves the original composition studies. The current signs
+combine that artwork with casual house-party invitations: Suprematist uses
+black planes, a vermilion thrust and cobalt counterstroke with marker lettering;
+Field uses bowed blade incisions on teal; Flow uses dense ink currents and a
+vermilion ribbon; Afterglow uses a glowing chromatic ring on black. The artwork
+was recovered from the original poster commits (2fad646 and e95c6d9). Copy stays
+limited to “join the jam”, “queue up a song”, “scan here” and the small fallback
+address. Each QR has a 290px code and 44px white quiet zone at source size.
 
 Edit each theme's `index.html`, then from the repository root:
 
