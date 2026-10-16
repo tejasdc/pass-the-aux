@@ -10,14 +10,31 @@ _Last updated 2026-10-16._
 
 ### DONE
 
-- **Synced lyrics DEPLOYED 2026-10-16 (version `04730536`):** timed lyrics from LRCLib follow Spotify's
+- **Synced lyrics DEPLOYED 2026-10-16 (version `cb71d708`):** timed lyrics from LRCLib follow Spotify's
   current track and playhead; the party page shows them beside Now Playing on
   wide screens, with a phone view switch and a dedicated `/lyrics` display.
-  Worker tests cover the live-party gate, track changes and cache reuse.
-  The live display link and closed-party gate were checked on production. A
-  real Spotify song-change check is pending because no party was live; the
-  browser check exercised song changes, pauses and seeks with Spotify-shaped
-  responses.
+  Worker tests cover the live-party gate, track changes, cache reuse, slow
+  audio-feature lookups and temporary lyric-source failures. The deployed
+  correction advances the Spotify playhead through lookup delay and retries
+  temporary lyric failures. The live display link and closed-party gate were
+  checked on production. Browser checks exercised song changes, pauses, seeks,
+  and out-of-order polls with Spotify-shaped responses. A real Spotify test
+  on 2026-10-16 authorized the host through an existing Chrome sign-in and
+  started a party. The live display showed timed lyrics for **Blinding Lights**
+  and advanced its active line during playback. The first **Tied Up** lookup
+  briefly failed, displayed a retry message, then returned synced lyrics on
+  replay after the retry interval. The live display followed a track change;
+  its active line advanced during playback, held during an eight-second pause,
+  and jumped to the matching line after a seek from 1:06 to 2:00. That test
+  exposed a fullscreen scrolling defect: the active line was offscreen even
+  though the page selected it. The follow-up fixes the scroll area height and
+  realigns after font loading or display resizing. Five cold desktop/mobile
+  browser runs and four smaller viewport checks passed. On the deployed page,
+  Chrome on the Mac showed **Tied Up** at 3:45 with the active line visible in
+  a 1920×1073 viewport; seeking to 2:00 moved the highlight to the matching
+  line and kept it visible. The display remained one screen high, and Spotify
+  was restored to paused **Tied Up** at 3:45. An email code was not needed for
+  the Chrome sign-in, so that sign-in path was not exercised.
 
 - **Winamp flyer gallery DEPLOYED 2026-09-19 (version `85dd31af`)** per Tejas: removed Field and Afterglow, added Winamp (his "Vietnam team" read as Winamp).
   Gallery now contains Suprematist, Flow and Winamp. Field and Afterglow
