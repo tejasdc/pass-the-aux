@@ -20,7 +20,14 @@ WiFi — just the QR.
   `party:vibe`, `oauth:state:*`, `rate-limit:*`, `host:auth-grant:*` (legacy),
   `audio-features:v2:*` (ReccoBeats tempo/energy per track: hits cached
   forever, misses expire after 6h, errors after 5min; `audio-features:<id>`
-  v1 entries are abandoned, not read).
+  v1 entries are abandoned, not read), `lyrics:v1:<track-id>` (LRCLib results:
+  hits 24h, misses 1h, temporary errors 60s).
+- Lyrics use the current Spotify track and playhead already returned by
+  `/api/now-playing`. `/api/lyrics` checks that the requested track is current
+  during a live party before fetching LRCLib; the client polls playback
+  about every 5s and interpolates the playhead between polls. `/lyrics` is the
+  display-only full-screen route. Its lyric list must scroll inside the
+  viewport so the active line stays visible after seeks and font loading.
 - Visualizers are driven by each track's tempo/energy plus the playhead, not by
   hearing audio. When ReccoBeats has no data, `/api/now-playing` sends a steady
   120 BPM beat flagged `estimated: true`, so visuals never freeze; the client
