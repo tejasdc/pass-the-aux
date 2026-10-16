@@ -185,10 +185,71 @@ async function testGuestRoutesRefuseWhenNoPartyIsLive() {
   const queueReadResponse = await call(env, "/api/queue");
   assert.equal(queueReadResponse.status, 403);
 
+  const lyricsResponse = await call(env, "/api/lyrics?trackId=0123456789012345678901");
+  assert.equal(lyricsResponse.status, 403);
+
   const queueWriteResponse = await callJson(env, "/api/queue", {
     uri: "spotify:track:123",
   });
   assert.equal(queueWriteResponse.status, 403);
+}
+
+async function testLyricsFollowCurrentTrackAndCache() {
+  const env = createEnv();
+  await env.PARTY_QUEUE_KV.put("host:tokens", JSON.stringify({
+    accessToken: "access-token",
+    refreshToken: "refresh-token",
+    expiresAt: Date.now() + 3600 * 1000,
+  }));
+  await env.PARTY_QUEUE_KV.put("party:session", JSON.stringify({
+    live: true,
+    hostUserId: "spotify-host",
+    startedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + PARTY_TTL_MS).toISOString(),
+    durationSeconds: 8 * 60 * 60,
+  }));
+
+  const firstId = "0123456789012345678901";
+  const secondId = "0123456789012345678902";
+  let currentId = firstId;
+  let lyricFetches = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const requestUrl = String(url);
+    if (requestUrl === "https://api.spotify.com/v1/me/player/currently-playing") {
+      return Response.json({ item: {
+        id: currentId, name: currentId === firstId ? "First Song" : "Second Song",
+        artists: [{ name: "The Artist" }], album: { name: "The Album" },
+        duration_ms: 180000,
+      } });
+    }
+    if (requestUrl.startsWith("https://lrclib.net/api/get?")) {
+      lyricFetches += 1;
+      const query = new URL(requestUrl);
+      assert.equal(query.searchParams.get("artist_name"), "The Artist");
+      return Response.json({ syncedLyrics: `[00:01.00]${query.searchParams.get("track_name")}` });
+    }
+    throw new Error(`Unexpected fetch: ${requestUrl}`);
+  };
+
+  try {
+    const first = await call(env, `/api/lyrics?trackId=${firstId}`);
+    assert.equal(first.status, 200);
+    assert.deepEqual(await responseJson(first), { status: "synced", text: "[00:01.00]First Song" });
+    assert.equal((await responseJson(await call(env, `/api/lyrics?trackId=${firstId}`))).status, "synced");
+    assert.equal(lyricFetches, 1, "lyrics come from KV on a repeat request");
+
+    currentId = secondId;
+    const stale = await call(env, `/api/lyrics?trackId=${firstId}`);
+    assert.equal(stale.status, 409, "a stale track is rejected even if its lyrics were cached");
+    assert.equal((await responseJson(stale)).status, "track_changed");
+
+    const second = await call(env, `/api/lyrics?trackId=${secondId}`);
+    assert.deepEqual(await responseJson(second), { status: "synced", text: "[00:01.00]Second Song" });
+    assert.equal(lyricFetches, 2);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
 }
 
 async function testEndAndLogoutRequireHostSession() {
@@ -416,6 +477,7 @@ try {
   await testPartyLifecycle();
   await testNowPlayingIncludesCachedAudioFeatures();
   await testNowPlayingKeepsABeatWhenFeaturesAreMissing();
+  await testLyricsFollowCurrentTrackAndCache();
   console.log("party-session worker harness passed");
 } finally {
   Date.now = realDateNow;

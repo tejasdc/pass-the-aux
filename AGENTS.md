@@ -26,6 +26,11 @@ WiFi — just the QR.
   120 BPM beat flagged `estimated: true`, so visuals never freeze; the client
   shows "BPM & ENERGY UNKNOWN" instead of a number for estimated beats. The vibe check lets songs through when
   it has no data for them (fail-open).
+- During a live party, `/api/lyrics` checks that the requested Spotify track is
+  still playing, then looks up timed lyrics from LRCLib and caches the result in
+  KV. The client follows the same five-second Spotify playhead poll used by
+  Now Playing. `/lyrics` is the full-screen display link; the guest page shows
+  lyrics beside Now Playing on wide screens and a view switch on phones.
 - Each page load gets a random theme; the header theme button (palette icon + theme name, deliberately not shuffle arrows so guests do not read it as shuffling songs) picks another
   random theme for that visit only (nothing is stored).
 - Field, Flow, and Afterglow keep their visualizer code isolated in their own
