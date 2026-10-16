@@ -3230,7 +3230,7 @@ a {
 .lyrics-screen {
   position: relative;
   width: min(100%, 1100px);
-  min-height: 100dvh;
+  height: 100dvh;
   margin: 0 auto;
   padding: 30px clamp(24px, 6vw, 88px);
   display: flex;
@@ -3269,6 +3269,7 @@ a {
 }
 
 .lyrics-panel-full .lyrics-scroll {
+  min-height: 0;
   max-height: none;
 }
 
