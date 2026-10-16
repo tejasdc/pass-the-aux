@@ -6,15 +6,18 @@ todo. Newest entries first.
 
 ## Status log
 
-_Last updated 2026-09-19._
+_Last updated 2026-10-16._
 
 ### DONE
 
-- **Synced lyrics (2026-10-16):** timed lyrics from LRCLib follow Spotify's
+- **Synced lyrics DEPLOYED 2026-10-16 (version `04730536`):** timed lyrics from LRCLib follow Spotify's
   current track and playhead; the party page shows them beside Now Playing on
   wide screens, with a phone view switch and a dedicated `/lyrics` display.
   Worker tests cover the live-party gate, track changes and cache reuse.
-  Deployment and real Spotify acceptance are recorded below when checked.
+  The live display link and closed-party gate were checked on production. A
+  real Spotify song-change check is pending because no party was live; the
+  browser check exercised song changes, pauses and seeks with Spotify-shaped
+  responses.
 
 - **Winamp flyer gallery DEPLOYED 2026-09-19 (version `85dd31af`)** per Tejas: removed Field and Afterglow, added Winamp (his "Vietnam team" read as Winamp).
   Gallery now contains Suprematist, Flow and Winamp. Field and Afterglow
