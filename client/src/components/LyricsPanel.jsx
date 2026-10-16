@@ -28,12 +28,30 @@ function LyricsPanel({ track, lyrics, fullScreen = false }) {
 
   useEffect(() => {
     if (activeIndex < 0 || !scrollArea.current) return;
-    const line = scrollArea.current.querySelector('[data-active="true"]');
-    if (!line) return;
     const area = scrollArea.current;
-    const top = line.offsetTop - area.offsetTop - area.clientHeight / 2 + line.clientHeight / 2;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    area.scrollTo({ top: Math.max(0, top), behavior: reducedMotion ? 'instant' : 'smooth' });
+    const centerActiveLine = (forceInstant = false) => {
+      const line = area.querySelector('[data-active="true"]');
+      if (!line) return;
+      const top = line.offsetTop - area.clientHeight / 2 + line.clientHeight / 2;
+      const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      const areaRect = area.getBoundingClientRect();
+      const lineRect = line.getBoundingClientRect();
+      const lineVisible = lineRect.top >= areaRect.top && lineRect.bottom <= areaRect.bottom;
+      area.scrollTo({ top: Math.max(0, top), behavior: forceInstant || reducedMotion || !lineVisible ? 'instant' : 'smooth' });
+    };
+    centerActiveLine();
+    let cancelled = false;
+    if (document.fonts.status === 'loading') {
+      document.fonts.ready.then(() => {
+        if (!cancelled) centerActiveLine(true);
+      });
+    }
+    const onResize = () => centerActiveLine(true);
+    window.addEventListener('resize', onResize);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('resize', onResize);
+    };
   }, [activeIndex, track?.id]);
 
   let body;
