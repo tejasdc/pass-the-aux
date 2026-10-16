@@ -10,6 +10,12 @@ _Last updated 2026-09-19._
 
 ### DONE
 
+- **Synced lyrics (2026-10-16):** timed lyrics from LRCLib follow Spotify's
+  current track and playhead; the party page shows them beside Now Playing on
+  wide screens, with a phone view switch and a dedicated `/lyrics` display.
+  Worker tests cover the live-party gate, track changes and cache reuse.
+  Deployment and real Spotify acceptance are recorded below when checked.
+
 - **Winamp flyer gallery DEPLOYED 2026-09-19 (version `85dd31af`)** per Tejas: removed Field and Afterglow, added Winamp (his "Vietnam team" read as Winamp).
   Gallery now contains Suprematist, Flow and Winamp. Field and Afterglow
   poster sources, original studies and published downloads were removed.

@@ -35,14 +35,16 @@ export function useNowPlaying({ enabled = true } = {}) {
       if (data.track) {
         setTrack({
           ...data.track,
-          is_playing: data.playing
+          is_playing: data.playing,
+          receivedAt: performance.now(),
         });
       } else if (data.item) {
         // Fallback for direct Spotify API format
         setTrack({
           ...data.item,
           progress_ms: data.progress_ms,
-          is_playing: data.is_playing
+          is_playing: data.is_playing,
+          receivedAt: performance.now(),
         });
       } else {
         setTrack(null);

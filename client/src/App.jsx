@@ -1,10 +1,12 @@
 import { useState, useEffect, useCallback } from 'react';
 import NowPlaying from './components/NowPlaying';
+import LyricsPanel from './components/LyricsPanel';
 import QueueList from './components/QueueList';
 import SearchOverlay from './components/SearchOverlay';
 import ThemeSwitcher from './components/ThemeSwitcher';
 import Toast from './components/Toast';
 import { useNowPlaying } from './hooks/useNowPlaying';
+import { useLyrics } from './hooks/useLyrics';
 import { useQueue } from './hooks/useQueue';
 import { useThemeSelection } from './hooks/useThemeSelection';
 import './index.css';
@@ -14,7 +16,9 @@ const PRODUCT_NAME = 'Pass the Aux';
 
 function App() {
   const isHostRoute = window.location.pathname === '/host';
+  const isLyricsRoute = window.location.pathname === '/lyrics';
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [mobileView, setMobileView] = useState('playing');
   const [toast, setToast] = useState({ message: '', isVisible: false, isError: false });
   const [partyStatus, setPartyStatus] = useState({ live: false, isLoading: true });
   const { activeTheme, shuffleTheme } = useThemeSelection();
@@ -25,8 +29,9 @@ function App() {
     enabled: isGuestExperienceLive,
   });
   const { queue, isLoading: isQueueLoading, addToQueue } = useQueue({
-    enabled: isGuestExperienceLive,
+    enabled: isGuestExperienceLive && !isLyricsRoute,
   });
+  const lyrics = useLyrics(isGuestExperienceLive ? nowPlaying?.id : null);
 
   const showToast = useCallback((message, isError = false) => {
     setToast({ message, isVisible: true, isError });
@@ -107,11 +112,32 @@ function App() {
     );
   }
 
+  if (isLyricsRoute) {
+    return (
+      <div className={`theme-root ${activeTheme.className} lyrics-route`} data-theme={activeTheme.id}>
+        <div className="lyrics-screen">
+          <a className="lyrics-screen-back" href="/" aria-label="Back to Pass the Aux" title="Back to Pass the Aux">←</a>
+          {partyStatus.isLoading ? (
+            <div className="loading-state">Checking party status...</div>
+          ) : partyStatus.live ? (
+            <LyricsPanel track={nowPlaying} lyrics={lyrics} fullScreen />
+          ) : (
+            <div className="lyrics-offline">
+              <h1>No party right now</h1>
+              <p>Start a party to show what’s playing here.</p>
+              <a href="/host">Host a party</a>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={`theme-root ${activeTheme.className}`} data-theme={activeTheme.id}>
       <ActiveBackground track={nowPlaying} partyStatus={partyStatus} />
 
-      <div className="app">
+      <div className="app party-app">
         <header className="header">
           <ThemeSwitcher activeTheme={activeTheme} onShuffle={shuffleTheme} />
           <a className="wordmark" href="/" aria-label={`${PRODUCT_NAME} home`}>
@@ -130,11 +156,23 @@ function App() {
             <div className="loading-state">Checking party status...</div>
           ) : partyStatus.live ? (
             <>
-              <NowPlaying
-                track={nowPlaying}
-                isLoading={isNowPlayingLoading}
-                activeTheme={activeTheme}
-              />
+              <div className="mobile-view-switch" aria-label="Now playing view">
+                <button type="button" className={mobileView === 'playing' ? 'is-selected' : ''} aria-label="Show now playing" title="Show now playing" aria-pressed={mobileView === 'playing'} onClick={() => setMobileView('playing')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="2" /></svg>
+                </button>
+                <button type="button" className={mobileView === 'lyrics' ? 'is-selected' : ''} aria-label="Show lyrics" title="Show lyrics" aria-pressed={mobileView === 'lyrics'} onClick={() => setMobileView('lyrics')}>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M5 5h14M5 10h14M5 15h9M5 20h6" /></svg>
+                </button>
+              </div>
+
+              <div className={`playback-layout view-${mobileView}`}>
+                <NowPlaying
+                  track={nowPlaying}
+                  isLoading={isNowPlayingLoading}
+                  activeTheme={activeTheme}
+                />
+                <LyricsPanel track={nowPlaying} lyrics={lyrics} />
+              </div>
 
               <QueueList queue={queue} isLoading={isQueueLoading} />
             </>

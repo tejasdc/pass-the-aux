@@ -8,6 +8,9 @@ const OAUTH_STATE_PREFIX = "oauth:state:";
 const RATE_LIMIT_PREFIX = "rate-limit:";
 // v2 abandons v1 entries, which cached lookup misses forever.
 const AUDIO_FEATURES_PREFIX = "audio-features:v2:";
+const LYRICS_PREFIX = "lyrics:v1:";
+const LYRICS_MISS_TTL_SECONDS = 60 * 60;
+const LYRICS_ERROR_TTL_SECONDS = 5 * 60;
 // ReccoBeats adds tracks over time and can fail transiently, so a miss is only
 // remembered briefly; found features are stable and cached indefinitely.
 const AUDIO_FEATURES_NOT_FOUND_TTL_SECONDS = 6 * 60 * 60;
@@ -168,6 +171,11 @@ async function handleApiRequest(request, env, url) {
   if (method === "GET" && pathname === "/api/now-playing") {
     await requireLiveParty(env);
     return handleNowPlaying(env);
+  }
+
+  if (method === "GET" && pathname === "/api/lyrics") {
+    await requireLiveParty(env);
+    return handleLyrics(env, url);
   }
 
   if (method === "GET" && pathname === "/api/queue") {
@@ -442,6 +450,81 @@ async function handleNowPlaying(env) {
     }
     return json({ error: "Internal server error" }, { status: 500 });
   }
+}
+
+async function handleLyrics(env, url) {
+  const trackId = url.searchParams.get("trackId");
+  if (!trackId || !/^[A-Za-z0-9]{22}$/.test(trackId)) {
+    throw new ApiError("Valid track ID required", 400);
+  }
+
+  const playingResponse = await spotifyFetch(env, "/me/player/currently-playing");
+  if (playingResponse.status === 204) {
+    return json({ status: "no_track" });
+  }
+  if (!playingResponse.ok) {
+    throw new ApiError("Unable to check the playing track", 502);
+  }
+  const playing = await playingResponse.json();
+  const track = playing?.item;
+  if (!track?.id || track.id !== trackId) {
+    return json({ status: "track_changed" }, { status: 409 });
+  }
+
+  const cacheKey = `${LYRICS_PREFIX}${track.id}`;
+  const cached = await env.PARTY_QUEUE_KV.get(cacheKey, "json");
+  if (cached) {
+    return lyricsResponse(cached);
+  }
+
+  const lookup = new URL("https://lrclib.net/api/get");
+  lookup.searchParams.set("track_name", track.name);
+  lookup.searchParams.set("artist_name", track.artists?.map((artist) => artist.name).join(", ") || "");
+  if (track.album?.name) lookup.searchParams.set("album_name", track.album.name);
+  if (track.duration_ms) lookup.searchParams.set("duration", String(Math.round(track.duration_ms / 1000)));
+
+  try {
+    const response = await fetch(lookup, {
+      headers: { "User-Agent": "PassTheAux/1.0 (https://aux.tejas.nyc/)" },
+    });
+    if (response.status === 429) {
+      const retryAfterSeconds = Math.max(1, Number.parseInt(response.headers.get("Retry-After") || "60", 10) || 60);
+      const result = { status: "rate_limited", retryAfterSeconds };
+      await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: retryAfterSeconds });
+      return lyricsResponse(result);
+    }
+    if (response.status === 404) {
+      const result = { status: "unavailable" };
+      await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: LYRICS_MISS_TTL_SECONDS });
+      return lyricsResponse(result);
+    }
+    if (!response.ok) throw new Error(`LRCLIB returned ${response.status}`);
+
+    const record = await response.json();
+    const result = record.instrumental
+      ? { status: "instrumental" }
+      : record.syncedLyrics
+        ? { status: "synced", text: record.syncedLyrics }
+        : record.plainLyrics
+          ? { status: "plain", text: record.plainLyrics }
+          : { status: "unavailable" };
+    await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify(result), {
+      expirationTtl: result.status === "unavailable" ? LYRICS_MISS_TTL_SECONDS : 24 * 60 * 60,
+    });
+    return lyricsResponse(result);
+  } catch (error) {
+    console.error("Lyrics lookup failed:", error);
+    const result = { status: "unavailable" };
+    await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: LYRICS_ERROR_TTL_SECONDS });
+    return lyricsResponse(result);
+  }
+}
+
+function lyricsResponse(result) {
+  if (result.status === "rate_limited") {
+    return json(result, { status: 503, headers: { "Retry-After": String(result.retryAfterSeconds) } });
+  }
+  return json(result);
 }
 
 async function handleGetQueue(env) {
