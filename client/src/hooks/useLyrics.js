@@ -19,7 +19,7 @@ export function useLyrics(trackId) {
         const result = await getLyrics(trackId);
         if (!active) return;
         setState({ trackId, result });
-        if (result.status === 'rate_limited') {
+        if (result.status === 'rate_limited' || result.status === 'temporary_error') {
           retryTimer = setTimeout(load, result.retryAfterSeconds * 1000);
         }
       } catch {

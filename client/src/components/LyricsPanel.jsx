@@ -61,6 +61,8 @@ function LyricsPanel({ track, lyrics, fullScreen = false }) {
     );
   } else if (lyrics.status === 'rate_limited') {
     body = <p className="lyrics-message">Lyrics are taking a moment. Retrying…</p>;
+  } else if (lyrics.status === 'temporary_error') {
+    body = <p className="lyrics-message">Lyrics couldn’t load. Retrying…</p>;
   } else if (lyrics.status === 'track_changed') {
     body = <p className="lyrics-message">Waiting for the next song…</p>;
   } else {

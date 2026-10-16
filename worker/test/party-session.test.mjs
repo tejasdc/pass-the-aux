@@ -211,20 +211,23 @@ async function testLyricsFollowCurrentTrackAndCache() {
 
   const firstId = "0123456789012345678901";
   const secondId = "0123456789012345678902";
+  const thirdId = "0123456789012345678903";
   let currentId = firstId;
   let lyricFetches = 0;
+  let failLyrics = false;
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (url) => {
     const requestUrl = String(url);
     if (requestUrl === "https://api.spotify.com/v1/me/player/currently-playing") {
       return Response.json({ item: {
-        id: currentId, name: currentId === firstId ? "First Song" : "Second Song",
+        id: currentId, name: currentId === firstId ? "First Song" : currentId === secondId ? "Second Song" : "Third Song",
         artists: [{ name: "The Artist" }], album: { name: "The Album" },
         duration_ms: 180000,
       } });
     }
     if (requestUrl.startsWith("https://lrclib.net/api/get?")) {
       lyricFetches += 1;
+      if (failLyrics) return Response.json({}, { status: 500 });
       const query = new URL(requestUrl);
       assert.equal(query.searchParams.get("artist_name"), "The Artist");
       return Response.json({ syncedLyrics: `[00:01.00]${query.searchParams.get("track_name")}` });
@@ -247,6 +250,50 @@ async function testLyricsFollowCurrentTrackAndCache() {
     const second = await call(env, `/api/lyrics?trackId=${secondId}`);
     assert.deepEqual(await responseJson(second), { status: "synced", text: "[00:01.00]Second Song" });
     assert.equal(lyricFetches, 2);
+
+    currentId = thirdId;
+    failLyrics = true;
+    const temporary = await call(env, `/api/lyrics?trackId=${thirdId}`);
+    assert.equal(temporary.status, 503);
+    assert.equal((await responseJson(temporary)).status, "temporary_error");
+    failLyrics = false;
+    fakeNow += 60 * 1000 + 1;
+    const recovered = await call(env, `/api/lyrics?trackId=${thirdId}`);
+    assert.deepEqual(await responseJson(recovered), { status: "synced", text: "[00:01.00]Third Song" });
+    assert.equal(lyricFetches, 4, "provider error expires and the track is retried");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+}
+
+async function testNowPlayingCompensatesForFeatureLookupTime() {
+  const env = createEnv();
+  await env.PARTY_QUEUE_KV.put("host:tokens", JSON.stringify({
+    accessToken: "access-token", refreshToken: "refresh-token", expiresAt: Date.now() + 3600 * 1000,
+  }));
+  await env.PARTY_QUEUE_KV.put("party:session", JSON.stringify({
+    live: true, hostUserId: "spotify-host", startedAt: new Date().toISOString(),
+    expiresAt: new Date(Date.now() + PARTY_TTL_MS).toISOString(), durationSeconds: 8 * 60 * 60,
+  }));
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const requestUrl = String(url);
+    if (requestUrl === "https://api.spotify.com/v1/me/player/currently-playing") {
+      return Response.json({ is_playing: true, progress_ms: 10000, item: {
+        id: "0123456789012345678901", name: "Test Song", duration_ms: 180000,
+        artists: [{ name: "Artist" }], album: { name: "Album", images: [] },
+      } });
+    }
+    if (requestUrl.startsWith("https://api.reccobeats.com/v1/audio-features")) {
+      fakeNow += 1500;
+      return Response.json({ content: [{ tempo: 120, energy: 0.6 }] });
+    }
+    throw new Error(`Unexpected fetch: ${requestUrl}`);
+  };
+  try {
+    const playing = await responseJson(await call(env, "/api/now-playing"));
+    assert.equal(playing.track.progress_ms, 11500, "the delivered playhead includes lookup time");
   } finally {
     globalThis.fetch = originalFetch;
   }
@@ -477,6 +524,7 @@ try {
   await testPartyLifecycle();
   await testNowPlayingIncludesCachedAudioFeatures();
   await testNowPlayingKeepsABeatWhenFeaturesAreMissing();
+  await testNowPlayingCompensatesForFeatureLookupTime();
   await testLyricsFollowCurrentTrackAndCache();
   console.log("party-session worker harness passed");
 } finally {

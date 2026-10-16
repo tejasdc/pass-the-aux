@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 
 const REFRESH_INTERVAL = 5000; // 5 seconds
 
@@ -6,8 +6,10 @@ export function useNowPlaying({ enabled = true } = {}) {
   const [track, setTrack] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const latestRequest = useRef(0);
 
   const fetchNowPlaying = useCallback(async () => {
+    const requestId = ++latestRequest.current;
     if (!enabled) {
       setTrack(null);
       setError(null);
@@ -17,6 +19,7 @@ export function useNowPlaying({ enabled = true } = {}) {
 
     try {
       const response = await fetch('/api/now-playing');
+      if (requestId !== latestRequest.current) return;
 
       if (response.status === 204) {
         // No content - nothing playing
@@ -30,6 +33,7 @@ export function useNowPlaying({ enabled = true } = {}) {
       }
 
       const data = await response.json();
+      if (requestId !== latestRequest.current) return;
 
       // Handle response format from backend: { playing: boolean, track: { ... } }
       if (data.track) {
@@ -52,10 +56,11 @@ export function useNowPlaying({ enabled = true } = {}) {
 
       setError(null);
     } catch (err) {
+      if (requestId !== latestRequest.current) return;
       console.error('Error fetching now playing:', err);
       setError(err.message);
     } finally {
-      setIsLoading(false);
+      if (requestId === latestRequest.current) setIsLoading(false);
     }
   }, [enabled]);
 
