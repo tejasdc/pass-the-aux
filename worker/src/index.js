@@ -10,7 +10,7 @@ const RATE_LIMIT_PREFIX = "rate-limit:";
 const AUDIO_FEATURES_PREFIX = "audio-features:v2:";
 const LYRICS_PREFIX = "lyrics:v1:";
 const LYRICS_MISS_TTL_SECONDS = 60 * 60;
-const LYRICS_ERROR_TTL_SECONDS = 5 * 60;
+const LYRICS_ERROR_TTL_SECONDS = 60;
 // ReccoBeats adds tracks over time and can fail transiently, so a miss is only
 // remembered briefly; found features are stable and cached indefinitely.
 const AUDIO_FEATURES_NOT_FOUND_TTL_SECONDS = 6 * 60 * 60;
@@ -434,12 +434,16 @@ async function handleNowPlaying(env) {
       return json({ playing: false, track: null });
     }
 
+    const sampledAt = Date.now();
     const audioFeatures = data.item.id ? await getAudioFeatures(env, data.item.id) : null;
+    const progressMs = data.is_playing && Number.isFinite(data.progress_ms)
+      ? Math.min(data.item.duration_ms || Infinity, data.progress_ms + Math.max(0, Date.now() - sampledAt))
+      : data.progress_ms;
 
     return json({
       playing: data.is_playing,
       track: formatTrack(data.item, {
-        progress_ms: data.progress_ms,
+        progress_ms: progressMs,
         audioFeatures: formatPublicAudioFeatures(audioFeatures) || ESTIMATED_BEAT,
       }),
     });
@@ -514,14 +518,14 @@ async function handleLyrics(env, url) {
     return lyricsResponse(result);
   } catch (error) {
     console.error("Lyrics lookup failed:", error);
-    const result = { status: "unavailable" };
+    const result = { status: "temporary_error", retryAfterSeconds: LYRICS_ERROR_TTL_SECONDS };
     await env.PARTY_QUEUE_KV.put(cacheKey, JSON.stringify(result), { expirationTtl: LYRICS_ERROR_TTL_SECONDS });
     return lyricsResponse(result);
   }
 }
 
 function lyricsResponse(result) {
-  if (result.status === "rate_limited") {
+  if (result.status === "rate_limited" || result.status === "temporary_error") {
     return json(result, { status: 503, headers: { "Retry-After": String(result.retryAfterSeconds) } });
   }
   return json(result);

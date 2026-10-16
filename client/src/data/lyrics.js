@@ -7,7 +7,7 @@ export async function getLyrics(trackId) {
   const request = fetch(`/api/lyrics?trackId=${encodeURIComponent(trackId)}`)
     .then(async (response) => {
       const result = await response.json().catch(() => ({}));
-      if (response.status === 503 && result.status === 'rate_limited') {
+      if (response.status === 503 && ['rate_limited', 'temporary_error'].includes(result.status)) {
         lyricsByTrack.delete(trackId);
         return result;
       }
@@ -16,6 +16,7 @@ export async function getLyrics(trackId) {
         return { status: 'track_changed' };
       }
       if (!response.ok) throw new Error('Lyrics could not be loaded');
+      if (result.status === 'unavailable') lyricsByTrack.delete(trackId);
       return result;
     })
     .catch((error) => {
