@@ -17,13 +17,14 @@ address. Each QR has a 290px code and 44px white quiet zone at source size.
 Edit each theme's `index.html`, then from the repository root:
 
 ```sh
-NODE_PATH=/tmp/signbuild/node_modules node design/party-flyers/render.cjs
+npm --prefix design/party-flyers run setup   # once per checkout: pinned Playwright, pngjs, jsqr + Chromium
+npm --prefix design/party-flyers run render
 npm --prefix client run build
 ```
 
-The render environment needs Playwright with Chromium, pngjs, jsqr, and
-`pdfinfo` (Poppler). `NODE_PATH` can point to any installation of these node
-packages. Fonts are bundled with their licenses so the posters render offline.
+The renderer's node packages are pinned in this folder's `package.json` and
+lockfile (installed into its own gitignored `node_modules`, separate from the
+Worker and client). It also needs `pdfinfo` (Poppler) on the machine. Fonts are bundled with their licenses so the posters render offline.
 No external font or image service is involved.
 
 Outputs are in `client/public/flyer/`: named PDF/PNG downloads and small JPEG

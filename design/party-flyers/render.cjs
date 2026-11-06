@@ -1,4 +1,4 @@
-// NODE_PATH=/tmp/signbuild/node_modules node design/party-flyers/render.cjs
+// npm --prefix design/party-flyers run setup && npm --prefix design/party-flyers run render
 const { chromium } = require('playwright');
 const { PNG } = require('pngjs');
 const jsQR = require('jsqr');
