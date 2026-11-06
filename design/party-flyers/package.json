@@ -1,0 +1,14 @@
+{
+  "name": "pass-the-aux-party-flyers",
+  "private": true,
+  "description": "Renders the party flyers to Letter PDFs and 300-dpi PNGs and checks page bounds and QR decoding.",
+  "scripts": {
+    "setup": "npm ci && playwright install chromium",
+    "render": "node render.cjs"
+  },
+  "devDependencies": {
+    "jsqr": "^1.4.0",
+    "playwright": "^1.65.0",
+    "pngjs": "^7.0.0"
+  }
+}

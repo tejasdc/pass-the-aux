@@ -103,8 +103,9 @@ npx wrangler secret list                # check secrets
   `design/` (committed).
 - Party poster sources live in `design/party-flyers/<theme>/index.html`, with
   bundled licensed fonts and composition sketches alongside them. Run
-  `NODE_PATH=/tmp/signbuild/node_modules node design/party-flyers/render.cjs`
-  (requires Playwright, pngjs, jsqr, Chromium and pdfinfo) to regenerate the
+  `npm --prefix design/party-flyers run setup` once per checkout (its own
+  pinned Playwright, pngjs, jsqr and Chromium), then
+  `npm --prefix design/party-flyers run render` (also needs `pdfinfo`) to regenerate the
   Letter PDFs, 300-dpi PNGs and lightweight gallery previews in
   `client/public/flyer/`. The renderer checks page bounds, PDF page count and
   final-PNG QR decoding. Suprematist is included in this pipeline and writes
