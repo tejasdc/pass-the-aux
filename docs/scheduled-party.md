@@ -80,3 +80,31 @@ Tokens and host identities are absent from receipts and responses.
 Rehearsal is refused after the planned end; status remains available for recovery.
 
 Focused checks: `npm run test:scheduled-party` and `npm run test:worker`.
+
+## Armed run and live evidence (2026-11-13)
+
+The existing Wrangler channel deployed version
+`03c769af-74be-472c-806a-9a6d7b4cbb0c` from main after both focused suites,
+client build, fresh Claude Sonnet primary review and targeted Sol auth review.
+The live server CLI status succeeded, proving the matching secret. One live
+`rehearse` returned `rehearsed:true`, `testClosed:true`,
+`productionUnchanged:true`, `durationSeconds:86400`, `live:false`. This also
+exercised the Worker's real saved Spotify profile/refresh path. The public
+party stayed `live:false`, guest search returned 403, and an unauthenticated
+private action returned 401. The real party was never opened for this check.
+
+Concierge request `531174b3-0b8c-4ed1-82c4-702722d236d5`, exact queued turn
+`29756`, is armed for `2026-11-14T19:00:00.000Z`, expires at the fixed party
+end and has no repetition. Verified in `sessions saved list`. Runtime:
+GPT-6 Luna / Codex, always-on server, project
+`/root/workspace/electric-love-party-queue`, conversation
+`session:WzIsOTU4NiwxXQ`, named “Open Pass the Aux for the Diwali party”.
+It calls the delivered CLI once, checks public live status/expiry and guest
+search with read-only propagation polling, and posts its result in the original
+Inbox thread rooted at
+`capture:a32130f212a9db9df069c5fdf6e604adf9d3ecd216c3e396b020057624651aec`.
+
+The schedule is armed, not yet fired. A future task result is not claimed here.
+Cancel only this queued turn with `sessions saved cancel 29756` if Tejas asks;
+keep its conversation and any operation receipts. The earlier account-change
+question was explicitly withdrawn; no new Cloudflare account scope was added.
