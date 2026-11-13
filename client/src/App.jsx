@@ -9,6 +9,7 @@ import { useNowPlaying } from './hooks/useNowPlaying';
 import { useLyrics } from './hooks/useLyrics';
 import { useQueue } from './hooks/useQueue';
 import { useThemeSelection } from './hooks/useThemeSelection';
+import { useIsDisplayScreen, useScreenWakeLock } from './hooks/useScreenWakeLock';
 import './index.css';
 
 const PARTY_STATUS_REFRESH_MS = 30000;
@@ -32,6 +33,8 @@ function App() {
     enabled: isGuestExperienceLive && !isLyricsRoute,
   });
   const lyrics = useLyrics(isGuestExperienceLive ? nowPlaying?.id : null);
+  const isDisplayScreen = useIsDisplayScreen();
+  useScreenWakeLock(isGuestExperienceLive && (isLyricsRoute || isDisplayScreen));
 
   const showToast = useCallback((message, isError = false) => {
     setToast({ message, isVisible: true, isError });

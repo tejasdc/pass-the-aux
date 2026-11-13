@@ -38,6 +38,12 @@ WiFi — just the QR.
   KV. The client follows the same five-second Spotify playhead poll used by
   Now Playing. `/lyrics` is the full-screen display link; the guest page shows
   lyrics beside Now Playing on wide screens and a view switch on phones.
+- Screen stays awake on the party display: during a live party, the
+  big-screen layout (1280px+) and `/lyrics` hold the browser's Screen Wake
+  Lock (`client/src/hooks/useScreenWakeLock.js`) while the tab is visible, and
+  request it again when the tab returns or on the first click or key press.
+  Phones and narrower windows do not hold it, so guests' screens sleep normally.
+  The browser drops it whenever the tab is hidden; Mac fallback: `caffeinate -d`.
 - Each page load gets a random theme; the header theme button (palette icon + theme name, deliberately not shuffle arrows so guests do not read it as shuffling songs) picks another
   random theme for that visit only (nothing is stored).
 - Field, Flow, and Afterglow keep their visualizer code isolated in their own

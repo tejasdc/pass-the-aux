@@ -26,6 +26,13 @@ _Last updated 2026-11-13._
 
 ### DONE
 
+- **Party display keeps the screen awake 2026-11-13**: during a live party
+  the big-screen layout and `/lyrics` hold the Screen Wake Lock while
+  visible. Checked in headed server Chrome (xvfb) with a mocked party: held at
+  2560×1440, 1920×1080, 1440×900 and on `/lyrics` at 1100×800; not held at
+  1100×800, 390×844 or with no party. Not checked on his Mac (no driving his
+  Chrome); hiding a tab could not be simulated without a window manager.
+
 - **Big-screen party layout 2026-11-13** (for the Diwali party monitor): at
   1280px and wider the guest page fills one screen with big album art, lyrics
   beside it and the queue as a scrolling sidebar; narrower windows and phones
