@@ -3327,3 +3327,162 @@ a {
     transition: none;
   }
 }
+
+/* Big screens (full laptop window, desktop monitor, TV across a room): the
+   party page becomes one fixed screen. Album art is the largest thing, lyrics
+   sit beside it, and the queue is a sidebar that scrolls on its own. Below
+   1280px the two-column (960px+) and phone layouts above stay as they were.
+   Doubled .theme-root beats each theme's narrow card widths and frames. */
+@media (min-width: 1280px) {
+  html {
+    font-size: clamp(16px, 0.84vw, 24px);
+  }
+
+  .theme-root.theme-root .party-app {
+    --queue-width: clamp(340px, 22vw, 560px);
+    --stage-gap: clamp(28px, 2.4vw, 64px);
+    width: 100%;
+    max-width: none;
+    height: 100dvh;
+    min-height: 0;
+    margin: 0;
+  }
+
+  /* Laminate's lanyard gap is decorative; on short big-screen windows it
+     would shrink the album art, so it scales with height instead. */
+  .theme-root.theme-holo .party-app {
+    padding-top: clamp(36px, 6.8vh, 98px);
+  }
+
+  .theme-root.theme-root .party-app .content {
+    flex: 1;
+    min-height: 0;
+    padding: 0 clamp(32px, 2.6vw, 72px) 12px;
+  }
+
+  .theme-root.theme-root .party-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--queue-width);
+    grid-template-rows: minmax(0, 1fr);
+    gap: var(--stage-gap);
+  }
+
+  .theme-root.theme-root .playback-layout {
+    display: grid;
+    grid-template-columns: clamp(360px, calc(100dvh - 22rem), 42vw) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: var(--stage-gap);
+    min-height: 0;
+    height: 100%;
+  }
+
+  .theme-root.theme-root .playback-layout .now-playing {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto auto;
+    grid-template-areas:
+      "kicker"
+      "art"
+      "info"
+      "viz"
+      "progress";
+    align-items: start;
+    row-gap: clamp(10px, 1.4vh, 22px);
+    min-height: 0;
+    height: 100%;
+    padding: clamp(12px, 2vh, 32px) 0 clamp(8px, 1.4vh, 20px);
+    overflow: hidden;
+  }
+
+  .theme-root.theme-root .party-app .album-plane {
+    justify-self: start;
+    align-self: stretch;
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 0;
+    aspect-ratio: 1;
+    transform: none;
+  }
+
+  .theme-root.theme-root .party-app .visualizer-stage {
+    min-height: 0;
+    height: clamp(64px, 9vh, 150px);
+  }
+
+  .theme-root.theme-root .party-app .track-title {
+    font-size: clamp(1.8rem, 2.3vw, 4.2rem);
+    line-height: 1.05;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .theme-root.theme-root .party-app .track-artist {
+    font-size: clamp(1.05rem, 1.15vw, 2rem);
+  }
+
+  .theme-root.theme-root .party-app .track-album {
+    font-size: clamp(0.85rem, 0.8vw, 1.3rem);
+  }
+
+  .theme-root.theme-root .playback-layout .lyrics-panel {
+    min-height: 0;
+    height: 100%;
+  }
+
+  .theme-root.theme-root .playback-layout .lyrics-scroll {
+    min-height: 0;
+    max-height: none;
+  }
+
+  .theme-root.theme-root .playback-layout .lyrics-line {
+    font-size: clamp(1.4rem, 1.7vw, 3rem);
+  }
+
+  .theme-root.theme-root .party-content .queue-section {
+    display: flex;
+    flex-direction: column;
+    max-width: none;
+    min-height: 0;
+    height: 100%;
+    margin: 0;
+    padding: clamp(12px, 2vh, 32px) 0 8px;
+  }
+
+  .theme-root.theme-root .party-content .queue-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    pointer-events: auto;
+  }
+
+  .theme-root.theme-root .party-content .queue-item {
+    grid-template-columns: clamp(52px, 3.4vw, 92px) minmax(0, 1fr) auto;
+    gap: clamp(12px, 0.9vw, 22px);
+  }
+
+  .theme-root.theme-root .party-content .queue-thumb {
+    width: clamp(52px, 3.4vw, 92px);
+    height: clamp(52px, 3.4vw, 92px);
+  }
+
+  .theme-root.theme-root .party-content .queue-track {
+    font-size: clamp(0.95rem, 0.95vw, 1.6rem);
+  }
+
+  .theme-root.theme-root .party-content .queue-artist {
+    font-size: clamp(0.78rem, 0.75vw, 1.25rem);
+  }
+
+  .theme-root.theme-root .party-content .section-title {
+    font-size: clamp(0.82rem, 0.75vw, 1.3rem);
+  }
+
+  .theme-root.theme-root .party-app .provenance {
+    flex: none;
+  }
+}

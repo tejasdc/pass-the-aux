@@ -10,6 +10,15 @@ _Last updated 2026-10-16._
 
 ### DONE
 
+- **Big-screen party layout 2026-11-13** (for the Diwali party monitor): at
+  1280px and wider the guest page fills one screen with big album art, lyrics
+  beside it and the queue as a scrolling sidebar; narrower windows and phones
+  unchanged. Checked with mocked party data in server Chromium at
+  2560×1440, 1920×1080, 1440×900, 1280×720, 1100×800 and 390×844 across all
+  themes, plus WebKit at the three largest sizes: no page scroll, queue beside
+  the art, Now Playing never cut off. Known edge: Laminate at 1280×720 gets
+  195px art (its header is tall).
+
 - **Synced lyrics DEPLOYED 2026-10-16 (version `cb71d708`):** timed lyrics from LRCLib follow Spotify's
   current track and playhead; the party page shows them beside Now Playing on
   wide screens, with a phone view switch and a dedicated `/lyrics` display.
