@@ -1,69 +1,12 @@
 #!/usr/bin/env node
-import { readFile, mkdir, open, rename } from "node:fs/promises";
+import { readFile, mkdir, open, rename, stat } from "node:fs/promises";
 import { homedir } from "node:os";
-import { dirname, resolve } from "node:path";
+import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createPartySession, PARTY_SESSION_KEY } from "../worker/src/party-session.js";
-
-export const PLAN = Object.freeze({
-  id: "request-e344679b-fe79-4008-bd02-dce43bb2bd37",
-  start: Date.parse("2026-11-14T19:00:00Z"),
-  end: Date.parse("2026-11-15T19:00:00Z"),
-});
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+import { PLAN, AUTOMATION_PATH } from "../worker/src/party-automation.js";
+export { PLAN };
 const STATE_DIR = resolve(homedir(), ".local/state/pass-the-aux");
-
-export function testKey(id) {
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9-]{15,100}$/.test(id || "")) {
-    throw new Error("Test id must be unique (16–101 letters, digits or hyphens)");
-  }
-  return `party:test:${id}`;
-}
-
-export async function runParty({ kv, command, testId, now = Date.now(), claim, complete }) {
-  const key = testId ? testKey(testId) : PARTY_SESSION_KEY;
-  if (!["start", "status", "close", "preflight"].includes(command)) throw new Error("Use start, status, close or preflight");
-  if (command === "status") {
-    const party = await kv.get(key, "json");
-    return { mode: testId ? "test" : "production", live: !!party && Date.parse(party.expiresAt) > now,
-      startedAt: party?.startedAt ?? null, expiresAt: party?.expiresAt ?? null,
-      operationId: party?.operationId ?? null };
-  }
-  // Production closing remains the authenticated host page's responsibility.
-  if (command === "close") {
-    if (!testId) throw new Error("CLI close is restricted to isolated test parties");
-    await kv.delete(key);
-    return { mode: "test", live: false };
-  }
-  if (command === "start" && !testId && (now < PLAN.start || now >= PLAN.end)) throw new Error("Outside scheduled party window");
-  const [boundHost, tokens] = await Promise.all([
-    kv.get("host:spotify-user-id"), kv.get("host:tokens", "json"),
-  ]);
-  if (!boundHost || tokens?.hostUserId !== boundHost || !tokens?.refreshToken || !tokens?.accessToken) {
-    throw new Error("Saved host identity or refresh token unavailable; no party started");
-  }
-  const existing = await kv.get(key, "json");
-  const active = existing && Date.parse(existing.expiresAt) > now;
-  if (active && existing.hostUserId !== boundHost) throw new Error("Active party host mismatch");
-  if (command === "preflight") return { mode: testId ? "test" : "production", ready: true,
-    live: !!active, plannedStart: new Date(PLAN.start).toISOString(), plannedEnd: new Date(PLAN.end).toISOString() };
-  const operationId = testId ? `test-${testId}` : PLAN.id;
-  // Claim is durable BEFORE the remote write. Any ambiguous result stays claimed.
-  await claim(operationId);
-  if (active && Date.parse(existing.expiresAt) >= (testId ? now + 86400000 : PLAN.end)) {
-    await complete(operationId);
-    return { mode: testId ? "test" : "production", live: true, preserved: true,
-      startedAt: existing.startedAt, expiresAt: existing.expiresAt, operationId };
-  }
-  const party = await createPartySession({ PARTY_QUEUE_KV: kv }, boundHost, {
-    key, now, startedAt: active ? Date.parse(existing.startedAt) : now, durationSeconds: 86400,
-    expiresAt: testId ? now + 86400000 : PLAN.end,
-    operationId,
-  });
-  await complete(operationId);
-  return { mode: testId ? "test" : "production", live: true,
-    startedAt: party.startedAt, expiresAt: party.expiresAt, operationId };
-}
+const TOKEN_PATH = "/root/.config/pass-the-aux/automation-token";
 
 export async function durableJournal(directory = STATE_DIR) {
   await mkdir(directory, { recursive: true, mode: 0o700 });
@@ -89,71 +32,56 @@ export async function durableJournal(directory = STATE_DIR) {
   };
 }
 
-export async function cloudflareKV({ token, accountId: configuredAccountId, workerName, fetchImpl = fetch }) {
-  const base = "https://api.cloudflare.com/client/v4";
-  async function request(path, options = {}, raw = false) {
-    const response = await fetchImpl(base + path, {
-      ...options, headers: { Authorization: `Bearer ${token}`, ...options.headers },
-    });
-    if (response.status === 404 && raw) return null;
-    if (!response.ok) throw new Error(`Cloudflare request failed (${response.status})`);
-    if (raw) return response.text();
-    const data = await response.json();
-    if (!data.success) throw new Error("Cloudflare request refused");
-    return data.result;
+export async function invokeAutomation({ command, secret, fetchImpl = fetch,
+  now = Date.now(), claim, complete }) {
+  if (!["start", "status", "rehearse"].includes(command)) throw new Error("Use start, status or rehearse");
+  if (command === "start") {
+    if (now < PLAN.start || now >= PLAN.end) throw new Error("Outside scheduled party window");
+    // No automatic retry, including when the server response was lost.
+    await claim(PLAN.id);
   }
-  // Binding settings are the deployed Worker's authority, including auto-created KV.
-  const accounts = configuredAccountId ? [{ id: configuredAccountId }] : await request("/accounts?per_page=50");
-  const matches = [];
-  for (const account of accounts) {
-    const response = await fetchImpl(`${base}/accounts/${account.id}/workers/scripts/${encodeURIComponent(workerName)}/settings`, {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (response.status === 404) continue;
-    if (!response.ok) throw new Error(`Worker settings unavailable (${response.status})`);
-    const settings = await response.json();
-    if (!settings.success) throw new Error("Worker settings refused");
-    const binding = settings.result.bindings?.find(item => item.name === "PARTY_QUEUE_KV" && item.type === "kv_namespace");
-    if (binding?.namespace_id) matches.push({ accountId: account.id, namespaceId: binding.namespace_id });
+  const result = await fetchImpl(`https://aux.tejas.nyc${AUTOMATION_PATH}`, {
+    method: "POST", redirect: "error", signal: AbortSignal.timeout(30000),
+    headers: { Authorization: `Bearer ${secret}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ command }),
+  });
+  if (!result.ok) throw new Error(`Private party action failed (${result.status}); read status before recovery`);
+  let value;
+  try { value = await result.json(); }
+  catch { throw new Error("Invalid private action response; read status before recovery"); }
+  // Print only fields owned by this protocol, never arbitrary remote content.
+  const safe = {};
+  for (const field of ["live", "preserved", "rehearsed", "productionUnchanged", "testClosed"]) {
+    if (typeof value[field] === "boolean") safe[field] = value[field];
   }
-  if (matches.length !== 1) throw new Error("Cannot uniquely resolve deployed party KV binding");
-  const { accountId, namespaceId } = matches[0];
-  const prefix = `/accounts/${accountId}/storage/kv/namespaces/${namespaceId}/values/`;
-  return {
-    async get(key, type) {
-      const text = await request(prefix + encodeURIComponent(key), {}, true);
-      if (text === null || type !== "json") return text;
-      try { return JSON.parse(text); }
-      catch { throw new Error("Stored Cloudflare value is not valid JSON"); }
-    },
-    async put(key, value, options = {}) {
-      const query = options.expirationTtl ? `?expiration_ttl=${options.expirationTtl}` : "";
-      await request(prefix + encodeURIComponent(key) + query, { method: "PUT", body: value });
-    },
-    async delete(key) { await request(prefix + encodeURIComponent(key), { method: "DELETE" }); },
-  };
+  for (const field of ["startedAt", "expiresAt", "plannedStart", "plannedEnd"]) {
+    if (value[field] === null || (typeof value[field] === "string" && Number.isFinite(Date.parse(value[field])))) safe[field] = value[field];
+  }
+  if (value.operationId === PLAN.id) safe.operationId = PLAN.id;
+  if (value.durationSeconds === 86400) safe.durationSeconds = 86400;
+  if (["claimed", "completed"].includes(value.operation?.state)) safe.operation = { state: value.operation.state, operationId: PLAN.id };
+  if (command === "start" && (value.live !== true || value.operationId !== PLAN.id)) throw new Error("Unconfirmed start response; read status before recovery");
+  if (command === "rehearse" && (value.rehearsed !== true || value.testClosed !== true || value.productionUnchanged !== true)) throw new Error("Unconfirmed rehearsal; inspect status");
+  if (command === "start") await complete(PLAN.id);
+  return safe;
 }
 
 async function main() {
-  const [command, flag, testId, ...extra] = process.argv.slice(2);
-  if (extra.length || (flag && (flag !== "--test-id" || !testId))) throw new Error("Usage: scheduled-party.mjs start|status|close [--test-id UNIQUE-ID]");
-  if (testId) testKey(testId);
-  const envText = await readFile(resolve(homedir(), ".config/cloudflare/deploy.env"), "utf8");
-  const match = envText.match(/^\s*(?:export\s+)?CLOUDFLARE_API_TOKEN\s*=\s*(.*?)\s*$/m);
-  const token = match?.[1]?.replace(/^(["'])(.*)\1$/, "$2");
-  if (!token) throw new Error("Shared Cloudflare deploy token unavailable");
-  const accountMatch = envText.match(/^\s*(?:export\s+)?CLOUDFLARE_ACCOUNT_ID\s*=\s*(.*?)\s*$/m);
-  const accountId = accountMatch?.[1]?.replace(/^(["'])(.*)\1$/, "$2");
-  const config = JSON.parse(await readFile(resolve(ROOT, "wrangler.jsonc"), "utf8"));
-  const kv = await cloudflareKV({ token, accountId, workerName: config.name });
+  const [command, ...extra] = process.argv.slice(2);
+  if (extra.length || !["start", "status", "rehearse"].includes(command)) throw new Error("Usage: scheduled-party.mjs start|status|rehearse");
+  const metadata = await stat(TOKEN_PATH);
+  if (metadata.uid !== 0 || (metadata.mode & 0o077) || !metadata.isFile()) throw new Error("Automation credential must be a root-only file");
+  const secret = (await readFile(TOKEN_PATH, "utf8")).trim();
+  if (!/^[A-Za-z0-9_-]{32,256}$/.test(secret)) throw new Error("Invalid automation credential file");
   const journal = command === "start" ? await durableJournal() : {};
-  console.log(JSON.stringify(await runParty({ kv, command, testId, ...journal })));
+  console.log(JSON.stringify(await invokeAutomation({ command, secret, ...journal })));
 }
 
 if (process.argv[1] && resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
   main().catch(error => {
-    // Never log remote response bodies or saved host metadata.
-    console.error(error.code === "EEXIST" ? "Operation already claimed; refusing replay (inspect durable receipt)" : error.message);
+    console.error(error.code === "EEXIST" ? "Operation already claimed; refusing replay (inspect durable receipt)" :
+      error.message.startsWith("Private party") || error.message.startsWith("Outside scheduled") || error.message.startsWith("Usage:") ? error.message :
+      "Party automation failed; inspect status and local receipt before recovery");
     process.exitCode = 1;
   });
 }

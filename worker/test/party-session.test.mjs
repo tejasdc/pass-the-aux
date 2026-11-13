@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import worker from "../src/index.js";
+import { PLAN } from "../src/party-automation.js";
+import { createPartySession } from "../src/party-session.js";
 
 const BASE_URL = "https://electric-love.test";
 const PARTY_TTL_MS = 8 * 60 * 60 * 1000;
@@ -152,6 +154,16 @@ async function testAuthStartsWithoutPassphrase() {
   assert.equal(callbackResponse.status, 302);
   assert.equal(await env.PARTY_QUEUE_KV.get("host:spotify-user-id"), "spotify-host");
   assert.equal((await env.PARTY_QUEUE_KV.get("host:tokens", "json")).hostUserId, "spotify-host");
+}
+
+async function testReauthPreservesScheduledParty() {
+  const env = createEnv();
+  await startThroughOAuth(env, "spotify-host");
+  await createPartySession(env, "spotify-host", { durationSeconds: 86400, operationId: PLAN.id });
+  const before = await env.PARTY_QUEUE_KV.get("party:session");
+  await startThroughOAuth(env, "spotify-host");
+  assert.equal(await env.PARTY_QUEUE_KV.get("party:session"), before,
+    "host OAuth must not shorten an active scheduled party to eight hours");
 }
 
 async function testFirstHostBindingRefusesSecondIdentity() {
@@ -518,6 +530,7 @@ Date.now = () => fakeNow;
 
 try {
   await testAuthStartsWithoutPassphrase();
+  await testReauthPreservesScheduledParty();
   await testFirstHostBindingRefusesSecondIdentity();
   await testGuestRoutesRefuseWhenNoPartyIsLive();
   await testEndAndLogoutRequireHostSession();

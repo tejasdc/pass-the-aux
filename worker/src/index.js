@@ -1,4 +1,5 @@
 import { PARTY_SESSION_KEY, PARTY_SESSION_TTL_SECONDS, createPartySession, getPartySession } from "./party-session.js";
+import { AUTOMATION_PATH, handlePartyAutomation, PLAN } from "./party-automation.js";
 const TOKEN_KEY = "host:tokens";
 const HOST_ID_KEY = "host:spotify-user-id";
 const VIBE_KEY = "party:vibe";
@@ -130,6 +131,17 @@ export default {
 async function handleApiRequest(request, env, url) {
   const method = request.method.toUpperCase();
   const pathname = url.pathname;
+
+  if (pathname === AUTOMATION_PATH) {
+    return handlePartyAutomation(request, env, async () => {
+      const [boundHost, tokens] = await Promise.all([getBoundHostId(env), getTokens(env)]);
+      if (!boundHost || tokens.hostUserId !== boundHost || !tokens.accessToken || !tokens.refreshToken) return null;
+      const profileResponse = await spotifyFetch(env, "/me");
+      if (!profileResponse.ok) return null;
+      const profile = await profileResponse.json();
+      return profile.id === boundHost ? boundHost : null;
+    });
+  }
 
   if (method === "GET" && pathname === "/api/party/status") {
     return handlePartyStatus(request, env);
@@ -373,7 +385,10 @@ async function handleAuthCallback(request, env, url) {
       expiresAt: Date.now() + tokenData.expires_in * 1000,
       hostUserId: spotifyUser.id,
     });
-    await createPartySession(env, spotifyUser.id);
+    const activeParty = await getPartySession(env);
+    if (!(activeParty?.hostUserId === spotifyUser.id && activeParty.operationId === PLAN.id)) {
+      await createPartySession(env, spotifyUser.id);
+    }
 
     const hostSessionToken = await createHostSession(env, spotifyUser.id);
 
@@ -909,8 +924,9 @@ async function refreshAccessToken(env, hostTokens) {
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({}));
-    console.error("Failed to refresh token:", error);
-    await env.PARTY_QUEUE_KV.delete(TOKEN_KEY);
+    console.error("Spotify token refresh refused:", response.status);
+    // Transient Spotify failures do not revoke the saved authorization.
+    if (error.error === "invalid_grant") await env.PARTY_QUEUE_KV.delete(TOKEN_KEY);
     throw new Error("Failed to refresh token");
   }
 

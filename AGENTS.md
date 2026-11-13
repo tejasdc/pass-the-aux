@@ -75,7 +75,7 @@ WiFi — just the QR.
 
 ## Operations
 
-- Saved-host server starts, isolated Cloudflare checks and replay recovery:
+- Saved-host server scheduling, private Worker action, rehearsal and replay recovery:
   [docs/scheduled-party.md](docs/scheduled-party.md). Never erase the durable
   server receipt to retry an uncertain start.
 

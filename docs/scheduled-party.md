@@ -1,90 +1,82 @@
 # One-time saved-host party start
 
-The server command opens the existing bound host's party without Spotify login.
-It requires saved token identity to match the bound host and a refresh token to
-exist. It never changes saved tokens. The Worker keeps its existing Spotify
-refresh path when guests use the app. A revoked Spotify authorization can still
-require the host to sign in.
+The always-on server runs one Concierge scheduled turn, which invokes a small
+HTTPS command. The existing Cloudflare Worker authenticates that command and
+uses its own KV binding to open the saved host's party. There is no Cloudflare
+Cron Trigger and no server access to the Cloudflare KV administration API.
 
-Production is fixed to **14 November 2026, 2pm New York** through **15 November,
-2pm New York** (19:00 UTC both days). Execution before start or at/after expiry
-is refused. Late execution retains the fixed end. Manual OAuth starts retain
-their existing eight-hour duration.
+The fixed plan is **November 14, 2026 at 2pm New York** through **November 15 at
+2pm New York** (19:00 UTC both days). The shared plan module is the only source
+for those times and the originating request identity. Both caller and Worker
+refuse production starts before the window or at/after expiry. Late execution
+retains the fixed end time.
 
-## Server command
+## Credential and deployment
 
-From the delivered repository checkout:
+The private action uses a dedicated random bearer secret. The server copy is
+`/root/.config/pass-the-aux/automation-token`, owned by root with mode 0600;
+the Worker copy is the secret `AUX_AUTOMATION_TOKEN`. Install the Worker secret
+through the existing shared Cloudflare deploy token and the normal Wrangler
+secret command, passing the file on stdin. Never print or commit either copy.
+No change to the Cloudflare account token's KV permissions is needed.
+
+The private route is `/api/private/scheduled-party`, POST only, and accepts
+exactly one of three commands. Authentication precedes even body parsing and
+storage reads. The streamed JSON body is capped at 128 bytes, cannot specify
+host identities, keys, dates or duration, and has no general hosting capability.
+The CLI always calls the fixed HTTPS origin, refuses redirects and never retries.
+
+## Commands on the server
 
 ```sh
 node scripts/scheduled-party.mjs status
-node scripts/scheduled-party.mjs preflight
+node scripts/scheduled-party.mjs rehearse
 node scripts/scheduled-party.mjs start
 ```
 
-The delivering session separately queues the one-time Concierge turn for
-`2026-11-14T19:00:00Z`; installing this code does not schedule or open anything.
-The scheduled agent runs `start`, reports the sanitized result and confirms the
-public party-status response. No playback is started and no host browser cookie
-is created. End production parties from the authenticated host page.
+`status` reads sanitized live-party and planned-operation metadata without
+Spotify or storage writes. `rehearse` verifies saved Spotify credentials against
+the bound host and reads Spotify's current profile, using the existing refresh
+path if needed. It starts a unique isolated test party, reads it, deletes it in
+a cleanup block, reads closure and compares the production party before/after.
+It may refresh saved tokens, but never changes the host binding, production
+party or playback. Transient Spotify refresh failures retain saved authorization;
+a confirmed invalid grant can clear unusable tokens. Rehearsal returns no host
+identity or token values. Test keys never grant guest access.
 
-The command reads `~/.config/cloudflare/deploy.env`, using the existing shared
-token and account configuration. It resolves the namespace from the deployed
-Worker's KV binding. Without an account setting it requires account-list access.
-The token needs Worker settings read and Workers KV storage read/write. Add
-missing permission to the existing shared token, never create another token.
+`start` repeats current-host verification, then opens a 24-hour party ending at
+the planned time. An earlier same-host party is extended while preserving its
+original start; an already-later expiry is preserved. A different host is refused.
+Opening the authenticated host page through Spotify OAuth preserves an active
+scheduled party instead of shortening it to the manual eight-hour default.
+New manual parties retain eight hours. The command never starts playback or
+creates a host browser cookie. Production closure stays on the host page.
 
-## Isolated Cloudflare check
-
-Replace the example with a fresh unique identifier for each check, keeping the
-same identifier for start, status and close:
-
-```sh
-node scripts/scheduled-party.mjs start --test-id aux-check-20261113-unique
-node scripts/scheduled-party.mjs status --test-id aux-check-20261113-unique
-node scripts/scheduled-party.mjs close --test-id aux-check-20261113-unique
-node scripts/scheduled-party.mjs status --test-id aux-check-20261113-unique
-node scripts/scheduled-party.mjs status
-```
-
-Test mode reads real host metadata but writes/deletes only `party:test:<id>`.
-The Worker ignores these keys, so guests remain gated. Tests have no date guard
-and expire after 24h. KV propagation can delay reads; poll status rather than
-replay a start. This proves storage and custody, not live guest acceptance.
+The delivering session queues the one-time server turn for
+`2026-11-14T19:00:00Z`. Installing/deploying this code does not schedule or open
+anything. The scheduled agent runs `start`, reports its sanitized result and
+checks public party status. A pre-event rehearsal proves real credentials and
+storage custody; public guest acceptance remains a post-start check.
 
 ## Replay and recovery
 
-Before any remote write, the command exclusively creates and syncs a receipt in
-`~/.local/state/pass-the-aux/`. Completion replaces it with a synced completed
-receipt. Both states refuse replay, including after the host ends the party.
-An existing same-host party is extended to the planned end while preserving its
-original start; an already-later expiry is preserved. Other hosts are refused.
-Production has one stable operation id derived from the originating request;
-test operations use the test id. The claim is server-local: do not run production
-from another machine or user home.
+Before sending a production request, the server exclusively creates and fsyncs
+an operation receipt under `~/.local/state/pass-the-aux/`. Its identity derives
+from the originating request. A lost response leaves it claimed; confirmed
+success replaces it with a synced completed receipt. Both refuse replay after
+the host ends a party. The Worker also writes a remote operation receipt before
+changing the real party, and refuses a claimed/completed operation. Claim and
+completion use separate immutable keys so a start writes each KV key only once;
+status prefers the completion receipt when present.
 
-After an uncertain write, never remove a receipt to retry. Inspect its state and
-read the remote party first: the write might already have succeeded. Ambiguous
-results stay claimed for evidence-based recovery. Receipts contain no tokens.
+KV is eventually consistent and cannot provide compare-and-swap. The fsynced
+exclusive server claim is the single-caller authority: run production only from
+this server and root home, never simultaneously from another machine or user.
+Never delete a receipt or create a new operation to retry an uncertain effect.
+Inspect local receipt plus remote `status`, establish whether the party exists,
+and recover only from evidence. A rehearsal can safely be repeated because every
+run uses a fresh isolated key, with a 24-hour expiry if cleanup cannot complete.
+Tokens and host identities are absent from receipts and responses.
+Rehearsal is refused after the planned end; status remains available for recovery.
 
-Checks: `npm run test:scheduled-party` and `npm run test:worker`.
-
-2026-11-13 preflight: the shared token can read Worker settings but KV reads
-return HTTP 401/code 10000. Cloudflare-backed isolated acceptance is blocked
-until the existing token has Workers KV Storage Edit permission. No successful
-live test or production start is claimed.
-
-Delivery: the implementation and focused tests are committed and pushed on the
-task branch. Fresh Claude Code Sonnet review (session
-`6227ff4f-2394-44d8-b2c0-ced892c7e8d4`) passed code readiness; its real-Cloudflare
-acceptance gate remains open. The delivering server ran `preflight` and the
-isolated `start` command; both returned sanitized HTTP401 errors before a party
-write. Public party status was still `live:false`, with guest search HTTP403.
-No schedule is armed. After the permission repair, finish the isolated lifecycle
-above, then queue the one-time turn using the existing Concierge schedule.
-
-The scheduled instructions must use this server's receipt directory and never
-delete a receipt or replay an ambiguous start. If a receipt already exists, read
-the party status and investigate rather than issuing another start. Confirm the
-public status and fixed expiry independently after a successful start and return
-that result to the originating Pass the Aux request thread. The agent must report
-a failure in that thread if permission or saved host access is unavailable.
+Focused checks: `npm run test:scheduled-party` and `npm run test:worker`.

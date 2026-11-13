@@ -6,17 +6,15 @@ todo. Newest entries first.
 
 ## Status log
 
-- **Saturday saved-host start built, reviewed and pushed 2026-11-13; not deployed
-  or scheduled yet:** server command opens November 14 at 2pm New York, expiring
-  November 15 at 2pm. Manual starts retain eight hours. Isolated tests cannot
-  open guest access; durable claims prevent replay after uncertain writes or
-  host closure. Focused checks pass. Cloudflare-backed acceptance is blocked:
-  existing shared token can read Worker settings but KV reads return 401/code
-  10000. Fresh Claude Sonnet review passed code readiness; the server's real-KV
-  preflight and isolated start both failed before any party write. The public
-  party stayed closed with guest search returning 403. Grant Workers KV Storage
-  Edit to the existing shared token, then run the isolated lifecycle before
-  arming the one-time schedule. Runbook: [docs/scheduled-party.md](docs/scheduled-party.md).
+- **Saturday saved-host start revised locally 2026-11-13; pending new review and
+  delivery:** a one-time server task calls a private authenticated Worker action
+  at November 14, 2pm New York, expiring November 15 at 2pm. The Worker uses its
+  existing storage binding; no account-permission change or Cloudflare Cron
+  Trigger. Rehearsal checks Spotify identity and an isolated storage lifecycle
+  while production remains unchanged. Durable claims prevent replay; host login
+  preserves the scheduled lifetime. Focused checks pass. The revised route still
+  needs deployment, live rehearsal and the server schedule. The previous direct
+  KV command is superseded. Runbook: [docs/scheduled-party.md](docs/scheduled-party.md).
 
 _Last updated 2026-10-16._
 
