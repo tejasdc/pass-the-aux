@@ -1,6 +1,6 @@
+import { PARTY_SESSION_KEY, PARTY_SESSION_TTL_SECONDS, createPartySession, getPartySession } from "./party-session.js";
 const TOKEN_KEY = "host:tokens";
 const HOST_ID_KEY = "host:spotify-user-id";
-const PARTY_SESSION_KEY = "party:session";
 const VIBE_KEY = "party:vibe";
 const HOST_SESSION_PREFIX = "host:session:";
 const HOST_SESSION_COOKIE = "el_host_session";
@@ -19,8 +19,6 @@ const AUDIO_FEATURES_ERROR_TTL_SECONDS = 5 * 60;
 // unknown; `estimated` tells the client not to present it as the song's BPM.
 const ESTIMATED_BEAT = { bpm: 120, tempo: 120, energy: 0.6, energyLevel: "medium", estimated: true };
 
-const PARTY_SESSION_TTL_SECONDS = 8 * 60 * 60;
-const PARTY_SESSION_TTL_MS = PARTY_SESSION_TTL_SECONDS * 1000;
 const HOST_SESSION_TTL_SECONDS = PARTY_SESSION_TTL_SECONDS;
 const OAUTH_STATE_TTL_SECONDS = 10 * 60;
 const RATE_LIMIT_WINDOW_MS = 60 * 60 * 1000;
@@ -936,38 +934,6 @@ async function getTokens(env) {
 
 async function saveTokens(env, tokens) {
   await env.PARTY_QUEUE_KV.put(TOKEN_KEY, JSON.stringify(tokens));
-}
-
-async function createPartySession(env, hostUserId) {
-  const now = Date.now();
-  const session = {
-    live: true,
-    hostUserId,
-    startedAt: new Date(now).toISOString(),
-    expiresAt: new Date(now + PARTY_SESSION_TTL_MS).toISOString(),
-    durationSeconds: PARTY_SESSION_TTL_SECONDS,
-  };
-
-  await env.PARTY_QUEUE_KV.put(PARTY_SESSION_KEY, JSON.stringify(session), {
-    expirationTtl: PARTY_SESSION_TTL_SECONDS,
-  });
-
-  return session;
-}
-
-async function getPartySession(env) {
-  const session = await env.PARTY_QUEUE_KV.get(PARTY_SESSION_KEY, "json");
-
-  if (!session?.expiresAt) {
-    return null;
-  }
-
-  if (Date.parse(session.expiresAt) <= Date.now()) {
-    await env.PARTY_QUEUE_KV.delete(PARTY_SESSION_KEY);
-    return null;
-  }
-
-  return session;
 }
 
 async function requireLiveParty(env) {

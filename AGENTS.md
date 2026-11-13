@@ -75,6 +75,10 @@ WiFi — just the QR.
 
 ## Operations
 
+- Saved-host server starts, isolated Cloudflare checks and replay recovery:
+  [docs/scheduled-party.md](docs/scheduled-party.md). Never erase the durable
+  server receipt to retry an uncertain start.
+
 ```bash
 npm install && npx wrangler deploy      # full deploy (builds client too)
 npm run test:worker                     # direct-import Worker harness tests
