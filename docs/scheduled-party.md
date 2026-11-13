@@ -72,3 +72,19 @@ Checks: `npm run test:scheduled-party` and `npm run test:worker`.
 return HTTP 401/code 10000. Cloudflare-backed isolated acceptance is blocked
 until the existing token has Workers KV Storage Edit permission. No successful
 live test or production start is claimed.
+
+Delivery: the implementation and focused tests are committed and pushed on the
+task branch. Fresh Claude Code Sonnet review (session
+`6227ff4f-2394-44d8-b2c0-ced892c7e8d4`) passed code readiness; its real-Cloudflare
+acceptance gate remains open. The delivering server ran `preflight` and the
+isolated `start` command; both returned sanitized HTTP401 errors before a party
+write. Public party status was still `live:false`, with guest search HTTP403.
+No schedule is armed. After the permission repair, finish the isolated lifecycle
+above, then queue the one-time turn using the existing Concierge schedule.
+
+The scheduled instructions must use this server's receipt directory and never
+delete a receipt or replay an ambiguous start. If a receipt already exists, read
+the party status and investigate rather than issuing another start. Confirm the
+public status and fixed expiry independently after a successful start and return
+that result to the originating Pass the Aux request thread. The agent must report
+a failure in that thread if permission or saved host access is unavailable.

@@ -6,14 +6,17 @@ todo. Newest entries first.
 
 ## Status log
 
-- **Saturday saved-host start implemented locally 2026-11-13; not deployed or
-  scheduled yet:** server command opens November 14 at 2pm New York, expiring
+- **Saturday saved-host start built, reviewed and pushed 2026-11-13; not deployed
+  or scheduled yet:** server command opens November 14 at 2pm New York, expiring
   November 15 at 2pm. Manual starts retain eight hours. Isolated tests cannot
   open guest access; durable claims prevent replay after uncertain writes or
   host closure. Focused checks pass. Cloudflare-backed acceptance is blocked:
   existing shared token can read Worker settings but KV reads return 401/code
-  10000. Review, token permission recovery and schedule remain with the delivering
-  session. Runbook: [docs/scheduled-party.md](docs/scheduled-party.md).
+  10000. Fresh Claude Sonnet review passed code readiness; the server's real-KV
+  preflight and isolated start both failed before any party write. The public
+  party stayed closed with guest search returning 403. Grant Workers KV Storage
+  Edit to the existing shared token, then run the isolated lifecycle before
+  arming the one-time schedule. Runbook: [docs/scheduled-party.md](docs/scheduled-party.md).
 
 _Last updated 2026-10-16._
 
